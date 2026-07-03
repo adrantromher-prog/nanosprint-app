@@ -5,6 +5,15 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
+async function generarCodigoUnico(): Promise<string> {
+  for (let i = 0; i < 50; i++) {
+    const codigo = String(Math.floor(10000 + Math.random() * 90000));
+    const existe = await pool.query("SELECT id FROM usuarios WHERE codigo_referido = $1", [codigo]);
+    if (existe.rows.length === 0) return codigo;
+  }
+  throw new Error("No se pudo generar un código único");
+}
+
 export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
@@ -28,6 +37,11 @@ export async function GET() {
     }
 
     const usuario = result.rows[0];
+
+    if (!usuario.codigo_referido) {
+      usuario.codigo_referido = await generarCodigoUnico();
+      await pool.query("UPDATE usuarios SET codigo_referido = $1 WHERE id = $2", [usuario.codigo_referido, decoded.id]);
+    }
 
     return NextResponse.json(
       {

@@ -3,6 +3,15 @@ import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import PerfilClient from "./PerfilClient";
 
+async function generarCodigoUnico(): Promise<string> {
+  for (let i = 0; i < 50; i++) {
+    const codigo = String(Math.floor(10000 + Math.random() * 90000));
+    const existe = await pool.query("SELECT id FROM usuarios WHERE codigo_referido = $1", [codigo]);
+    if (existe.rows.length === 0) return codigo;
+  }
+  throw new Error("No se pudo generar un código único");
+}
+
 export default async function PerfilPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
@@ -29,6 +38,11 @@ export default async function PerfilPage() {
 
   if (!user) {
     return <div className="text-white p-10">Usuario no encontrado</div>;
+  }
+
+  if (!user.codigo_referido) {
+    user.codigo_referido = await generarCodigoUnico();
+    await pool.query("UPDATE usuarios SET codigo_referido = $1 WHERE id = $2", [user.codigo_referido, decoded.id]);
   }
 
   return (
