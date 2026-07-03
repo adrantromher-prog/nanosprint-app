@@ -28,30 +28,30 @@ export default function AdminMovimientos() {
   };
 
   return (
-    <main className="min-h-screen p-6 text-white">
-      <div className="flex items-center justify-between mb-6">
+    <main className="min-h-screen p-4 md:p-6 text-white">
+      <div className="flex items-center justify-between mb-6 gap-3">
         <button onClick={() => router.push("/admin")}
           className="px-4 py-2 rounded-xl bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 text-white font-bold text-sm shadow-[0_0_18px_rgba(0,255,255,0.5)] hover:shadow-[0_0_28px_rgba(0,255,255,0.9)] active:scale-95 transition-all">
           ← Volver
         </button>
-        <h1 className="text-3xl font-extrabold drop-shadow-[0_0_12px_rgba(0,255,255,0.6)]">Movimientos</h1>
-        <div className="w-20" />
+        <h1 className="text-xl md:text-3xl font-extrabold drop-shadow-[0_0_12px_rgba(0,255,255,0.6)] text-center">Movimientos</h1>
+        <div className="w-14 md:w-20" />
       </div>
 
       {!remates && (
-        <div className="flex flex-col items-center mt-16">
+        <div className="flex flex-col items-center mt-8 md:mt-16">
           <button onClick={cargar} disabled={cargando}
-            className="w-80 py-6 rounded-2xl text-xl font-bold bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 shadow-[0_0_22px_rgba(0,255,255,0.5)] hover:shadow-[0_0_35px_rgba(0,255,255,0.9)] active:scale-95 transition-all disabled:opacity-50">
+            className="w-full max-w-xs py-4 md:py-6 rounded-2xl text-sm md:text-xl font-bold bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 shadow-[0_0_22px_rgba(0,255,255,0.5)] hover:shadow-[0_0_35px_rgba(0,255,255,0.9)] active:scale-95 transition-all disabled:opacity-50">
             {cargando ? "Cargando..." : "Ver Remates"}
           </button>
         </div>
       )}
 
       {remates && (
-        <div className="max-w-lg mx-auto mt-8 space-y-4">
-          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6 shadow-xl">
-            <h2 className="text-2xl font-bold text-cyan-300 mb-4">Remates</h2>
-            <div className="space-y-3 text-lg">
+        <div className="max-w-lg mx-auto mt-6 md:mt-8 space-y-4">
+          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 md:p-6 shadow-xl">
+            <h2 className="text-xl md:text-2xl font-bold text-cyan-300 mb-4">Remates</h2>
+            <div className="space-y-3 text-sm md:text-lg">
               <div className="flex justify-between">
                 <span className="text-gray-400">Suma total de remates</span>
                 <span className="font-bold">Bs. {remates.totalPujas.toFixed(2)}</span>

@@ -21,7 +21,7 @@ export default function Clasificacion() {
   }, []);
 
   return (
-    <main className="relative h-screen w-full text-white overflow-hidden">
+    <main className="relative h-dvh w-full text-white overflow-hidden">
 
       <video
         src="/fondos/fondoapuesta.mp4"

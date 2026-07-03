@@ -285,7 +285,7 @@ export default function GestionarRemates() {
       <div className="relative z-10 p-6">
 
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold drop-shadow-[0_0_12px_rgba(0,255,255,0.6)]">
+          <h1 className="text-xl md:text-3xl font-bold drop-shadow-[0_0_12px_rgba(0,255,255,0.6)]">
             Gestionar Carreras
           </h1>
           <button

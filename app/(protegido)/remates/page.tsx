@@ -188,7 +188,7 @@ export default function LobbyRemates() {
   }
 
   return (
-    <main className="relative h-screen w-full text-white overflow-hidden">
+    <main className="relative h-dvh w-full text-white overflow-hidden">
 
       <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
       <div className="absolute inset-0 opacity-20"

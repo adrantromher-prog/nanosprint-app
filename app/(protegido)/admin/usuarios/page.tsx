@@ -82,56 +82,52 @@ export default function AdminUsuarios() {
   };
 
   return (
-    <main className="p-8 text-white space-y-10 bg-[#0F172A] min-h-screen">
+    <main className="p-4 md:p-8 text-white space-y-6 md:space-y-10 bg-[#0F172A] min-h-screen">
 
-      {/* BOTÓN VOLVER */}
       <button
         onClick={() => router.push("/admin")}
-        className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white"
+        className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white text-sm"
       >
         ← Volver al Panel
       </button>
 
-      {/* TÍTULO */}
-      <h1 className="text-4xl font-bold">Gestión de Usuarios</h1>
+      <h1 className="text-2xl md:text-4xl font-bold">Gestión de Usuarios</h1>
 
-      {/* BUSCADOR */}
-      <div className="bg-[#1E293B] p-6 rounded-xl border border-white/10 shadow-lg space-y-4">
-        <h2 className="text-2xl font-semibold text-white">Buscar Usuario</h2>
+      <div className="bg-[#1E293B] p-4 md:p-6 rounded-xl border border-white/10 shadow-lg space-y-4">
+        <h2 className="text-xl md:text-2xl font-semibold text-white">Buscar Usuario</h2>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <input
             type="text"
             placeholder="Número de teléfono"
-            className="bg-white text-black px-3 py-2 rounded w-64 border border-gray-300 focus:ring-2 focus:ring-blue-500"
+            className="bg-white text-black px-3 py-2 rounded w-full sm:w-64 border border-gray-300 focus:ring-2 focus:ring-blue-500"
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
           />
 
           <button
             onClick={buscarUsuario}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded text-lg"
+            className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base"
           >
             Buscar
           </button>
         </div>
       </div>
 
-      {/* INFORMACIÓN DEL USUARIO */}
       {usuario && (
-        <div className="bg-[#1E293B] p-6 rounded-xl border border-white/10 shadow-lg space-y-6">
+        <div className="bg-[#1E293B] p-4 md:p-6 rounded-xl border border-white/10 shadow-lg space-y-4 md:space-y-6">
 
-          <h2 className="text-2xl font-semibold text-white">Información del Usuario</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-white">Información del Usuario</h2>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
-            <div className="bg-[#0F172A] p-4 rounded-lg border border-white/10">
+            <div className="bg-[#0F172A] p-4 rounded-lg border border-white/10 text-sm">
               <p><b>Nombre:</b> {usuario.nombre}</p>
               <p><b>Apellido:</b> {usuario.apellido}</p>
               <p><b>Comida favorita:</b> {usuario.comida_favorita}</p>
             </div>
 
-            <div className="bg-[#0F172A] p-4 rounded-lg border border-white/10">
+            <div className="bg-[#0F172A] p-4 rounded-lg border border-white/10 text-sm">
               <p><b>Teléfono:</b> {usuario.telefono}</p>
               <p><b>Saldo actual:</b> ${usuario.saldo}</p>
               <p><b>Creado:</b> {new Date(usuario.creado_en).toLocaleString()}</p>
@@ -154,31 +150,29 @@ export default function AdminUsuarios() {
         </div>
       )}
 
-      {/* HISTORIAL */}
       {usuario && (
-        <div className="bg-[#1E293B] p-6 rounded-xl border border-white/10 shadow-lg flex items-center justify-between">
+        <div className="bg-[#1E293B] p-4 md:p-6 rounded-xl border border-white/10 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-white">Historial de Movimientos</h2>
-            <p className="text-gray-400 mt-1">Ver todas las transacciones, apuestas y pujas del usuario</p>
+            <h2 className="text-xl md:text-2xl font-semibold text-white">Historial de Movimientos</h2>
+            <p className="text-gray-400 mt-1 text-sm">Ver todas las transacciones, apuestas y pujas del usuario</p>
           </div>
           <button onClick={() => router.push(`/historial?admin_user_id=${usuario.id}`)}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded text-lg font-semibold"
+            className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base font-semibold"
           >
             Ver Historial
           </button>
         </div>
       )}
 
-      {/* OPERACIONES */}
       {usuario && (
-        <div className="bg-[#1E293B] p-6 rounded-xl border border-white/10 shadow-lg space-y-6">
+        <div className="bg-[#1E293B] p-4 md:p-6 rounded-xl border border-white/10 shadow-lg space-y-4 md:space-y-6">
 
-          <h2 className="text-2xl font-semibold text-white">Operaciones</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-white">Operaciones</h2>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-            <div className="space-y-4">
-              <label className="block text-lg text-gray-300">Monto:</label>
+            <div className="space-y-2">
+              <label className="block text-sm md:text-base text-gray-300">Monto:</label>
               <input
                 type="number"
                 className="bg-white text-black px-3 py-2 rounded w-full border border-gray-300 focus:ring-2 focus:ring-blue-500"
@@ -187,8 +181,8 @@ export default function AdminUsuarios() {
               />
             </div>
 
-            <div className="space-y-4">
-              <label className="block text-lg text-gray-300">Asunto:</label>
+            <div className="space-y-2">
+              <label className="block text-sm md:text-base text-gray-300">Asunto:</label>
               <input
                 type="text"
                 className="bg-white text-black px-3 py-2 rounded w-full border border-gray-300 focus:ring-2 focus:ring-blue-500"
@@ -200,17 +194,17 @@ export default function AdminUsuarios() {
 
           </div>
 
-          <div className="flex gap-6 pt-4">
+          <div className="flex gap-3 sm:gap-6 pt-2 md:pt-4">
             <button
               onClick={() => enviarMovimiento("recarga")}
-              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded text-lg"
+              className="bg-green-600 hover:bg-green-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base"
             >
               Recargar
             </button>
 
             <button
               onClick={() => enviarMovimiento("retiro")}
-              className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded text-lg"
+              className="bg-red-600 hover:bg-red-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base"
             >
               Retirar
             </button>
@@ -219,14 +213,13 @@ export default function AdminUsuarios() {
         </div>
       )}
 
-      {/* BLOQUEO DE USUARIO */}
       {usuario && (
-        <div className="bg-[#1E293B] p-6 rounded-xl border border-white/10 shadow-lg space-y-6">
+        <div className="bg-[#1E293B] p-4 md:p-6 rounded-xl border border-white/10 shadow-lg space-y-4 md:space-y-6">
 
-          <h2 className="text-2xl font-semibold text-white">Control de Bloqueo</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-white">Control de Bloqueo</h2>
 
-          <div className="space-y-4">
-            <label className="block text-lg text-gray-300">Razón del bloqueo:</label>
+          <div className="space-y-2">
+            <label className="block text-sm md:text-base text-gray-300">Razón del bloqueo:</label>
             <input
               type="text"
               className="bg-white text-black px-3 py-2 rounded w-full border border-gray-300 focus:ring-2 focus:ring-red-500"
@@ -236,17 +229,17 @@ export default function AdminUsuarios() {
             />
           </div>
 
-          <div className="flex gap-6 pt-4">
+          <div className="flex gap-3 sm:gap-6 pt-2 md:pt-4">
             <button
               onClick={() => cambiarEstadoBloqueo(true)}
-              className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded text-lg"
+              className="bg-red-600 hover:bg-red-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base"
             >
               Bloquear Usuario
             </button>
 
             <button
               onClick={() => cambiarEstadoBloqueo(false)}
-              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded text-lg"
+              className="bg-green-600 hover:bg-green-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base"
             >
               Desbloquear Usuario
             </button>

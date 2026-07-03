@@ -85,7 +85,7 @@ export default function AdminRemates() {
       </div>
 
       {/* TÍTULO */}
-      <h1 className="text-3xl font-bold mt-0 mb-3 drop-shadow-[0_0_12px_rgba(0,255,255,0.6)]">
+      <h1 className="text-xl md:text-3xl font-bold mt-0 mb-3 drop-shadow-[0_0_12px_rgba(0,255,255,0.6)]">
         Crear Carrera de Remate
       </h1>
 

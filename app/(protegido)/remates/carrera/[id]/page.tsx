@@ -4,28 +4,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
-function OrientationLock() {
-  const [portrait, setPortrait] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(orientation: portrait)");
-    const handler = (e: MediaQueryListEvent | MediaQueryList) => setPortrait(e.matches);
-    mq.addEventListener("change", handler);
-    handler(mq);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  if (!portrait) return null;
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center gap-4">
-      <svg viewBox="0 0 24 24" fill="white" className="w-20 h-20 animate-pulse">
-        <path d="M7 0h10v24H7V0zm2 3v18h6V3H9z" transform="rotate(90 12 12)" />
-      </svg>
-      <p className="text-white/80 text-lg font-bold text-center px-4">
-        Gira tu teléfono a horizontal
-      </p>
-    </div>
-  );
-}
-
 interface Caballo {
   id: number;
   numero: number;
@@ -231,9 +209,7 @@ export default function DetalleCarrera() {
   }
 
   return (
-    <>
-    <OrientationLock />
-    <main className="relative w-screen h-screen text-white overflow-hidden">
+    <main className="relative min-h-dvh w-full text-white overflow-y-auto">
 
       <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
       <div className="absolute inset-0 opacity-20"
@@ -244,166 +220,149 @@ export default function DetalleCarrera() {
         }}
       />
 
-      <div className="relative z-10 flex flex-col w-full h-full p-2 gap-2">
+      <div className="relative z-10 w-full p-3 mx-auto max-w-5xl">
 
-        <div className="flex-shrink-0 flex justify-between items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
 
           <div className="flex items-center gap-2">
             {carrera.imagen && (
               <button
                 onClick={() => window.open(`/api/remates/imagen/${carrera.id}`, '_blank')}
-                className="
-                  w-9 h-9 rounded-xl text-sm font-bold
-                  bg-gradient-to-b from-yellow-500/30 to-orange-600/30
-                  border border-yellow-400/40
-                  shadow-[0_0_12px_rgba(255,200,0,0.15)]
-                  hover:shadow-[0_0_20px_rgba(255,200,0,0.4)]
-                  hover:border-yellow-300/60
-                  active:scale-95 transition-all duration-300
-                  flex items-center justify-center
-                "
+                className="w-9 h-9 rounded-xl text-sm font-bold bg-gradient-to-b from-yellow-500/30 to-orange-600/30 border border-yellow-400/40 shadow-[0_0_12px_rgba(255,200,0,0.15)] hover:shadow-[0_0_20px_rgba(255,200,0,0.4)] hover:border-yellow-300/60 active:scale-95 transition-all duration-300 flex items-center justify-center"
               >
                 <svg className="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               </button>
             )}
             <button
               onClick={() => router.push("/remates")}
-              className="
-                px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap
-                bg-gradient-to-b from-slate-700 to-slate-900
-                border border-slate-500/50
-                shadow-[0_0_12px_rgba(100,200,255,0.15)]
-                hover:shadow-[0_0_20px_rgba(100,200,255,0.4)]
-                hover:border-cyan-400/60
-                active:scale-95 transition-all duration-300
-              "
+              className="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gradient-to-b from-slate-700 to-slate-900 border border-slate-500/50 shadow-[0_0_12px_rgba(100,200,255,0.15)] hover:shadow-[0_0_20px_rgba(100,200,255,0.4)] hover:border-cyan-400/60 active:scale-95 transition-all duration-300"
             >
               ← Volver
             </button>
           </div>
 
-          <div className="flex flex-col items-center flex-1">
-            <span className="text-white font-bold text-lg leading-tight tracking-wide drop-shadow-[0_0_8px_rgba(0,255,255,0.2)]">{carrera.hipodromo}</span>
-            <span className="text-gray-400 text-xs tracking-wide">Carrera #{carrera.numero_carrera} · {carrera.tipo.charAt(0).toUpperCase() + carrera.tipo.slice(1)}</span>
-            <div className="mt-1">
-              <Temporizador horaCierre={carrera.hora_cierre} estado={carrera.estado} />
-            </div>
+          <div className="flex flex-col items-center flex-1 min-w-0 text-center">
+            <span className="text-white font-bold text-sm leading-tight truncate w-full px-1 drop-shadow-[0_0_8px_rgba(0,255,255,0.2)]">{carrera.hipodromo}</span>
+            <span className="text-gray-400 text-[10px] tracking-wide">Carrera #{carrera.numero_carrera} · {carrera.tipo.charAt(0).toUpperCase() + carrera.tipo.slice(1)}</span>
+            <Temporizador horaCierre={carrera.hora_cierre} estado={carrera.estado} />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-right whitespace-nowrap shadow-[0_0_15px_rgba(0,255,255,0.05)]">
-            <p className="text-gray-300 text-base font-bold">{usuario.nombre}</p>
-            <p className="text-green-300 font-extrabold text-base drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]">
-              Bs. {Number(usuario.saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-2.5 py-1 text-right whitespace-nowrap shadow-[0_0_15px_rgba(0,255,255,0.05)]">
+            <p className="text-gray-300 text-[10px] font-bold leading-tight">{usuario.nombre}</p>
+            <p className="text-green-300 font-extrabold text-[10px] drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]">
+              Bs. {Number(usuario.saldo).toLocaleString("en-US", { minimumFractionDigits: 0 })}
             </p>
           </div>
 
         </div>
 
         {carrera.ganador && (
-          <div className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500/20 via-yellow-400/10 to-yellow-500/20 border border-yellow-400/40 text-center shadow-[0_0_20px_rgba(255,200,0,0.15)]">
-            <span className="text-yellow-300 font-bold text-base drop-shadow-[0_0_6px_rgba(255,200,0,0.3)]">🏆 GANADOR: Caballo #{carrera.ganador}</span>
+          <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-yellow-500/20 via-yellow-400/10 to-yellow-500/20 border border-yellow-400/40 text-center mb-3 shadow-[0_0_20px_rgba(255,200,0,0.15)]">
+            <span className="text-yellow-300 font-bold text-sm drop-shadow-[0_0_6px_rgba(255,200,0,0.3)]">🏆 GANADOR: Caballo #{carrera.ganador}</span>
           </div>
         )}
 
-        <div className="flex-1 min-h-0 grid grid-cols-[70%_30%] gap-2">
+        <div className="flex flex-col lg:flex-row gap-3">
 
-          <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-2 flex flex-col overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-
-            <div className="grid grid-cols-4 px-3 pb-2 border-b border-gray-700/50 flex-shrink-0"
-              style={{ gridTemplateColumns: "36px 1fr 130px 290px" }}
-            >
-              <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold">N°</span>
-              <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold">Caballo</span>
-              <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold text-center">Puja</span>
-              <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold text-center">Apuesta</span>
+          {carrera.estado === "cerrada" && (
+            <div className="w-full text-center mb-1">
+              <span className="inline-block px-4 py-1 rounded-full bg-red-500/20 border border-red-400/50 text-red-300 font-bold text-xs shadow-[0_0_10px_rgba(255,0,0,0.1)]">
+                🔒 Carrera Cerrada — No se aceptan más pujas
+              </span>
             </div>
+          )}
 
-            <div className="flex-1 overflow-y-auto space-y-1 pt-2 pr-1">
-              {carrera.caballos.map((caballo, idx) => (
-                <div
-                  key={caballo.id}
-                  className={`grid items-center px-3 py-2.5 rounded-xl text-xs gap-0.5 transition-all duration-200 ${
-                    caballo.retirado
-                      ? "bg-red-500/10 border border-red-400/20"
-                      : idx % 2 === 0
-                        ? "bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.07] hover:border-cyan-400/20"
-                        : "bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.06] hover:border-cyan-400/20"
-                  }`}
-                  style={{ gridTemplateColumns: "36px 1fr 130px 290px" }}
-                >
-                  <span className="font-mono text-gray-500 text-xs font-semibold">#{caballo.numero}</span>
+          <div className="flex-1 min-w-0">
 
-                  <span className={`text-xs font-semibold truncate ${caballo.retirado ? "line-through text-gray-500" : "text-white"}`}>
-                    {caballo.nombre}
-                    {caballo.retirado && (
-                      <span className="block text-red-400 text-[10px] font-bold mt-0.5" style={{ textDecoration: "none" }}>
-                        RETIRADO
+            <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-2 shadow-[0_0_20px_rgba(0,0,0,0.3)]">
+
+              <div className="hidden sm:grid grid-cols-[36px_1fr_100px_1fr] px-3 pb-2 border-b border-gray-700/50 gap-1">
+                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold">N°</span>
+                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold">Caballo</span>
+                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold text-center">Puja</span>
+                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold text-center">Apuesta</span>
+              </div>
+
+              <div className="space-y-1 pt-2">
+                {carrera.caballos.map((caballo, idx) => (
+                  <div
+                    key={caballo.id}
+                    className={`rounded-xl text-xs transition-all duration-200 ${
+                      caballo.retirado
+                        ? "bg-red-500/10 border border-red-400/20"
+                        : idx % 2 === 0
+                          ? "bg-white/[0.04] border border-white/[0.06]"
+                          : "bg-white/[0.02] border border-white/[0.04]"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 px-3 py-2">
+                      <span className="font-mono text-gray-500 text-xs font-semibold">#{caballo.numero}</span>
+
+                      <span className={`text-xs font-semibold truncate flex-1 min-w-0 ${caballo.retirado ? "line-through text-gray-500" : "text-white"}`}>
+                        {caballo.nombre}
+                        {caballo.retirado && (
+                          <span className="inline text-red-400 text-[10px] font-bold ml-1" style={{ textDecoration: "none" }}>RETIRADO</span>
+                        )}
                       </span>
-                    )}
-                  </span>
 
-                  <div className="text-center leading-snug">
-                    {caballo.retirado ? (
-                      <span className="text-gray-600">—</span>
-                    ) : (
-                      <>
-                        <span className="text-cyan-300 font-bold text-base drop-shadow-[0_0_6px_rgba(0,255,255,0.15)]">
-                          {caballo.puja_actual ? `Bs.${caballo.puja_actual.toLocaleString()}` : "—"}
-                        </span>
-                        {caballo.pujador_sobrenombre && (
-                          <span className="block text-purple-400 font-bold text-sm drop-shadow-[0_0_4px_rgba(200,0,255,0.15)]">
-                            @{caballo.pujador_sobrenombre}
+                      {caballo.retirado ? (
+                        <span className="text-gray-600 text-xs ml-auto">—</span>
+                      ) : (
+                        <div className="ml-auto sm:ml-0 text-right leading-snug">
+                          <span className="text-cyan-300 font-bold text-sm drop-shadow-[0_0_6px_rgba(0,255,255,0.15)]">
+                            {caballo.puja_actual ? `Bs.${caballo.puja_actual.toLocaleString()}` : "—"}
                           </span>
-                        )}
-                      </>
-                    )}
-                  </div>
+                          {caballo.pujador_sobrenombre && (
+                            <span className="block text-purple-400 font-bold text-[10px] drop-shadow-[0_0_4px_rgba(200,0,255,0.15)]">
+                              @{caballo.pujador_sobrenombre}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
-                  <div className="flex items-center gap-1.5">
-                    {!caballo.retirado && carrera.estado === "abierta" ? (
-                      <>
-                        <span className="text-white font-bold text-sm text-center px-2 py-1.5 rounded-lg bg-black/50 border border-cyan-400/30 whitespace-nowrap min-w-[80px] shadow-[0_0_6px_rgba(0,255,255,0.05)]">
-                          Bs.{(montos[caballo.id] || 0).toLocaleString()}
-                        </span>
-                        {[500, 1000, 5000].map((cant) => (
-                          <button
-                            key={cant}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setErrorMsg("");
-                              setMontos((prev) => ({ ...prev, [caballo.id]: (prev[caballo.id] || 0) + cant }));
-                            }}
-                            className="px-3 py-1.5 rounded-md text-xs font-bold bg-gradient-to-b from-cyan-600 to-cyan-900 border border-cyan-400/40 text-cyan-100 shadow-[0_0_8px_rgba(0,255,255,0.1)] hover:shadow-[0_0_14px_rgba(0,255,255,0.35)] hover:border-cyan-300/60 active:scale-90 transition-all duration-150"
-                          >
-                            +{cant.toLocaleString()}
-                          </button>
-                        ))}
-                        {montos[caballo.id] > 0 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setErrorMsg("");
-                              setMontos((prev) => ({ ...prev, [caballo.id]: 0 }));
-                            }}
-                            className="px-2.5 py-1.5 rounded-md text-xs font-bold bg-gradient-to-b from-red-700 to-red-950 border border-red-400/30 text-red-200 shadow-[0_0_6px_rgba(255,0,0,0.1)] hover:shadow-[0_0_12px_rgba(255,0,0,0.3)] hover:border-red-300/50 active:scale-90 transition-all duration-150"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-gray-600">—</span>
-                    )}
+                      {!caballo.retirado && carrera.estado === "abierta" && (
+                        <div className="w-full flex items-center gap-1 pt-1.5 mt-1 border-t border-white/[0.04] flex-wrap">
+                          <span className="text-white font-bold text-xs text-center px-2 py-1 rounded-lg bg-black/50 border border-cyan-400/30 min-w-[70px] shadow-[0_0_6px_rgba(0,255,255,0.05)]">
+                            Bs.{(montos[caballo.id] || 0).toLocaleString()}
+                          </span>
+                          {[500, 1000, 5000].map((cant) => (
+                            <button
+                              key={cant}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setErrorMsg("");
+                                setMontos((prev) => ({ ...prev, [caballo.id]: (prev[caballo.id] || 0) + cant }));
+                              }}
+                              className="px-2 py-1 rounded-md text-[10px] font-bold bg-gradient-to-b from-cyan-600 to-cyan-900 border border-cyan-400/40 text-cyan-100 shadow-[0_0_8px_rgba(0,255,255,0.1)] hover:shadow-[0_0_14px_rgba(0,255,255,0.35)] hover:border-cyan-300/60 active:scale-90 transition-all duration-150"
+                            >
+                              +{cant.toLocaleString()}
+                            </button>
+                          ))}
+                          {montos[caballo.id] > 0 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setErrorMsg("");
+                                setMontos((prev) => ({ ...prev, [caballo.id]: 0 }));
+                              }}
+                              className="px-2 py-1 rounded-md text-[10px] font-bold bg-gradient-to-b from-red-700 to-red-950 border border-red-400/30 text-red-200 shadow-[0_0_6px_rgba(255,0,0,0.1)] hover:shadow-[0_0_12px_rgba(255,0,0,0.3)] hover:border-red-300/50 active:scale-90 transition-all duration-150"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="w-full lg:w-72 flex flex-col gap-2 shrink-0">
 
             {carrera.estado === "abierta" && (
-              <div className="flex-shrink-0 bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-3 flex flex-col gap-2 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
+              <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-3 flex flex-col gap-2 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
                 {errorMsg && (
                   <p className="text-red-400 text-xs text-center font-semibold">{errorMsg}</p>
                 )}
@@ -415,15 +374,7 @@ export default function DetalleCarrera() {
                       <button
                         key={caballo.id}
                         onClick={() => abrirPopup(caballo)}
-                        className="
-                          w-full py-3 rounded-xl font-bold text-base
-                          bg-gradient-to-b from-purple-600 to-purple-900
-                          border border-purple-400/60
-                          shadow-[0_0_18px_rgba(200,0,255,0.3)]
-                          hover:shadow-[0_0_30px_rgba(200,0,255,0.6)]
-                          hover:border-purple-300/80
-                          active:scale-[0.97] transition-all duration-300
-                        "
+                        className="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-b from-purple-600 to-purple-900 border border-purple-400/60 shadow-[0_0_18px_rgba(200,0,255,0.3)] hover:shadow-[0_0_30px_rgba(200,0,255,0.6)] hover:border-purple-300/80 active:scale-[0.97] transition-all duration-300"
                       >
                         🏇 Rematar #{caballo.numero}
                       </button>
@@ -431,7 +382,7 @@ export default function DetalleCarrera() {
                 ) : (
                   <button
                     disabled
-                    className="w-full py-3 rounded-xl font-bold text-base bg-gray-800/50 border border-gray-700/50 text-gray-600 cursor-not-allowed"
+                    className="w-full py-2.5 rounded-xl font-bold text-sm bg-gray-800/50 border border-gray-700/50 text-gray-600 cursor-not-allowed"
                   >
                     🏇 Rematar
                   </button>
@@ -439,33 +390,25 @@ export default function DetalleCarrera() {
               </div>
             )}
 
-            <div className="flex-1 bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-4 flex flex-col justify-center gap-2 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
+            <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-3 flex flex-col gap-2 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
 
-              {carrera.estado === "cerrada" && (
-                <div className="text-center mb-1">
-                  <span className="inline-block px-4 py-1 rounded-full bg-red-500/20 border border-red-400/50 text-red-300 font-bold text-xs shadow-[0_0_10px_rgba(255,0,0,0.1)]">
-                    🔒 Carrera Cerrada — No se aceptan más pujas
-                  </span>
-                </div>
-              )}
-
-              <h3 className="text-xs font-bold text-cyan-300 text-center uppercase tracking-[0.2em] mb-1 drop-shadow-[0_0_6px_rgba(0,255,255,0.1)]">
+              <h3 className="text-[10px] font-bold text-cyan-300 text-center uppercase tracking-[0.2em] drop-shadow-[0_0_6px_rgba(0,255,255,0.1)]">
                 Pozo de la carrera
               </h3>
 
-              <div className="flex justify-between items-center px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-gray-400 text-sm">Total pujas</span>
-                <span className="text-white font-bold text-sm">Bs. {totalPujas.toLocaleString()}</span>
+              <div className="flex justify-between items-center px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <span className="text-gray-400 text-[10px]">Total pujas</span>
+                <span className="text-white font-bold text-[10px]">Bs. {totalPujas.toLocaleString()}</span>
               </div>
 
-              <div className="flex justify-between items-center px-3 py-2 rounded-xl bg-red-500/[0.06] border border-red-400/15">
-                <span className="text-gray-400 text-sm">Casa 20%</span>
-                <span className="text-red-300 font-bold text-sm">− Bs. {casa.toLocaleString()}</span>
+              <div className="flex justify-between items-center px-2.5 py-1.5 rounded-xl bg-red-500/[0.06] border border-red-400/15">
+                <span className="text-gray-400 text-[10px]">Casa 20%</span>
+                <span className="text-red-300 font-bold text-[10px]">− Bs. {casa.toLocaleString()}</span>
               </div>
 
-              <div className="flex justify-between items-center px-3 py-2 rounded-xl bg-green-500/[0.06] border border-green-400/20">
-                <span className="text-gray-400 text-sm">Total ganador</span>
-                <span className="text-green-300 font-extrabold text-lg drop-shadow-[0_0_8px_rgba(0,255,0,0.15)]">Bs. {totalGanador.toLocaleString()}</span>
+              <div className="flex justify-between items-center px-2.5 py-1.5 rounded-xl bg-green-500/[0.06] border border-green-400/20">
+                <span className="text-gray-400 text-[10px]">Total ganador</span>
+                <span className="text-green-300 font-extrabold text-xs drop-shadow-[0_0_8px_rgba(0,255,0,0.15)]">Bs. {totalGanador.toLocaleString()}</span>
               </div>
             </div>
 
@@ -525,6 +468,5 @@ export default function DetalleCarrera() {
       )}
 
     </main>
-    </>
   );
 }

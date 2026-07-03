@@ -82,7 +82,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
   }
 
   return (
-    <main className="relative h-screen w-full overflow-hidden select-none">
+    <main className="relative h-dvh w-full overflow-hidden select-none">
       <style>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -160,46 +160,46 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-between min-h-0 px-4">
+        <div className="flex-1 flex items-center justify-center min-h-0 px-2 gap-3">
           <button onClick={() => router.push("/remates")}
-            className="btn-remates group relative w-[200px] h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-cyan-500 to-blue-800 border border-cyan-400/40 shadow-[0_0_24px_rgba(0,200,255,0.25)] hover:shadow-[0_0_40px_rgba(0,200,255,0.6)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-400 ease-out">
+            className="btn-remates group relative flex-1 max-w-[200px] h-[130px] md:h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-cyan-500 to-blue-800 border border-cyan-400/40 shadow-[0_0_24px_rgba(0,200,255,0.25)] hover:shadow-[0_0_40px_rgba(0,200,255,0.6)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-400 ease-out">
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/[0.06] transition-opacity duration-300" />
-            <div className="relative h-full flex flex-col items-center justify-center gap-2 px-4">
+            <div className="relative h-full flex flex-col items-center justify-center gap-1 md:gap-2 px-2 md:px-4">
               <div className="text-white/90 group-hover:scale-110 group-hover:text-white transition-all duration-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.2)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-11 h-11">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-8 h-8 md:w-11 md:h-11">
                   <path d="M5 20h14M5 20V8l7-5 7 5v12M5 20h14" />
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 3v3M12 18v3" />
                 </svg>
               </div>
-              <span className="text-white text-2xl font-extrabold tracking-wide text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <span className="text-white text-lg md:text-2xl font-extrabold tracking-wide text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                 REMATES
               </span>
-              <span className="text-white/40 text-[10px] font-medium tracking-wide text-center leading-tight max-w-[160px]">
+              <span className="text-white/40 font-medium tracking-wide text-center leading-tight max-w-[120px] md:max-w-[160px] hidden md:block text-[10px]">
                 Subastas de caballos
               </span>
             </div>
           </button>
 
           <button onClick={() => router.push("/remates/clasificacion")}
-            className="jackpot-glow group relative w-[200px] h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-yellow-900/60 via-amber-800/40 to-yellow-900/60 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:shadow-[0_0_36px_rgba(255,200,0,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
+            className="jackpot-glow group relative flex-1 max-w-[200px] h-[130px] md:h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-yellow-900/60 via-amber-800/40 to-yellow-900/60 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:shadow-[0_0_36px_rgba(255,200,0,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
             <div className="jackpot-shimmer absolute inset-0" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
-            <div className="relative h-full flex flex-col items-center justify-center gap-2 px-4">
+            <div className="relative h-full flex flex-col items-center justify-center gap-1 md:gap-2 px-2 md:px-4">
               <div className="text-yellow-200/80 group-hover:scale-110 group-hover:text-yellow-200 transition-all duration-300 drop-shadow-[0_0_8px_rgba(255,200,0,0.15)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-10 h-10">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-10 md:h-10">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M16 21v-2a4 4 0 00-8 0v2" />
                   <path d="M12 12v3" />
                   <path d="M10 15h4" />
                 </svg>
               </div>
-              <span className="jackpot-text-shine text-yellow-200 font-bold text-[10px] tracking-[0.25em] uppercase drop-shadow-[0_0_4px_rgba(255,200,0,0.2)]">CLASIFICACIÓN</span>
-              <span className="jackpot-amount text-yellow-100 font-black text-lg tracking-wide text-center drop-shadow-[0_0_8px_rgba(255,200,0,0.2)]">
-                Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              <span className="jackpot-text-shine text-yellow-200 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase drop-shadow-[0_0_4px_rgba(255,200,0,0.2)] hidden md:block text-[10px]">CLASIFICACIÓN</span>
+              <span className="jackpot-amount text-yellow-100 font-black text-sm md:text-lg tracking-wide text-center drop-shadow-[0_0_8px_rgba(255,200,0,0.2)]">
+                Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 0 })}
               </span>
-              <span className="text-yellow-300/50 font-bold text-[8px] tracking-[0.25em] uppercase">ACUMULADO</span>
+              <span className="text-yellow-300/50 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[8px]">ACUMULADO</span>
             </div>
           </button>
         </div>
