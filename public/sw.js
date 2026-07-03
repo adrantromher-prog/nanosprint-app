@@ -8,7 +8,7 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: "/favicon.ico",
       badge: "/favicon.ico",
-      vibrate: [200, 100, 200, 100, 200],
+
       data: { url: data.url },
     })
   );

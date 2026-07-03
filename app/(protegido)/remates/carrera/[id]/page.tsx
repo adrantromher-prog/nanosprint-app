@@ -91,9 +91,6 @@ function Temporizador({ horaCierre, estado }: { horaCierre: string; estado?: str
           try { new Notification("⏰ Faltan 5 minutos", { body: "La carrera está por cerrar", silent: true }); } catch {}
         }
 
-        if (!notificado5min.current && navigator.vibrate) {
-          try { navigator.vibrate([200, 100, 200, 100, 200]); } catch {}
-        }
       }
 
       setAbierto(true);
