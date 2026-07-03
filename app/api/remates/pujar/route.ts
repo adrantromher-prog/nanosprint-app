@@ -88,6 +88,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Este caballo fue retirado." }, { status: 400 });
     }
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS historial (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL,
+        tipo VARCHAR(50) NOT NULL,
+        monto NUMERIC(12,2) NOT NULL,
+        asunto TEXT,
+        fecha TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     await client.query("BEGIN");
 
     await client.query(

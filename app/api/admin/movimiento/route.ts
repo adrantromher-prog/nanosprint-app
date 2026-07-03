@@ -13,6 +13,17 @@ export async function POST(req: Request) {
     if (!monto || monto <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
     if (!asunto) return NextResponse.json({ error: "Falta asunto" }, { status: 400 });
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS historial (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL,
+        tipo VARCHAR(50) NOT NULL,
+        monto NUMERIC(12,2) NOT NULL,
+        asunto TEXT,
+        fecha TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     const operacion = tipo === "recarga" ? "+" : "-";
 
     // Actualizar saldo

@@ -42,6 +42,17 @@ export async function POST(req: Request) {
     const aporteJackpot = Math.round(casa * 0.3);
     const totalGanador = totalPujas - casa;
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS historial (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL,
+        tipo VARCHAR(50) NOT NULL,
+        monto NUMERIC(12,2) NOT NULL,
+        asunto TEXT,
+        fecha TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     await client.query("BEGIN");
 
     for (const c of caballos.rows) {
