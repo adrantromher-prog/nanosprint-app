@@ -31,6 +31,9 @@ app.prepare().then(async () => {
     console.log("✅ Columna referido_por lista");
     await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS referido_saldo NUMERIC(12,2) DEFAULT 0`);
     console.log("✅ Columna referido_saldo lista");
+    await pool.query(`CREATE TABLE IF NOT EXISTS jackpot_remates (id SERIAL PRIMARY KEY, monto NUMERIC(12,2) NOT NULL DEFAULT 0)`);
+    await pool.query(`INSERT INTO jackpot_remates (id, monto) VALUES (1, 0) ON CONFLICT (id) DO NOTHING`);
+    console.log("✅ Tabla jackpot_remates lista");
     await pool.end();
   } catch (e) {
     console.log("⚠️ No se pudo migrar codigo_referido:", e.message);

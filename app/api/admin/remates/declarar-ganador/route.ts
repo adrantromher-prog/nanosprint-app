@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     );
 
     await client.query(
-      `UPDATE jackpot_remates SET monto = monto + $1 WHERE id = 1`,
+      `INSERT INTO jackpot_remates (id, monto) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET monto = jackpot_remates.monto + $1`,
       [aporteJackpot]
     );
 
