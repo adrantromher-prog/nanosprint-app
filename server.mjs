@@ -34,9 +34,16 @@ app.prepare().then(async () => {
     await pool.query(`CREATE TABLE IF NOT EXISTS jackpot_remates (id SERIAL PRIMARY KEY, monto NUMERIC(12,2) NOT NULL DEFAULT 0)`);
     await pool.query(`INSERT INTO jackpot_remates (id, monto) VALUES (1, 0) ON CONFLICT (id) DO NOTHING`);
     console.log("✅ Tabla jackpot_remates lista");
+
+    // Verificar que las columnas existen
+    const cols = await pool.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name IN ('codigo_referido','referido_por','referido_saldo')`
+    );
+    console.log("📊 Columnas en usuarios:", cols.rows.map(c => c.column_name).join(", "));
+
     await pool.end();
   } catch (e) {
-    console.log("⚠️ No se pudo migrar codigo_referido:", e.message);
+    console.log("⚠️ Error en migraciones:", e.message);
   }
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
