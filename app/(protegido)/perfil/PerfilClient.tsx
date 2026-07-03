@@ -95,9 +95,9 @@ export default function PerfilClient({
           {codigo_referido && (
             <button onClick={handleCopyCode}
               className="w-full py-2 px-3 rounded-xl bg-gradient-to-b from-yellow-900/40 to-yellow-900/20 backdrop-blur border border-yellow-400/40 shadow-[0_0_12px_rgba(255,200,0,0.12)] hover:shadow-[0_0_20px_rgba(255,200,0,0.25)] active:scale-[0.98] transition-all duration-300 text-left flex-shrink-0">
-              <p className="text-yellow-300/70 text-[8px] font-semibold tracking-[0.15em] uppercase mb-0.5">Código de referido</p>
+              <p className="text-yellow-300/70 text-[10px] font-semibold tracking-[0.15em] uppercase mb-1">Código de referido</p>
               <div className="flex items-center justify-between">
-                <span className="text-yellow-100 font-black text-xl tracking-[0.1em] drop-shadow-[0_0_6px_rgba(255,200,0,0.25)]">
+                <span className="text-yellow-100 font-black text-2xl tracking-[0.1em] drop-shadow-[0_0_6px_rgba(255,200,0,0.25)]">
                   {codigo_referido}
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-300 ${copied ? "text-green-300 border-green-400/60 bg-green-900/30" : "text-yellow-300 border-yellow-400/40 bg-yellow-900/20"}`}>
@@ -109,8 +109,8 @@ export default function PerfilClient({
 
           {!showPasswordForm ? (
             <div className="w-full py-2.5 px-3 rounded-xl bg-white/[0.05] backdrop-blur border border-white/[0.10] shadow-[0_4px_20px_rgba(0,0,0,0.3)] flex-shrink-0">
-              <h2 className="text-white/50 text-[8px] font-semibold tracking-[0.15em] uppercase mb-1.5">Datos de registro</h2>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+              <h2 className="text-white/50 text-[10px] font-semibold tracking-[0.15em] uppercase mb-2">Datos de registro</h2>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                 <DataRow label="Nombre" value={`${nombre} ${apellido}`} />
                 <DataRow label="Sobrenombre" value={sobrenombre} />
                 <DataRow label="Teléfono" value={telefono} />
@@ -163,8 +163,8 @@ export default function PerfilClient({
 function DataRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center min-w-0">
-      <span className="text-white/40 text-[10px] font-medium tracking-wide truncate mr-1">{label}</span>
-      <span className="text-white text-[11px] font-semibold truncate text-right">{value}</span>
+      <span className="text-white/50 text-xs font-medium tracking-wide truncate mr-1">{label}</span>
+      <span className="text-white text-sm font-semibold truncate text-right">{value}</span>
     </div>
   );
 }
