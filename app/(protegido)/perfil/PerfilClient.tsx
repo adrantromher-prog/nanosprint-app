@@ -87,11 +87,7 @@ export default function PerfilClient({
           <div className="w-16" />
         </div>
 
-        <div className="flex-1 flex flex-col items-center gap-1.5 max-w-md mx-auto w-full justify-center">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_14px_rgba(0,255,255,0.25)] flex-shrink-0">
-            {nombre?.charAt(0).toUpperCase()}
-          </div>
-
+        <div className="flex-1 flex flex-col items-center gap-1.5 max-w-md mx-auto w-full justify-center pt-4">
           {codigo_referido && (
             <button onClick={handleCopyCode}
               className="w-full py-2 px-3 rounded-xl bg-gradient-to-b from-yellow-900/40 to-yellow-900/20 backdrop-blur border border-yellow-400/40 shadow-[0_0_12px_rgba(255,200,0,0.12)] hover:shadow-[0_0_20px_rgba(255,200,0,0.25)] active:scale-[0.98] transition-all duration-300 text-left flex-shrink-0">
