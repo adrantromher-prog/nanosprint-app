@@ -111,7 +111,7 @@ export default function HistorialPage() {
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-white text-sm font-semibold truncate">{item.descripcion}</span>
                     <span className="text-white/30 text-[10px] mt-0.5 font-mono">
-                      {new Date(item.fecha).toLocaleString("es-VE", {
+                      {new Date(item.fecha).toLocaleString("en-US", {
                         day: "2-digit", month: "2-digit", year: "numeric",
                         hour: "2-digit", minute: "2-digit",
                       })}

@@ -238,7 +238,7 @@ export default function LobbyRemates() {
             <div>
               <p className="text-white text-sm font-bold leading-tight">{usuario.nombre}</p>
               <p className="text-green-300 font-extrabold text-sm drop-shadow-[0_0_6px_rgba(0,255,0,0.3)]">
-                Bs. {Number(usuario.saldo).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                Bs. {Number(usuario.saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function LobbyRemates() {
             className="jackpot-breathe jackpot-outer-glow inline-flex items-center gap-4 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/50 via-yellow-700/50 to-amber-950/50 border-2 border-yellow-400/50 cursor-pointer hover:brightness-110 active:scale-95 transition-all duration-200"
           >
             <div className="flex flex-col items-center">
-              <span className="jackpot-shimmer text-xl font-black tracking-wide">Bs. {jackpot.toLocaleString("es-VE", { minimumFractionDigits: 2 })}</span>
+              <span className="jackpot-shimmer text-xl font-black tracking-wide">Bs. {Number(jackpot).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
               <span className="text-yellow-300/50 text-[8px] font-bold tracking-[0.3em] uppercase leading-tight">ACUMULADO</span>
             </div>
           </button>

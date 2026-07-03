@@ -293,7 +293,7 @@ export default function DetalleCarrera() {
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-right whitespace-nowrap shadow-[0_0_15px_rgba(0,255,255,0.05)]">
             <p className="text-gray-300 text-base font-bold">{usuario.nombre}</p>
             <p className="text-green-300 font-extrabold text-base drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]">
-              Bs. {Number(usuario.saldo).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+              Bs. {Number(usuario.saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </p>
           </div>
 

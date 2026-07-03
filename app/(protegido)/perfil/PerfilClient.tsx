@@ -75,11 +75,11 @@ export default function PerfilClient({
     setShowPasswordForm(false);
   };
 
-  const fecha = creado_en ? new Date(creado_en).toLocaleDateString("es-VE", {
+  const fecha = creado_en ? new Date(creado_en).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }) : "";
+  }).replace(/,/g, "") : "";
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
@@ -130,7 +130,7 @@ export default function PerfilClient({
                 <DataRow label="Fecha de registro" value={fecha} />
                 <DataRow label="Rol" value={rol} />
                 <div className="pt-2 mt-2 border-t border-white/[0.06]">
-                  <DataRow label="Saldo actual" value={`Bs. ${Number(saldo).toLocaleString("es-VE", { minimumFractionDigits: 2 })}`} />
+                  <DataRow label="Saldo actual" value={`Bs. ${Number(saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
                 </div>
               </div>
             </div>

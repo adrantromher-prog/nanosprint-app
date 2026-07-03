@@ -141,7 +141,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
             <div className="relative flex items-center gap-2 mt-2 pt-2 border-t border-white/[0.06]">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_6px_rgba(74,222,128,0.8)]" />
               <span className="text-green-300 font-extrabold text-base drop-shadow-[0_0_8px_rgba(74,222,128,0.4)]">
-                Bs. {Number(saldo).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                Bs. {Number(saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </span>
             </div>
           </button>
@@ -197,7 +197,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
               </div>
               <span className="jackpot-text-shine text-yellow-200 font-bold text-[10px] tracking-[0.25em] uppercase drop-shadow-[0_0_4px_rgba(255,200,0,0.2)]">CLASIFICACIÓN</span>
               <span className="jackpot-amount text-yellow-100 font-black text-lg tracking-wide text-center drop-shadow-[0_0_8px_rgba(255,200,0,0.2)]">
-                Bs. {jackpotRemates.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+                Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </span>
               <span className="text-yellow-300/50 font-bold text-[8px] tracking-[0.25em] uppercase">ACUMULADO</span>
             </div>
