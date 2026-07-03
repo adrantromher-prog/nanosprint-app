@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 
-const VAPID_PUBLIC = "BHykAxsMbM9V2NuKn4QpsqhGIAjnPcVOG-kdfTa6CKBpuKXHRd3gkfsr1Twl_gM8znJ61uZHJ9K7kO0evtMYVAI";
+const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
 
 async function registrarPush() {
   try {

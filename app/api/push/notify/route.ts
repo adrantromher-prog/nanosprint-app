@@ -2,8 +2,8 @@ import pool from "@/lib/db";
 import { NextResponse } from "next/server";
 import webpush from "web-push";
 
-const VAPID_PUBLIC = "BHykAxsMbM9V2NuKn4QpsqhGIAjnPcVOG-kdfTa6CKBpuKXHRd3gkfsr1Twl_gM8znJ61uZHJ9K7kO0evtMYVAI";
-const VAPID_PRIVATE = "jOOIbng_vCFIr9n4QeX9U8ODY-NyAhvrgAQshiE0CbI";
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY!;
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY!;
 
 webpush.setVapidDetails("mailto:soporte@nanosprint.com", VAPID_PUBLIC, VAPID_PRIVATE);
 
