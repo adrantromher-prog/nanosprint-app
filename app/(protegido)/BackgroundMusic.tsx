@@ -19,7 +19,9 @@ async function registrarPush() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(nuevaSub.toJSON()),
     });
-  } catch {}
+  } catch (e) {
+    console.error("push reg error:", e);
+  }
 }
 
 async function enviarPush(titulo: string, cuerpo: string, url: string) {
