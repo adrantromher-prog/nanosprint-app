@@ -9,6 +9,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { hipodromo, numeroCarrera, horaCierre, tipoCarrera, caballos } = body;
 
+    if (!horaCierre || horaCierre.trim() === "") {
+      return NextResponse.json({ ok: false, error: "La hora de cierre es obligatoria" }, { status: 400 });
+    }
+    if (!hipodromo || hipodromo.trim() === "") {
+      return NextResponse.json({ ok: false, error: "El hipódromo es obligatorio" }, { status: 400 });
+    }
+    if (!caballos || caballos.length === 0 || caballos.some((c: string) => !c.trim())) {
+      return NextResponse.json({ ok: false, error: "Debes ingresar al menos un caballo con nombre" }, { status: 400 });
+    }
+
     // 1. Insertar la carrera
     const resultado = await pool.query(
       `INSERT INTO carreras_remate (hipodromo, numero_carrera, hora_cierre, tipo, estado)

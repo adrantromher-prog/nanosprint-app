@@ -24,7 +24,11 @@ export default function AdminRemates() {
   };
 
   const crearCarrera = async () => {
-    await fetch("/api/admin/remates/crear", {
+    if (!horaCierre) { alert("Selecciona la hora de cierre"); return; }
+    if (!hipodromo.trim()) { alert("Escribe el nombre del hipódromo"); return; }
+    if (caballos.length === 0 || caballos.some(c => !c.trim())) { alert("Completa todos los nombres de caballos"); return; }
+
+    const res = await fetch("/api/admin/remates/crear", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -36,7 +40,13 @@ export default function AdminRemates() {
       }),
     });
 
-    alert("Carrera creada correctamente");
+    const data = await res.json();
+    if (data.ok) {
+      alert("Carrera creada correctamente");
+      window.location.reload();
+    } else {
+      alert(data.error || "Error al crear la carrera");
+    }
   };
 
   const reiniciarJackpot = async () => {
