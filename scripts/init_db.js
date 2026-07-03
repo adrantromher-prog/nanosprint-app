@@ -102,21 +102,6 @@ async function init() {
     `);
     console.log("Tabla configuracion lista");
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS musica_estado (
-        id INTEGER PRIMARY KEY DEFAULT 1,
-        track_idx INTEGER NOT NULL DEFAULT 1,
-        inicio TIMESTAMP NOT NULL DEFAULT NOW(),
-        reproduciendo BOOLEAN NOT NULL DEFAULT true
-      )
-    `);
-    await pool.query(`
-      INSERT INTO musica_estado (id, track_idx, inicio, reproduciendo)
-      VALUES (1, 1, NOW(), true)
-      ON CONFLICT (id) DO NOTHING
-    `);
-    console.log("Tabla musica_estado lista");
-
     console.log("Base de datos inicializada correctamente");
     process.exit(0);
   } catch (e) {

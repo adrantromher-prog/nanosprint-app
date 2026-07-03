@@ -15,8 +15,6 @@ export async function proxy(request: NextRequest) {
     "/admin",
     "/favicon.ico",
     "/fondos/",
-
-    "/musica/",
     "/transicion.png",
     "/sw.js",
   ];

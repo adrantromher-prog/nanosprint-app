@@ -2,14 +2,13 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
 import MantenimientoOverlay from "./MantenimientoOverlay";
-import BackgroundMusic from "./BackgroundMusic";
+import TrompetaNotifier from "./TrompetaNotifier";
 
 export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // ⭐ cookies() ahora es async → hay que hacer await
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -25,7 +24,7 @@ export default async function ProtectedLayout({
 
   return (
     <MantenimientoOverlay>
-      <BackgroundMusic>{children}</BackgroundMusic>
+      <TrompetaNotifier>{children}</TrompetaNotifier>
     </MantenimientoOverlay>
   );
 }
