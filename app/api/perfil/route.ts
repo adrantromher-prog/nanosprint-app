@@ -17,7 +17,7 @@ export async function GET() {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
 
     const result = await pool.query(
-      `SELECT nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, saldo, rol, bloqueado, razon_bloqueo
+      `SELECT nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, saldo, rol, bloqueado, razon_bloqueo, codigo_referido
        FROM usuarios
        WHERE id = $1`,
       [decoded.id]
@@ -40,6 +40,7 @@ export async function GET() {
         creado_en: usuario.creado_en,
         saldo: usuario.saldo,
         rol: usuario.rol,
+        codigo_referido: usuario.codigo_referido,
         bloqueado: usuario.bloqueado,
         razon_bloqueo: usuario.razon_bloqueo,
       },

@@ -13,6 +13,7 @@ export default function PerfilClient({
   creado_en,
   saldo,
   rol,
+  codigo_referido,
 }: any) {
   const router = useRouter();
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -21,6 +22,15 @@ export default function PerfilClient({
   const [passwordConfirmar, setPasswordConfirmar] = useState("");
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(codigo_referido);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +102,21 @@ export default function PerfilClient({
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-3xl shadow-[0_0_20px_rgba(0,255,255,0.3)]">
             {nombre?.charAt(0).toUpperCase()}
           </div>
+
+          {codigo_referido && (
+            <button onClick={handleCopyCode}
+              className="w-full p-4 rounded-2xl bg-gradient-to-b from-yellow-900/40 to-yellow-900/20 backdrop-blur-xl border border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:shadow-[0_0_30px_rgba(255,200,0,0.3)] active:scale-[0.98] transition-all duration-300 text-left">
+              <p className="text-yellow-300/70 text-[10px] font-semibold tracking-[0.15em] uppercase mb-2">Código de referido</p>
+              <div className="flex items-center justify-between">
+                <span className="text-yellow-100 font-black text-3xl tracking-[0.1em] drop-shadow-[0_0_8px_rgba(255,200,0,0.3)]">
+                  {codigo_referido}
+                </span>
+                <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all duration-300 ${copied ? "text-green-300 border-green-400/60 bg-green-900/30" : "text-yellow-300 border-yellow-400/40 bg-yellow-900/20"}`}>
+                  {copied ? "¡Copiado!" : "Copiar"}
+                </span>
+              </div>
+            </button>
+          )}
 
           <div className="w-full space-y-3">
             <div className="p-4 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">

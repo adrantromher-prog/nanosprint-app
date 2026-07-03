@@ -20,7 +20,7 @@ export default async function PerfilPage() {
   }
 
   const result = await pool.query(
-    `SELECT nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, saldo, rol
+    `SELECT nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, saldo, rol, codigo_referido
      FROM usuarios WHERE id = $1`,
     [decoded.id]
   );
@@ -42,6 +42,7 @@ export default async function PerfilPage() {
       creado_en={user.creado_en}
       saldo={user.saldo}
       rol={user.rol}
+      codigo_referido={user.codigo_referido}
     />
   );
 }
