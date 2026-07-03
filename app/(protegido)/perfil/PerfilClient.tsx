@@ -10,8 +10,8 @@ export default function PerfilClient({
   telefono,
   comida_favorita,
   sexo,
-  creado_en,
-  saldo,
+  fechaRegistro,
+  saldoStr,
   rol,
   codigo_referido,
 }: any) {
@@ -75,12 +75,6 @@ export default function PerfilClient({
     setShowPasswordForm(false);
   };
 
-  const fecha = creado_en ? new Date(creado_en).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).replace(/,/g, "") : "";
-
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
       <video src="/fondos/fondohome.mp4" autoPlay loop muted playsInline
@@ -127,10 +121,10 @@ export default function PerfilClient({
                 <DataRow label="Teléfono" value={telefono} />
                 <DataRow label="Sexo" value={sexo === "M" ? "Masculino" : "Femenino"} />
                 <DataRow label="Comida favorita" value={comida_favorita} />
-                <DataRow label="Fecha de registro" value={fecha} />
+                <DataRow label="Fecha de registro" value={fechaRegistro} />
                 <DataRow label="Rol" value={rol} />
                 <div className="pt-2 mt-2 border-t border-white/[0.06]">
-                  <DataRow label="Saldo actual" value={`Bs. ${Number(saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
+                  <DataRow label="Saldo actual" value={saldoStr} />
                 </div>
               </div>
             </div>

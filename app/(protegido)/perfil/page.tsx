@@ -45,6 +45,17 @@ export default async function PerfilPage() {
     await pool.query("UPDATE usuarios SET codigo_referido = $1 WHERE id = $2", [user.codigo_referido, decoded.id]);
   }
 
+  const fechaRegistro = user.creado_en
+    ? new Date(user.creado_en).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC",
+      }).replace(/,/g, "")
+    : "";
+
+  const saldoStr = `Bs. ${Number(user.saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+
   return (
     <PerfilClient
       nombre={user.nombre}
@@ -53,8 +64,8 @@ export default async function PerfilPage() {
       telefono={user.telefono}
       comida_favorita={user.comida_favorita}
       sexo={user.sexo}
-      creado_en={user.creado_en}
-      saldo={user.saldo}
+      fechaRegistro={fechaRegistro}
+      saldoStr={saldoStr}
       rol={user.rol}
       codigo_referido={user.codigo_referido}
     />
