@@ -3,6 +3,28 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+function OrientationLock() {
+  const [portrait, setPortrait] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait)");
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => setPortrait(e.matches);
+    mq.addEventListener("change", handler);
+    handler(mq);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  if (!portrait) return null;
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center gap-4">
+      <svg viewBox="0 0 24 24" fill="white" className="w-20 h-20 animate-pulse">
+        <path d="M7 0h10v24H7V0zm2 3v18h6V3H9z" transform="rotate(90 12 12)" />
+      </svg>
+      <p className="text-white/80 text-lg font-bold text-center px-4">
+        Gira tu teléfono a horizontal
+      </p>
+    </div>
+  );
+}
+
 interface Caballo {
   id: number;
   numero: number;
@@ -201,6 +223,8 @@ export default function DetalleCarrera() {
   }
 
   return (
+    <>
+    <OrientationLock />
     <main className="relative w-screen h-screen text-white overflow-hidden">
 
       <video
@@ -472,5 +496,6 @@ export default function DetalleCarrera() {
       )}
 
     </main>
+    </>
   );
 }

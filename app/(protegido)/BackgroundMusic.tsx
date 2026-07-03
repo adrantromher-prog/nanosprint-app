@@ -22,7 +22,7 @@ function getAudio(): HTMLAudioElement {
   if (!globalAudio) {
     globalAudio = new Audio();
     globalAudio.loop = false;
-    globalAudio.volume = 0.25;
+    globalAudio.volume = 0.12;
     globalAudio.preload = "auto";
   }
   return globalAudio;
@@ -84,7 +84,7 @@ export default function BackgroundMusic({ children }: { children: React.ReactNod
           if (diff <= 300000 && diff > 0) {
             trompetaAgotada.add(c.id);
             const t = new Audio("/trompeta.mp3");
-            t.volume = 0.5;
+            t.volume = 0.15;
             t.play().catch(() => {});
           }
         }
