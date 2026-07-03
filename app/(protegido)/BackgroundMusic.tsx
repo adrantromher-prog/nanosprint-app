@@ -3,29 +3,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 
-const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-
-async function registrarPush() {
-  try {
-    const reg = await navigator.serviceWorker.register("/sw.js");
-    const sub = await reg.pushManager.getSubscription();
-    if (sub) return;
-    const nuevaSub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: VAPID_PUBLIC,
-    });
-    await fetch("/api/push/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuevaSub.toJSON()),
-    });
-  } catch (e) {
-    console.error("push reg error:", e);
-  }
-}
-
-
-
 interface EstadoMusica {
   track_idx: number;
   inicio: string;
@@ -90,14 +67,6 @@ export default function BackgroundMusic({ children }: { children: React.ReactNod
       });
       if (res2.ok) setEstado(await res2.json());
     } catch {}
-  }, []);
-
-  useEffect(() => {
-    if (!("serviceWorker" in navigator && "PushManager" in window)) return;
-    if (Notification.permission === "granted") { registrarPush(); return; }
-    if (Notification.permission === "default") {
-      Notification.requestPermission().then((r) => { if (r === "granted") registrarPush(); });
-    }
   }, []);
 
   useEffect(() => {
