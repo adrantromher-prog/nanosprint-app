@@ -48,6 +48,8 @@ export default function HistorialPage() {
     if (tipo === "puja") return "text-red-400";
     if (tipo === "reembolso") return "text-green-400";
     if (tipo === "premio") return "text-yellow-400";
+    if (tipo === "comision_referido") return "text-purple-400";
+    if (tipo === "liberacion_referido") return "text-cyan-300";
     return "text-white";
   };
 
@@ -55,6 +57,8 @@ export default function HistorialPage() {
     if (tipo === "deposito") return "+";
     if (tipo === "reembolso") return "+";
     if (tipo === "premio") return "+";
+    if (tipo === "comision_referido") return "+";
+    if (tipo === "liberacion_referido") return "+";
     return "";
   };
 

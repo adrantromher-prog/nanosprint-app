@@ -27,6 +27,10 @@ app.prepare().then(async () => {
     });
     await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_referido VARCHAR(5) UNIQUE`);
     console.log("✅ Columna codigo_referido lista");
+    await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS referido_por INTEGER REFERENCES usuarios(id)`);
+    console.log("✅ Columna referido_por lista");
+    await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS referido_saldo NUMERIC(12,2) DEFAULT 0`);
+    console.log("✅ Columna referido_saldo lista");
     await pool.end();
   } catch (e) {
     console.log("⚠️ No se pudo migrar codigo_referido:", e.message);

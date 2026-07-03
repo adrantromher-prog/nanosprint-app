@@ -64,6 +64,18 @@ export async function GET(req: Request) {
     `);
     countPartitions.push(`SELECT 'premio' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'premio_remate'`);
 
+    partitions.push(`
+      SELECT 'comision_referido' as fuente, id, monto::numeric, asunto, fecha, 'comision_referido'
+      FROM historial WHERE usuario_id = $1 AND tipo = 'comision_referido'
+    `);
+    countPartitions.push(`SELECT 'comision_referido' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'comision_referido'`);
+
+    partitions.push(`
+      SELECT 'liberacion_referido' as fuente, id, monto::numeric, asunto, fecha, 'liberacion_referido'
+      FROM historial WHERE usuario_id = $1 AND tipo = 'liberacion_referido'
+    `);
+    countPartitions.push(`SELECT 'liberacion_referido' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'liberacion_referido'`);
+
     const { rows: [tablaApuestas] } = await pool.query(
       "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'apuestas') as existe"
     );

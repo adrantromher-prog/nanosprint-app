@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { nombre, apellido, sobrenombre, telefono, comida, sexo, password } = await req.json();
+    const { nombre, apellido, sobrenombre, telefono, comida, sexo, password, codigo_referido: codigoIngresado } = await req.json();
 
     const existeTelefono = await pool.query(
       `SELECT id FROM usuarios WHERE telefono = $1`,
@@ -30,6 +30,14 @@ export async function POST(req: Request) {
       );
     }
 
+    let referidoPor: number | null = null;
+    if (codigoIngresado && codigoIngresado.trim() !== "") {
+      const ref = await pool.query("SELECT id FROM usuarios WHERE codigo_referido = $1", [codigoIngresado.trim()]);
+      if (ref.rows.length > 0) {
+        referidoPor = ref.rows[0].id;
+      }
+    }
+
     const hashed = await bcrypt.hash(password, 10);
 
     let codigo_referido = "";
@@ -45,12 +53,12 @@ export async function POST(req: Request) {
     }
 
     const query = `
-      INSERT INTO usuarios (nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, password, rol, codigo_referido)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', $8)
+      INSERT INTO usuarios (nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, password, rol, codigo_referido, referido_por)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'user', $8, $9)
       RETURNING id, nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, rol, codigo_referido
     `;
 
-    const values = [nombre, apellido, sobrenombre, telefono, comida, sexo, hashed, codigo_referido];
+    const values = [nombre, apellido, sobrenombre, telefono, comida, sexo, hashed, codigo_referido, referidoPor];
 
     const result = await pool.query(query, values);
 

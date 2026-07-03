@@ -165,7 +165,7 @@ export default function DetalleCarrera() {
   const totalPujas = carrera?.caballos
     .filter((c) => !c.retirado)
     .reduce((acc, c) => acc + Number(c.puja_actual || 0), 0) || 0;
-  const casa = Math.round(totalPujas * 0.15);
+  const casa = Math.round(totalPujas * 0.20);
   const totalGanador = totalPujas - casa;
 
   const abrirPopup = (caballo: Caballo) => {
@@ -459,7 +459,7 @@ export default function DetalleCarrera() {
               </div>
 
               <div className="flex justify-between items-center px-3 py-2 rounded-xl bg-red-500/[0.06] border border-red-400/15">
-                <span className="text-gray-400 text-sm">Casa 15%</span>
+                <span className="text-gray-400 text-sm">Casa 20%</span>
                 <span className="text-red-300 font-bold text-sm">− Bs. {casa.toLocaleString()}</span>
               </div>
 

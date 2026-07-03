@@ -146,6 +146,11 @@ export default function PerfilClient({
             </form>
           )}
 
+          <button onClick={() => router.push("/referidos")}
+            className="w-full py-2 rounded-xl bg-gradient-to-b from-yellow-700 to-yellow-900 border border-yellow-400/40 text-white font-bold text-xs tracking-wide shadow-[0_0_12px_rgba(255,200,0,0.2)] hover:shadow-[0_0_20px_rgba(255,200,0,0.4)] active:scale-95 transition-all flex-shrink-0">
+            Control de referidos
+          </button>
+
           <button onClick={() => { setShowPasswordForm(!showPasswordForm); setMessage(""); }}
             className="w-full py-2 rounded-xl bg-gradient-to-b from-cyan-600 to-cyan-800 border border-cyan-400/40 text-white font-bold text-xs tracking-wide shadow-[0_0_12px_rgba(0,200,255,0.2)] hover:shadow-[0_0_20px_rgba(0,200,255,0.4)] active:scale-95 transition-all flex-shrink-0">
             {showPasswordForm ? "Ver datos" : "Cambiar contraseña"}

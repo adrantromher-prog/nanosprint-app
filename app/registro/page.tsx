@@ -12,6 +12,7 @@ export default function RegistroPage() {
   const [telefono, setTelefono] = useState("");
   const [comida, setComida] = useState("");
   const [sexo, setSexo] = useState("");
+  const [codigoReferido, setCodigoReferido] = useState("");
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [message, setMessage] = useState("");
@@ -49,6 +50,7 @@ export default function RegistroPage() {
         comida,
         sexo,
         password,
+        codigo_referido: codigoReferido,
       }),
     });
 
@@ -150,6 +152,13 @@ export default function RegistroPage() {
               type="password" placeholder="Repetir contraseña" value={confirmar}
               onChange={(e) => setConfirmar(e.target.value)}
               className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
+            />
+
+            {/* Fila 5 - Código de referido (opcional) */}
+            <input
+              type="text" placeholder="Código de referido (opcional)" value={codigoReferido}
+              onChange={(e) => setCodigoReferido(e.target.value)}
+              className="col-span-2 p-2.5 bg-black/30 text-white border border-yellow-400/30 rounded-lg placeholder-yellow-200/40 text-xs text-center focus:outline-none focus:border-yellow-300 focus:shadow-[0_0_10px_rgba(255,200,0,0.4)] transition-all duration-300"
             />
 
             <button

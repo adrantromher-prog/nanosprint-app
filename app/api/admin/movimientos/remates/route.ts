@@ -21,17 +21,18 @@ export async function GET() {
     `);
 
     const totalPujas = Number(rows[0].total_base);
-    const casa = Math.round(totalPujas * 0.15);
-    const aporteJackpot = Math.round(casa * 0.3);
-    const gananciaFinal = casa - aporteJackpot;
-    const totalRemates = totalPujas;
+    const casa = Math.round(totalPujas * 0.20);
+    const aporteJackpot = Math.round(casa * 0.25);
+    const comisionReferidos = Math.round(casa * 0.25);
+    const gananciaFinal = casa - aporteJackpot - comisionReferidos;
 
     return NextResponse.json({
       ok: true,
-      totalRemates,
+      totalRemates: totalPujas,
       totalPujas,
       casa,
       aporteJackpot,
+      comisionReferidos,
       gananciaFinal,
     });
   } catch (error) {

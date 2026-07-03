@@ -8,6 +8,7 @@ type MovimientosRemates = {
   totalPujas: number;
   casa: number;
   aporteJackpot: number;
+  comisionReferidos: number;
   gananciaFinal: number;
 };
 
@@ -56,12 +57,16 @@ export default function AdminMovimientos() {
                 <span className="font-bold">Bs. {remates.totalPujas.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Ganancia de la casa (15%)</span>
+                <span className="text-gray-400">Ganancia de la casa (20%)</span>
                 <span className="font-bold text-green-400">Bs. {remates.casa.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">% que va al jackpot (30% de la casa)</span>
+                <span className="text-gray-400">% que va al jackpot (25% de la casa)</span>
                 <span className="font-bold text-yellow-300">Bs. {remates.aporteJackpot.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">% que va a referidos (25% de la casa)</span>
+                <span className="font-bold text-purple-300">Bs. {remates.comisionReferidos.toFixed(2)}</span>
               </div>
               <div className="border-t border-gray-700 pt-3 flex justify-between">
                 <span className="text-gray-200 font-bold">Ganancia final de la casa</span>
