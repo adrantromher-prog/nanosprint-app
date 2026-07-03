@@ -126,7 +126,8 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
 
       <div className="relative z-10 w-full h-full flex flex-col px-5 pt-5 pb-4">
         <div className="flex items-start justify-between flex-shrink-0">
-          <div className="group relative px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-white/[0.09] transition-all duration-300">
+          <button onClick={() => router.push("/perfil")}
+            className="group relative px-5 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:bg-white/[0.09] active:scale-95 transition-all duration-300 text-left w-auto">
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none" />
             <div className="relative flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_12px_rgba(0,255,255,0.25)]">
@@ -143,7 +144,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
                 Bs. {Number(saldo).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
               </span>
             </div>
-          </div>
+          </button>
 
           <div className="flex items-center gap-2">
             {rol === "admin" && (
