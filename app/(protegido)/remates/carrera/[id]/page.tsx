@@ -194,9 +194,19 @@ export default function DetalleCarrera() {
     if (data.ok) {
       setPopup(null);
       setMontos((prev) => ({ ...prev, [popup.caballo.id]: 0 }));
-      fetchCarrera();
-      const resUser = await fetch("/api/me", { cache: "no-store" });
-      setUsuario(await resUser.json());
+      // Optimistic update — refleja la puja al instante sin esperar HTTP
+      setCarrera((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          caballos: prev.caballos.map((c) =>
+            c.id === popup.caballo.id
+              ? { ...c, puja_actual: popup.monto, pujador_sobrenombre: usuario?.sobrenombre || c.pujador_sobrenombre }
+              : c
+          ),
+        };
+      });
+      setUsuario((prev) => prev ? { ...prev, saldo: Number(prev.saldo) - popup.monto } : prev);
     } else {
       setErrorMsg(data.error || "Error al pujar.");
     }
