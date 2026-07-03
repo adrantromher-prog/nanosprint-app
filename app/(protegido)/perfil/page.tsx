@@ -29,7 +29,7 @@ export default async function PerfilPage() {
   }
 
   const result = await pool.query(
-    `SELECT nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, saldo, rol, codigo_referido
+    `SELECT nombre, apellido, sobrenombre, telefono, comida_favorita, sexo, creado_en, codigo_referido
      FROM usuarios WHERE id = $1`,
     [decoded.id]
   );
@@ -54,8 +54,6 @@ export default async function PerfilPage() {
       }).replace(/,/g, "")
     : "";
 
-  const saldoStr = `Bs. ${Number(user.saldo).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
-
   return (
     <PerfilClient
       nombre={user.nombre}
@@ -65,8 +63,6 @@ export default async function PerfilPage() {
       comida_favorita={user.comida_favorita}
       sexo={user.sexo}
       fechaRegistro={fechaRegistro}
-      saldoStr={saldoStr}
-      rol={user.rol}
       codigo_referido={user.codigo_referido}
     />
   );

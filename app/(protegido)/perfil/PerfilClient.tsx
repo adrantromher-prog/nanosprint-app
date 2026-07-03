@@ -11,8 +11,6 @@ export default function PerfilClient({
   comida_favorita,
   sexo,
   fechaRegistro,
-  saldoStr,
-  rol,
   codigo_referido,
 }: any) {
   const router = useRouter();
@@ -119,8 +117,7 @@ export default function PerfilClient({
                 <DataRow label="Sexo" value={sexo === "M" ? "Masculino" : "Femenino"} />
                 <DataRow label="Comida" value={comida_favorita} />
                 <DataRow label="Registro" value={fechaRegistro} />
-                <DataRow label="Rol" value={rol} />
-                <DataRow label="Saldo" value={saldoStr} />
+
               </div>
             </div>
           ) : (
