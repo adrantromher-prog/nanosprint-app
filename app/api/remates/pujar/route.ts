@@ -106,6 +106,11 @@ export async function POST(req: Request) {
         `UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2`,
         [pujaAnterior.monto, pujaAnterior.id_usuario]
       );
+      await client.query(
+        `INSERT INTO historial (usuario_id, tipo, monto, asunto)
+         VALUES ($1, 'reembolso_puja', $2, $3)`,
+        [pujaAnterior.id_usuario, pujaAnterior.monto, 'Reembolso de puja - Fuiste superado']
+      );
     }
 
     await client.query("COMMIT");

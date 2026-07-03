@@ -52,6 +52,11 @@ export async function POST(req: Request) {
           `UPDATE usuarios SET saldo = saldo + $1, puntos = puntos + 1 WHERE id = $2`,
           [totalGanador, c.id_usuario]
         );
+        await client.query(
+          `INSERT INTO historial (usuario_id, tipo, monto, asunto)
+           VALUES ($1, 'premio_remate', $2, $3)`,
+          [c.id_usuario, totalGanador, 'Premio por ganar remate']
+        );
       }
     }
 

@@ -8,9 +8,10 @@ export async function POST(req: Request) {
   try {
     const { usuarioId, tipo, monto, asunto } = await req.json();
 
-    if (!usuarioId || !tipo || !monto || !asunto) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
-    }
+    if (!usuarioId) return NextResponse.json({ error: "Falta usuarioId" }, { status: 400 });
+    if (!tipo) return NextResponse.json({ error: "Falta tipo" }, { status: 400 });
+    if (!monto || monto <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
+    if (!asunto) return NextResponse.json({ error: "Falta asunto" }, { status: 400 });
 
     const operacion = tipo === "recarga" ? "+" : "-";
 

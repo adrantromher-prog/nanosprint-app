@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     if (filtro === "depositos") conditions.push("fuente = 'deposito'");
     else if (filtro === "retiros") conditions.push("fuente = 'retiro'");
     else if (filtro === "apuestas") conditions.push("fuente = 'apuesta'");
-    else if (filtro === "pujas") conditions.push("fuente = 'puja'");
+    else if (filtro === "pujas") conditions.push("fuente IN ('puja','reembolso','premio')");
 
     const whereFilter = conditions.length ? `AND (${conditions.join(" OR ")})` : "";
 
@@ -63,6 +63,14 @@ export async function GET(req: Request) {
         FROM remates_pujas rp
         JOIN carreras_caballos cc ON cc.id = rp.id_caballo
         WHERE rp.id_usuario = $1
+        UNION ALL
+        SELECT
+          'reembolso' as fuente, id, monto::numeric, asunto, fecha, 'reembolso'
+        FROM historial WHERE usuario_id = $1 AND tipo = 'reembolso_puja'
+        UNION ALL
+        SELECT
+          'premio' as fuente, id, monto::numeric, asunto, fecha, 'premio'
+        FROM historial WHERE usuario_id = $1 AND tipo = 'premio_remate'
       )
       SELECT * FROM combined
       WHERE 1=1 ${whereFilter}
@@ -78,7 +86,11 @@ export async function GET(req: Request) {
         UNION ALL
         SELECT 'apuesta' as fuente FROM apuestas WHERE usuario_id = $1
         UNION ALL
-        SELECT 'puja' as fuente FROM remates_pujas WHERE rp.id_usuario = $1
+        SELECT 'puja' as fuente FROM remates_pujas WHERE id_usuario = $1
+        UNION ALL
+        SELECT 'reembolso' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'reembolso_puja'
+        UNION ALL
+        SELECT 'premio' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'premio_remate'
       )
       SELECT COUNT(*) FROM combined WHERE 1=1 ${whereFilter}
     `;
@@ -86,7 +98,7 @@ export async function GET(req: Request) {
     const offset = (page - 1) * limit;
     const [res, resCount] = await Promise.all([
       pool.query(query, [targetId, offset, limit]),
-      pool.query(countQuery.replace("rp.id_usuario = $1", "id_usuario = $1"), [targetId]),
+      pool.query(countQuery, [targetId]),
     ]);
 
     const total = parseInt(resCount.rows[0].count);

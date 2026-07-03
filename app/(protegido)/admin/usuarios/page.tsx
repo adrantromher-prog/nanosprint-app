@@ -33,7 +33,16 @@ export default function AdminUsuarios() {
   const enviarMovimiento = async (tipo: "recarga" | "retiro") => {
     if (!usuario) return;
 
-    await fetch("/api/admin/movimiento", {
+    if (!monto || monto <= 0) {
+      alert("Ingresa un monto válido mayor a 0");
+      return;
+    }
+    if (!asunto.trim()) {
+      alert("Ingresa un asunto para el movimiento");
+      return;
+    }
+
+    const res = await fetch("/api/admin/movimiento", {
       method: "POST",
       body: JSON.stringify({
         usuarioId: usuario.id,
@@ -43,7 +52,16 @@ export default function AdminUsuarios() {
       }),
     });
 
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert("Error: " + (data.error || "Error desconocido"));
+      return;
+    }
+
     alert("Movimiento registrado");
+    setMonto(0);
+    setAsunto("");
     buscarUsuario();
   };
 

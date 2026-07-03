@@ -46,11 +46,15 @@ export default function HistorialPage() {
     if (tipo === "deposito") return "text-green-400";
     if (tipo === "retiro") return "text-red-400";
     if (tipo === "puja") return "text-red-400";
+    if (tipo === "reembolso") return "text-green-400";
+    if (tipo === "premio") return "text-yellow-400";
     return "text-white";
   };
 
   const getSigno = (tipo: string, subtipo: string) => {
     if (tipo === "deposito") return "+";
+    if (tipo === "reembolso") return "+";
+    if (tipo === "premio") return "+";
     return "";
   };
 
