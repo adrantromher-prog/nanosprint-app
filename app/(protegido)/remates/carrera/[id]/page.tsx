@@ -251,7 +251,7 @@ export default function DetalleCarrera() {
           <div className="flex items-center gap-2">
             {carrera.imagen && (
               <button
-                onClick={() => window.open(carrera.imagen!, '_blank')}
+                onClick={() => window.open(`/api/remates/imagen/${carrera.id}`, '_blank')}
                 className="
                   w-9 h-9 rounded-xl text-sm font-bold
                   bg-gradient-to-b from-yellow-500/30 to-orange-600/30
