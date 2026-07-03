@@ -24,15 +24,7 @@ async function registrarPush() {
   }
 }
 
-async function enviarPush(titulo: string, cuerpo: string, url: string) {
-  try {
-    await fetch("/api/push/notify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ titulo, cuerpo, url }),
-    });
-  } catch {}
-}
+
 
 interface EstadoMusica {
   track_idx: number;
@@ -125,9 +117,6 @@ export default function BackgroundMusic({ children }: { children: React.ReactNod
             const t = new Audio("/trompeta.mp3");
             t.volume = 0.5;
             t.play().catch(() => {});
-            if (Notification.permission === "granted") {
-              enviarPush("Faltan 5 minutos", `Carrera #${c.id} está por cerrar`, `/remates/carrera/${c.id}`);
-            }
           }
         }
       } catch {}
