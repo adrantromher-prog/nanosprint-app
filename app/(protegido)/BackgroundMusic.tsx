@@ -3,6 +3,35 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 
+const VAPID_PUBLIC = "BHykAxsMbM9V2NuKn4QpsqhGIAjnPcVOG-kdfTa6CKBpuKXHRd3gkfsr1Twl_gM8znJ61uZHJ9K7kO0evtMYVAI";
+
+async function registrarPush() {
+  try {
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) return;
+    const nuevaSub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: VAPID_PUBLIC,
+    });
+    await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevaSub.toJSON()),
+    });
+  } catch {}
+}
+
+async function enviarPush(titulo: string, cuerpo: string, url: string) {
+  try {
+    await fetch("/api/push/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ titulo, cuerpo, url }),
+    });
+  } catch {}
+}
+
 interface EstadoMusica {
   track_idx: number;
   inicio: string;
@@ -70,6 +99,13 @@ export default function BackgroundMusic({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      if (Notification.permission === "default") Notification.requestPermission();
+      if (Notification.permission === "granted") registrarPush();
+    }
+  }, []);
+
+  useEffect(() => {
     const id = setInterval(async () => {
       try {
         const res = await fetch("/api/remates/activas");
@@ -86,6 +122,9 @@ export default function BackgroundMusic({ children }: { children: React.ReactNod
             const t = new Audio("/trompeta.mp3");
             t.volume = 0.5;
             t.play().catch(() => {});
+            if (Notification.permission === "granted") {
+              enviarPush("Faltan 5 minutos", `Carrera #${c.id} está por cerrar`, `/remates/carrera/${c.id}`);
+            }
           }
         }
       } catch {}
