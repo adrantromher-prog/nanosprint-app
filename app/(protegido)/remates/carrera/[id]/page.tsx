@@ -127,8 +127,6 @@ export default function DetalleCarrera() {
   const [popup, setPopup] = useState<{ caballo: Caballo; monto: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [cargando, setCargando] = useState(false);
-  const [mostrarImagen, setMostrarImagen] = useState(false);
-
   const fetchCarrera = async () => {
     const res = await fetch("/api/remates/activas");
     const data = await res.json();
@@ -253,7 +251,7 @@ export default function DetalleCarrera() {
           <div className="flex items-center gap-2">
             {carrera.imagen && (
               <button
-                onClick={() => setMostrarImagen(true)}
+                onClick={() => window.open(carrera.imagen!, '_blank')}
                 className="
                   w-9 h-9 rounded-xl text-sm font-bold
                   bg-gradient-to-b from-yellow-500/30 to-orange-600/30
@@ -474,27 +472,6 @@ export default function DetalleCarrera() {
           </div>
         </div>
       </div>
-
-      {mostrarImagen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          onClick={() => setMostrarImagen(false)}
-        >
-          <div className="relative max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setMostrarImagen(false)}
-              className="absolute -top-3 -right-3 z-10 w-8 h-8 bg-red-600 rounded-full text-white text-sm flex items-center justify-center hover:bg-red-500 transition-colors shadow-lg"
-            >
-              ✕
-            </button>
-            <img
-              src={carrera.imagen!}
-              alt={carrera.hipodromo}
-              className="w-full h-auto rounded-2xl border-2 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
-            />
-          </div>
-        </div>
-      )}
 
       {popup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
