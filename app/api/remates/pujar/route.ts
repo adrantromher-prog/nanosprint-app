@@ -71,10 +71,14 @@ export async function POST(req: Request) {
     }
 
     const ahora = new Date();
+    const offsetVET = -4 * 60 * 60 * 1000;
+    const ahoraVET = new Date(ahora.getTime() + offsetVET);
+    const minutosActual = ahoraVET.getUTCHours() * 60 + ahoraVET.getUTCMinutes();
+
     const [horas, minutos] = resCarrera.rows[0].hora_cierre.split(":").map(Number);
-    const cierre = new Date();
-    cierre.setHours(horas, minutos, 0, 0);
-    if (ahora.getTime() >= cierre.getTime()) {
+    const minutosLimite = horas * 60 + minutos;
+
+    if (minutosActual >= minutosLimite) {
       client.release();
       return NextResponse.json({ ok: false, error: "El tiempo de la carrera ha expirado." }, { status: 400 });
     }
