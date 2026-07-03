@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import useWebSocket from "@/hooks/useWebSocket";
 
 export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, mantenimiento: mantenimientoInicial }: any) {
   const router = useRouter();
@@ -21,22 +22,31 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
     })();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const [resME, resMant, r1] = await Promise.all([
-          fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" }).then(r => r.json()),
-          fetch("/api/admin/mantenimiento", { cache: "no-store" }).then(r => r.json()),
-          fetch("/api/remates/jackpot", { cache: "no-store" }).then(r => r.json()),
-        ]);
-        if (resME.bloqueado) { setIsBlocked(true); setRazon(resME.razon_bloqueo); }
-        setSaldo(resME.saldo);
-        setMantenimiento(resMant.mantenimiento);
-        if (r1.ok) setJackpotRemates(r1.monto);
-      } catch {}
-    }, 5000);
-    return () => clearInterval(interval);
+  const recargarDatos = useCallback(async () => {
+    try {
+      const [resME, resMant, r1] = await Promise.all([
+        fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" }).then(r => r.json()),
+        fetch("/api/admin/mantenimiento", { cache: "no-store" }).then(r => r.json()),
+        fetch("/api/remates/jackpot", { cache: "no-store" }).then(r => r.json()),
+      ]);
+      if (resME.bloqueado) { setIsBlocked(true); setRazon(resME.razon_bloqueo); }
+      setSaldo(resME.saldo);
+      setMantenimiento(resMant.mantenimiento);
+      if (r1.ok) setJackpotRemates(r1.monto);
+    } catch {}
   }, []);
+
+  useWebSocket(useCallback((event) => {
+    if (["puja", "movimiento", "ganador", "jackpot_actualizado"].includes(event.type)) {
+      recargarDatos();
+    }
+  }, [recargarDatos]));
+
+  useEffect(() => {
+    recargarDatos();
+    const interval = setInterval(recargarDatos, 30000);
+    return () => clearInterval(interval);
+  }, [recargarDatos]);
 
   if (mantenimiento) {
     return (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin();
@@ -38,6 +39,8 @@ export async function POST(req: Request) {
        VALUES ($1, $2, $3, $4)`,
       [usuarioId, tipo, monto, asunto]
     );
+
+    broadcast({ type: "movimiento", usuario_id: usuarioId, monto });
 
     return NextResponse.json({ mensaje: "Movimiento registrado" });
 

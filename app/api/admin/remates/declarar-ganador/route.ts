@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin();
@@ -83,6 +84,8 @@ export async function POST(req: Request) {
 
     await client.query("COMMIT");
     client.release();
+
+    broadcast({ type: "ganador", carrera_id });
 
     return NextResponse.json({ ok: true, totalGanador });
   } catch (error) {

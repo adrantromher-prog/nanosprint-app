@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import useWebSocket from "@/hooks/useWebSocket";
 
 interface Caballo {
   id: number;
@@ -172,31 +173,28 @@ export default function LobbyRemates() {
     return () => clearInterval(intervalo);
   }, []);
 
-  useEffect(() => {
-    const fetchCarreras = async () => {
-      try {
-        const res = await fetch("/api/remates/activas");
-        const data = await res.json();
-        if (data.ok) setCarreras(data.carreras);
-      } catch {}
-    };
-    fetchCarreras();
-    const intervalo = setInterval(fetchCarreras, 5000);
-    return () => clearInterval(intervalo);
+  const recargarCarreras = useCallback(async () => {
+    try {
+      const [resCarreras, resJackpot] = await Promise.all([
+        fetch("/api/remates/activas").then(r => r.json()),
+        fetch("/api/remates/jackpot").then(r => r.json()),
+      ]);
+      if (resCarreras.ok) setCarreras(resCarreras.carreras);
+      if (resJackpot.ok) setJackpot(resJackpot.monto);
+    } catch {}
   }, []);
 
+  useWebSocket(useCallback((event) => {
+    if (["puja", "ganador", "carrera_creada", "carrera_cerrada", "carrera_eliminada", "caballo_retirado", "jackpot_actualizado"].includes(event.type)) {
+      recargarCarreras();
+    }
+  }, [recargarCarreras]));
+
   useEffect(() => {
-    const fetchJackpot = async () => {
-      try {
-        const res = await fetch("/api/remates/jackpot");
-        const data = await res.json();
-        if (data.ok) setJackpot(data.monto);
-      } catch {}
-    };
-    fetchJackpot();
-    const intervalo = setInterval(fetchJackpot, 5000);
+    recargarCarreras();
+    const intervalo = setInterval(recargarCarreras, 30000);
     return () => clearInterval(intervalo);
-  }, []);
+  }, [recargarCarreras]);
 
   const nacionales = carreras.filter((c) => c.tipo === "nacional");
   const americanas = carreras.filter((c) => c.tipo === "americana");

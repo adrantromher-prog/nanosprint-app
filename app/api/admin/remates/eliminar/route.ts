@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin();
@@ -25,6 +26,8 @@ export async function POST(req: Request) {
       `DELETE FROM carreras_remate WHERE id = $1`,
       [carrera_id]
     );
+
+    broadcast({ type: "carrera_eliminada", carrera_id });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

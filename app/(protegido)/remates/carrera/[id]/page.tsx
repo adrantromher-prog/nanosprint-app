@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import useWebSocket from "@/hooks/useWebSocket";
 
 function OrientationLock() {
   const [portrait, setPortrait] = useState(false);
@@ -143,13 +144,23 @@ export default function DetalleCarrera() {
     if (data.nombre) setUsuario(data);
   };
 
+  useWebSocket(useCallback((event) => {
+    if (event.type === "puja" && event.carrera_id === Number(id)) {
+      fetchCarrera();
+      fetchUser();
+    }
+    if (["ganador", "carrera_cerrada", "caballo_retirado"].includes(event.type)) {
+      fetchCarrera();
+    }
+  }, [id]));
+
   useEffect(() => {
     fetchCarrera();
     fetchUser();
     const intervalo = setInterval(() => {
       fetchCarrera();
       fetchUser();
-    }, 5000);
+    }, 30000);
     return () => clearInterval(intervalo);
   }, [id]);
 

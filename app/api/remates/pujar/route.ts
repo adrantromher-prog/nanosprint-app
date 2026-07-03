@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { cookies } from "next/headers";
+import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const client = await pool.connect();
@@ -126,6 +127,8 @@ export async function POST(req: Request) {
 
     await client.query("COMMIT");
     client.release();
+
+    broadcast({ type: "puja", carrera_id, caballo_id, monto });
 
     return NextResponse.json({ ok: true });
 

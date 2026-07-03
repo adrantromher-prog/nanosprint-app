@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin();
@@ -53,6 +54,8 @@ export async function POST(req: Request) {
         [carreraId, i + 1, caballos[i]]
       );
     }
+
+    broadcast({ type: "carrera_creada" });
 
     return NextResponse.json({ ok: true, carreraId });
   } catch (error) {
