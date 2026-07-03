@@ -50,9 +50,11 @@ async function init() {
         hora_cierre VARCHAR(5) NOT NULL,
         tipo VARCHAR(20) NOT NULL DEFAULT 'nacional',
         estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
-        ganador INTEGER
+        ganador INTEGER,
+        imagen TEXT
       )
     `);
+    await pool.query(`ALTER TABLE carreras_remate ADD COLUMN IF NOT EXISTS imagen TEXT`);
     console.log("Tabla carreras_remate lista");
 
     await pool.query(`

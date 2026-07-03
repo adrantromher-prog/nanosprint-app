@@ -6,8 +6,24 @@ export async function POST(req: Request) {
   const error = await requireAdmin();
   if (error) return error;
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS carreras_remate (
+        id SERIAL PRIMARY KEY,
+        hipodromo VARCHAR(100) NOT NULL,
+        numero_carrera INTEGER NOT NULL,
+        hora_cierre VARCHAR(5) NOT NULL,
+        tipo VARCHAR(20) NOT NULL DEFAULT 'nacional',
+        estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
+        ganador INTEGER,
+        imagen TEXT
+      )
+    `);
+    await pool.query(`
+      ALTER TABLE carreras_remate ADD COLUMN IF NOT EXISTS imagen TEXT
+    `);
+
     const body = await req.json();
-    const { hipodromo, numeroCarrera, horaCierre, tipoCarrera, caballos } = body;
+    const { hipodromo, numeroCarrera, horaCierre, tipoCarrera, caballos, imagen } = body;
 
     if (!horaCierre || horaCierre.trim() === "") {
       return NextResponse.json({ ok: false, error: "La hora de cierre es obligatoria" }, { status: 400 });
@@ -21,10 +37,10 @@ export async function POST(req: Request) {
 
     // 1. Insertar la carrera
     const resultado = await pool.query(
-      `INSERT INTO carreras_remate (hipodromo, numero_carrera, hora_cierre, tipo, estado)
-       VALUES ($1, $2, $3, $4, 'abierta')
+      `INSERT INTO carreras_remate (hipodromo, numero_carrera, hora_cierre, tipo, estado, imagen)
+       VALUES ($1, $2, $3, $4, 'abierta', $5)
        RETURNING id`,
-      [hipodromo, numeroCarrera, horaCierre, tipoCarrera]
+      [hipodromo, numeroCarrera, horaCierre, tipoCarrera, imagen || null]
     );
 
     const carreraId = resultado.rows[0].id;

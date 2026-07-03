@@ -18,6 +18,7 @@ interface Carrera {
   tipo: string;
   estado: string;
   ganador: number | null;
+  imagen: string | null;
   caballos: Caballo[];
 }
 
@@ -90,41 +91,65 @@ function Temporizador({ horaCierre, compact, estado }: TemporizadorProps) {
 }
 
 function TarjetaCarrera({ carrera, onClick }: { carrera: Carrera; onClick: () => void }) {
+  const [mostrarImagen, setMostrarImagen] = useState(false);
+
   return (
-    <div
-      onClick={onClick}
-      className="
-        flex items-center gap-3 px-4 py-3
-        bg-gradient-to-r from-gray-900/80 to-gray-900/40
-        border border-gray-700/50 rounded-xl
-        cursor-pointer
-        hover:border-cyan-400/40 hover:from-gray-800/80 hover:to-gray-800/40
-        hover:shadow-[0_0_16px_rgba(0,255,255,0.1)]
-        active:scale-[0.99]
-        transition-all duration-200
-      "
-    >
-      <div className="flex-1 min-w-0 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-400/20 flex items-center justify-center flex-shrink-0">
-          <span className="text-[10px] font-bold text-cyan-300">#{carrera.numero_carrera}</span>
+    <>
+      <div className="flex items-center gap-1 px-4 py-3 bg-gradient-to-r from-gray-900/80 to-gray-900/40 border border-gray-700/50 rounded-xl cursor-pointer hover:border-cyan-400/40 hover:from-gray-800/80 hover:to-gray-800/40 hover:shadow-[0_0_16px_rgba(0,255,255,0.1)] active:scale-[0.99] transition-all duration-200">
+        {carrera.imagen && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setMostrarImagen(true); }}
+            className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-600/20 border border-yellow-400/30 flex items-center justify-center flex-shrink-0 hover:bg-yellow-500/30 transition-all"
+          >
+            <svg className="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          </button>
+        )}
+        <div
+          onClick={onClick}
+          className="flex-1 min-w-0 flex items-center gap-3"
+        >
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-400/20 flex items-center justify-center flex-shrink-0">
+            <span className="text-[10px] font-bold text-cyan-300">#{carrera.numero_carrera}</span>
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold text-white truncate">{carrera.hipodromo}</h3>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold text-white truncate">{carrera.hipodromo}</h3>
+
+        <Temporizador horaCierre={carrera.hora_cierre} compact estado={carrera.estado} />
+
+        {carrera.ganador && (
+          <span className="text-[10px] font-bold text-yellow-300 bg-yellow-500/15 border border-yellow-400/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-[0_0_8px_rgba(255,200,0,0.1)]">
+            🏆 #{carrera.ganador}
+          </span>
+        )}
+
+        <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-400/10 group-hover:border-cyan-400/30 transition-all">
+          <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </div>
       </div>
 
-      <Temporizador horaCierre={carrera.hora_cierre} compact estado={carrera.estado} />
-
-      {carrera.ganador && (
-        <span className="text-[10px] font-bold text-yellow-300 bg-yellow-500/15 border border-yellow-400/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-[0_0_8px_rgba(255,200,0,0.1)]">
-          🏆 #{carrera.ganador}
-        </span>
+      {mostrarImagen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setMostrarImagen(false)}
+        >
+          <div className="relative max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setMostrarImagen(false)}
+              className="absolute -top-3 -right-3 z-10 w-8 h-8 bg-red-600 rounded-full text-white text-sm flex items-center justify-center hover:bg-red-500 transition-colors shadow-lg"
+            >
+              ✕
+            </button>
+            <img
+              src={carrera.imagen!}
+              alt={carrera.hipodromo}
+              className="w-full h-auto rounded-2xl border-2 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            />
+          </div>
+        </div>
       )}
-
-      <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-400/10 group-hover:border-cyan-400/30 transition-all">
-        <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-      </div>
-    </div>
+    </>
   );
 }
 

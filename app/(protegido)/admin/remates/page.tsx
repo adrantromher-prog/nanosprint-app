@@ -11,6 +11,8 @@ export default function AdminRemates() {
   const [tipoCarrera, setTipoCarrera] = useState("nacional");
   const [cantidadCaballos, setCantidadCaballos] = useState(0);
   const [caballos, setCaballos] = useState<string[]>([]);
+  const [imagen, setImagen] = useState<string>("");
+  const [imagenPreview, setImagenPreview] = useState<string>("");
 
   const generarInputs = (cantidad: number) => {
     setCantidadCaballos(cantidad);
@@ -37,6 +39,7 @@ export default function AdminRemates() {
         horaCierre,
         tipoCarrera,
         caballos,
+        imagen: imagen || null,
       }),
     });
 
@@ -181,6 +184,37 @@ export default function AdminRemates() {
             ))}
           </div>
         )}
+
+        {/* Imagen de la carrera */}
+        <label className="block mb-3">
+          <span className="text-sm font-semibold">Imagen de la Carrera (opcional)</span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const dataUrl = reader.result as string;
+                  setImagen(dataUrl);
+                  setImagenPreview(dataUrl);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+            className="w-full mt-1 text-sm text-white file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-purple-700/70 file:text-white file:font-bold file:text-sm hover:file:bg-purple-700/90 cursor-pointer"
+          />
+          {imagenPreview && (
+            <div
+              onClick={() => { setImagen(""); setImagenPreview(""); }}
+              className="relative mt-2 inline-block cursor-pointer group"
+            >
+              <img src={imagenPreview} alt="Preview" className="h-24 rounded-xl border border-purple-400/50" />
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 rounded-full text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</span>
+            </div>
+          )}
+        </label>
 
         {/* Botón Crear */}
         <button

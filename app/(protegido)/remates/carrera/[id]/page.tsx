@@ -42,6 +42,7 @@ interface Carrera {
   tipo: string;
   estado: string;
   ganador: number | null;
+  imagen: string | null;
   caballos: Caballo[];
 }
 
@@ -125,6 +126,7 @@ export default function DetalleCarrera() {
   const [popup, setPopup] = useState<{ caballo: Caballo; monto: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [mostrarImagen, setMostrarImagen] = useState(false);
 
   const fetchCarrera = async () => {
     const res = await fetch("/api/remates/activas");
@@ -235,20 +237,39 @@ export default function DetalleCarrera() {
 
         <div className="flex-shrink-0 flex justify-between items-center gap-2">
 
-          <button
-            onClick={() => router.push("/remates")}
-            className="
-              px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap
-              bg-gradient-to-b from-slate-700 to-slate-900
-              border border-slate-500/50
-              shadow-[0_0_12px_rgba(100,200,255,0.15)]
-              hover:shadow-[0_0_20px_rgba(100,200,255,0.4)]
-              hover:border-cyan-400/60
-              active:scale-95 transition-all duration-300
-            "
-          >
-            ← Volver
-          </button>
+          <div className="flex items-center gap-2">
+            {carrera.imagen && (
+              <button
+                onClick={() => setMostrarImagen(true)}
+                className="
+                  w-9 h-9 rounded-xl text-sm font-bold
+                  bg-gradient-to-b from-yellow-500/30 to-orange-600/30
+                  border border-yellow-400/40
+                  shadow-[0_0_12px_rgba(255,200,0,0.15)]
+                  hover:shadow-[0_0_20px_rgba(255,200,0,0.4)]
+                  hover:border-yellow-300/60
+                  active:scale-95 transition-all duration-300
+                  flex items-center justify-center
+                "
+              >
+                <svg className="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/remates")}
+              className="
+                px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap
+                bg-gradient-to-b from-slate-700 to-slate-900
+                border border-slate-500/50
+                shadow-[0_0_12px_rgba(100,200,255,0.15)]
+                hover:shadow-[0_0_20px_rgba(100,200,255,0.4)]
+                hover:border-cyan-400/60
+                active:scale-95 transition-all duration-300
+              "
+            >
+              ← Volver
+            </button>
+          </div>
 
           <div className="flex flex-col items-center flex-1">
             <span className="text-white font-bold text-lg leading-tight tracking-wide drop-shadow-[0_0_8px_rgba(0,255,255,0.2)]">{carrera.hipodromo}</span>
@@ -440,6 +461,27 @@ export default function DetalleCarrera() {
           </div>
         </div>
       </div>
+
+      {mostrarImagen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setMostrarImagen(false)}
+        >
+          <div className="relative max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setMostrarImagen(false)}
+              className="absolute -top-3 -right-3 z-10 w-8 h-8 bg-red-600 rounded-full text-white text-sm flex items-center justify-center hover:bg-red-500 transition-colors shadow-lg"
+            >
+              ✕
+            </button>
+            <img
+              src={carrera.imagen!}
+              alt={carrera.hipodromo}
+              className="w-full h-auto rounded-2xl border-2 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            />
+          </div>
+        </div>
+      )}
 
       {popup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
