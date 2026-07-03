@@ -99,9 +99,10 @@ export default function BackgroundMusic({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      if (Notification.permission === "default") Notification.requestPermission();
-      if (Notification.permission === "granted") registrarPush();
+    if (!("serviceWorker" in navigator && "PushManager" in window)) return;
+    if (Notification.permission === "granted") { registrarPush(); return; }
+    if (Notification.permission === "default") {
+      Notification.requestPermission().then((r) => { if (r === "granted") registrarPush(); });
     }
   }, []);
 

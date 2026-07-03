@@ -18,6 +18,7 @@ export async function proxy(request: NextRequest) {
 
     "/musica/",
     "/transicion.png",
+    "/sw.js",
   ];
 
   for (const pattern of excludePatterns) {
