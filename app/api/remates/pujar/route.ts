@@ -132,7 +132,34 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    broadcast({ type: "puja", carrera_id, caballo_id, monto });
+    // Fetch full carrera data and broadcast to all clients for instant update
+    try {
+      const resCarrera = await pool.query(`SELECT * FROM carreras_remate WHERE id = $1`, [carrera_id]);
+      const resCaballos = await pool.query(
+        `SELECT 
+          cc.id, cc.numero, cc.nombre, cc.retirado,
+          COALESCE(MAX(rp.monto), 0) as puja_actual,
+          (SELECT u.sobrenombre FROM remates_pujas rp2
+           JOIN usuarios u ON u.id = rp2.id_usuario
+           WHERE rp2.id_caballo = cc.id
+           ORDER BY rp2.monto DESC LIMIT 1
+          ) as pujador_sobrenombre
+         FROM carreras_caballos cc
+         LEFT JOIN remates_pujas rp ON rp.id_caballo = cc.id
+         WHERE cc.id_carrera = $1
+         GROUP BY cc.id, cc.numero, cc.nombre, cc.retirado
+         ORDER BY cc.numero ASC`,
+        [carrera_id]
+      );
+      const resSaldo = await pool.query(`SELECT saldo FROM usuarios WHERE id = $1`, [usuarioId]);
+      const carreraData = {
+        ...resCarrera.rows[0],
+        caballos: resCaballos.rows.map((c: any) => ({ ...c, puja_actual: Number(c.puja_actual) })),
+      };
+      broadcast({ type: "puja", carrera: carreraData, usuario_id: usuarioId, saldo: Number(resSaldo.rows[0].saldo) });
+    } catch (e) {
+      console.error("Error broadcasting carrera data:", e);
+    }
 
     return NextResponse.json({ ok: true });
 

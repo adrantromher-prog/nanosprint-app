@@ -2,8 +2,20 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
+interface CarreraData {
+  id: number;
+  hipodromo: string;
+  numero_carrera: number;
+  hora_cierre: string;
+  tipo: string;
+  estado: string;
+  ganador: number | null;
+  imagen: string | null;
+  caballos: { id: number; numero: number; nombre: string; retirado: boolean; puja_actual: number; pujador_sobrenombre?: string }[];
+}
+
 type WSEvent =
-  | { type: "puja"; carrera_id: number; caballo_id: number; monto: number }
+  | { type: "puja"; carrera?: CarreraData; usuario_id?: number; saldo?: number }
   | { type: "movimiento"; usuario_id: number }
   | { type: "ganador"; carrera_id: number }
   | { type: "carrera_creada" }

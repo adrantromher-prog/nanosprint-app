@@ -101,44 +101,49 @@ export default function DetalleCarrera() {
   const router = useRouter();
   const [carrera, setCarrera] = useState<Carrera | null>(null);
   const [usuario, setUsuario] = useState<any>(null);
+  const userIdRef = useRef<number | null>(null);
   const [montos, setMontos] = useState<{ [key: number]: number }>({});
   const [popup, setPopup] = useState<{ caballo: Caballo; monto: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [cargando, setCargando] = useState(false);
-  const fetchCarrera = async () => {
-    const res = await fetch("/api/remates/activas");
-    const data = await res.json();
-    if (data.ok) {
-      const encontrada = data.carreras.find((c: Carrera) => c.id === Number(id));
-      if (encontrada) setCarrera(encontrada);
-    }
-  };
 
-  const fetchUser = async () => {
+  const fetchCarrera = useCallback(async () => {
+    const res = await fetch(`/api/remates/carrera/${id}`);
+    const data = await res.json();
+    if (data.ok && data.carrera) setCarrera(data.carrera);
+  }, [id]);
+
+  const fetchUser = useCallback(async () => {
     const res = await fetch("/api/me", { cache: "no-store" });
     const data = await res.json();
-    if (data.nombre) setUsuario(data);
-  };
+    if (data.nombre) {
+      setUsuario(data);
+      userIdRef.current = data.id;
+    }
+  }, []);
 
-  useWebSocket(useCallback((event) => {
-    if (event.type === "puja" && event.carrera_id === Number(id)) {
-      fetchCarrera();
-      fetchUser();
+  useWebSocket(useCallback((event: any) => {
+    if (event.type === "puja") {
+      if (event.carrera?.id === Number(id)) {
+        setCarrera(event.carrera);
+      }
+      if (event.usuario_id && event.usuario_id === userIdRef.current && event.saldo !== undefined) {
+        setUsuario((prev: any) => prev ? { ...prev, saldo: event.saldo } : prev);
+      }
     }
     if (["ganador", "carrera_cerrada", "caballo_retirado"].includes(event.type)) {
       fetchCarrera();
     }
-  }, [id]));
+  }, [id, fetchCarrera]));
 
   useEffect(() => {
     fetchCarrera();
     fetchUser();
     const intervalo = setInterval(() => {
-      fetchCarrera();
       fetchUser();
-    }, 30000);
+    }, 10000);
     return () => clearInterval(intervalo);
-  }, [id]);
+  }, [id, fetchCarrera, fetchUser]);
 
   const totalPujas = carrera?.caballos
     .filter((c) => !c.retirado)
