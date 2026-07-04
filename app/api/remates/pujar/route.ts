@@ -26,77 +26,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "El monto debe ser múltiplo de 500." }, { status: 400 });
     }
 
-    const resUsuario = await client.query(
-      `SELECT saldo FROM usuarios WHERE id = $1`,
-      [usuarioId]
-    );
-
-    if (resUsuario.rows.length === 0) {
-      client.release();
-      return NextResponse.json({ ok: false, error: "Usuario no encontrado." }, { status: 404 });
-    }
-
-    const saldoActual = Number(resUsuario.rows[0].saldo);
-
-    const resPuja = await client.query(
-      `SELECT monto, id_usuario FROM remates_pujas WHERE id_caballo = $1 ORDER BY monto DESC LIMIT 1`,
-      [caballo_id]
-    );
-
-    const pujaAnterior = resPuja.rows[0]
-      ? { monto: Number(resPuja.rows[0].monto), id_usuario: resPuja.rows[0].id_usuario }
-      : null;
-
-    if (pujaAnterior && monto <= pujaAnterior.monto) {
-      client.release();
-      return NextResponse.json({
-        ok: false,
-        error: `Debes superar la puja actual de Bs. ${pujaAnterior.monto.toLocaleString()}.`
-      }, { status: 400 });
-    }
-
-    // Validar saldo suficiente según sea aumento propio o nueva puja
-    const esMismoUsuario = pujaAnterior?.id_usuario === usuarioId;
-    const necesitaSaldo = esMismoUsuario ? monto - pujaAnterior!.monto : monto;
-
-    if (necesitaSaldo > saldoActual) {
-      client.release();
-      return NextResponse.json({ ok: false, error: "Saldo insuficiente." }, { status: 400 });
-    }
-
-    const resCarrera = await client.query(
-      `SELECT estado, hora_cierre FROM carreras_remate WHERE id = $1`,
-      [carrera_id]
-    );
-
-    if (resCarrera.rows[0]?.estado !== "abierta") {
-      client.release();
-      return NextResponse.json({ ok: false, error: "La carrera ya está cerrada." }, { status: 400 });
-    }
-
-    const ahora = new Date();
-    const offsetVET = -4 * 60 * 60 * 1000;
-    const ahoraVET = new Date(ahora.getTime() + offsetVET);
-    const minutosActual = ahoraVET.getUTCHours() * 60 + ahoraVET.getUTCMinutes();
-
-    const [horas, minutos] = resCarrera.rows[0].hora_cierre.split(":").map(Number);
-    const minutosLimite = horas * 60 + minutos;
-
-    if (minutosActual >= minutosLimite) {
-      client.release();
-      return NextResponse.json({ ok: false, error: "El tiempo de la carrera ha expirado." }, { status: 400 });
-    }
-
-    const resCaballo = await client.query(
-      `SELECT retirado FROM carreras_caballos WHERE id = $1`,
-      [caballo_id]
-    );
-
-    if (resCaballo.rows[0]?.retirado) {
-      client.release();
-      return NextResponse.json({ ok: false, error: "Este caballo fue retirado." }, { status: 400 });
-    }
-
     await client.query(`
       CREATE TABLE IF NOT EXISTS historial (
         id SERIAL PRIMARY KEY,
@@ -110,6 +39,93 @@ export async function POST(req: Request) {
 
     await client.query("BEGIN");
 
+    // Bloquear la fila del usuario para evitar condiciones de carrera
+    const resUsuario = await client.query(
+      `SELECT saldo FROM usuarios WHERE id = $1 FOR UPDATE`,
+      [usuarioId]
+    );
+
+    if (resUsuario.rows.length === 0) {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({ ok: false, error: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    const saldoActual = Number(resUsuario.rows[0].saldo);
+
+    // Bloquear la carrera para evitar que cierre mientras se procesa la puja
+    const resCarrera = await client.query(
+      `SELECT estado, hora_cierre FROM carreras_remate WHERE id = $1 FOR UPDATE`,
+      [carrera_id]
+    );
+
+    if (!resCarrera.rows[0] || resCarrera.rows[0].estado !== "abierta") {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({ ok: false, error: "La carrera ya está cerrada." }, { status: 400 });
+    }
+
+    const ahora = new Date();
+    const offsetVET = -4 * 60 * 60 * 1000;
+    const ahoraVET = new Date(ahora.getTime() + offsetVET);
+    const minutosActual = ahoraVET.getUTCHours() * 60 + ahoraVET.getUTCMinutes();
+
+    const [horas, minutos] = resCarrera.rows[0].hora_cierre.split(":").map(Number);
+    const minutosLimite = horas * 60 + minutos;
+
+    if (minutosActual >= minutosLimite) {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({ ok: false, error: "El tiempo de la carrera ha expirado." }, { status: 400 });
+    }
+
+    // Validar que el caballo existe, no está retirado, y pertenece a la carrera indicada
+    const resCaballo = await client.query(
+      `SELECT retirado, id_carrera FROM carreras_caballos WHERE id = $1`,
+      [caballo_id]
+    );
+
+    if (!resCaballo.rows[0] || resCaballo.rows[0].retirado) {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({ ok: false, error: "Este caballo fue retirado." }, { status: 400 });
+    }
+
+    if (Number(resCaballo.rows[0].id_carrera) !== Number(carrera_id)) {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({ ok: false, error: "El caballo no pertenece a esta carrera." }, { status: 400 });
+    }
+
+    // Obtener la puja actual más alta para este caballo
+    const resPuja = await client.query(
+      `SELECT monto, id_usuario FROM remates_pujas WHERE id_caballo = $1 ORDER BY monto DESC LIMIT 1`,
+      [caballo_id]
+    );
+
+    const pujaAnterior = resPuja.rows[0]
+      ? { monto: Number(resPuja.rows[0].monto), id_usuario: resPuja.rows[0].id_usuario }
+      : null;
+
+    if (pujaAnterior && monto <= pujaAnterior.monto) {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({
+        ok: false,
+        error: `Debes superar la puja actual de Bs. ${pujaAnterior.monto.toLocaleString()}.`
+      }, { status: 400 });
+    }
+
+    const esMismoUsuario = pujaAnterior?.id_usuario === usuarioId;
+    const necesitaSaldo = esMismoUsuario ? monto - pujaAnterior!.monto : monto;
+
+    if (necesitaSaldo > saldoActual) {
+      await client.query("ROLLBACK");
+      client.release();
+      return NextResponse.json({ ok: false, error: "Saldo insuficiente." }, { status: 400 });
+    }
+
+    // Insertar la nueva puja
     await client.query(
       `INSERT INTO remates_pujas (id_remate, id_caballo, id_usuario, monto, fecha)
        VALUES ($1, $2, $3, $4, NOW())`,
@@ -117,14 +133,12 @@ export async function POST(req: Request) {
     );
 
     if (esMismoUsuario) {
-      // Mismo usuario aumentando su puja — solo cobrar la diferencia
       const diferencia = monto - pujaAnterior!.monto;
       await client.query(
         `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
         [diferencia, usuarioId]
       );
     } else {
-      // Nuevo usuario pujando — cobrar monto completo y reembolsar al anterior
       await client.query(
         `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
         [monto, usuarioId]
