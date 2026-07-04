@@ -96,9 +96,6 @@ export default function PollaPage() {
 
   const todoSeleccionado = Object.keys(selecciones).length === 6;
 
-  const getSeleccionEnTicket = (ticket: any, carreraOrden: number) =>
-    ticket.selecciones?.find((s: any) => s.carrera_orden === carreraOrden);
-
   return (
     <main className="relative min-h-screen w-full text-white overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
@@ -216,20 +213,10 @@ export default function PollaPage() {
 
                 <div className="flex flex-wrap gap-2">
                   {caballos.map((num) => {
-                    const estaEnTicketLocal = seleccionLocal === num;
-                    const tieneTicketConEste = misTickets.some(t => getSeleccionEnTicket(t, carrera.orden)?.caballo_numero === num);
-                    const selected = estaEnTicketLocal || tieneTicketConEste;
-                    const esGanador = resultado?.primer_lugar === num;
-                    const esSegundo = resultado?.segundo_lugar === num;
-                    const esTercero = resultado?.tercer_lugar === num;
+                    const selected = seleccionLocal === num;
 
                     let borderColor = "border-gray-600/50 hover:border-amber-400/50";
-                    if (selected && tieneTicketConEste && !estaEnTicketLocal) {
-                      if (esGanador) borderColor = "border-yellow-400/80 bg-yellow-500/20";
-                      else if (esSegundo) borderColor = "border-gray-300/80 bg-gray-400/20";
-                      else if (esTercero) borderColor = "border-orange-400/80 bg-orange-500/20";
-                      else borderColor = "border-red-400/60 bg-red-500/15";
-                    } else if (estaEnTicketLocal) {
+                    if (selected) {
                       borderColor = "border-amber-400/80 bg-amber-500/20 shadow-[0_0_12px_rgba(255,200,0,0.25)]";
                     }
 
@@ -241,16 +228,6 @@ export default function PollaPage() {
                         disabled={estaDeshabilitado}
                         className={`relative w-12 h-12 rounded-xl border-2 flex items-center justify-center font-bold text-base transition-all duration-150 ${borderColor} ${selected ? "scale-110" : "hover:scale-105"} ${estaDeshabilitado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
                         <span className={`${selected ? "text-white" : "text-gray-400"}`}>{num}</span>
-                        {esGanador && <span className="absolute -top-1.5 -right-1.5 text-[10px]">👑</span>}
-                        {esSegundo && <span className="absolute -top-1.5 -right-1.5 text-[10px]">🥈</span>}
-                        {esTercero && <span className="absolute -top-1.5 -right-1.5 text-[10px]">🥉</span>}
-                        {tieneTicketConEste && !estaEnTicketLocal && (
-                          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] whitespace-nowrap">
-                            <span className={`font-bold ${esGanador ? "text-yellow-300" : esSegundo ? "text-gray-300" : esTercero ? "text-orange-300" : "text-red-400"}`}>
-                              ✓
-                            </span>
-                          </div>
-                        )}
                       </button>
                     );
                   })}
