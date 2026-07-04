@@ -261,58 +261,56 @@ export default function LobbyRemates() {
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex-1 overflow-y-auto custom-scroll">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          <section className="flex flex-col min-h-0 bg-gradient-to-b from-gray-900/40 to-transparent rounded-2xl p-3 border border-white/[0.03]">
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-              <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,255,255,0.4)]" />
-              <h2 className="text-lg font-bold text-cyan-300 drop-shadow-[0_0_6px_rgba(0,255,255,0.2)] tracking-wide">
-                Nacionales
-              </h2>
-              <span className="text-[10px] text-gray-600 font-mono ml-auto">{nacionales.length} carrera{(nacionales.length !== 1 ? "s" : "")}</span>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scroll">
-              {nacionales.length === 0
-                ? <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                    <span className="text-2xl mb-2">🏇</span>
-                    <p className="text-xs">No hay carreras activas</p>
-                  </div>
-                : nacionales.map((c) => (
-                  <TarjetaCarrera
-                    key={c.id}
-                    carrera={c}
-                    onClick={() => router.push(`/remates/carrera/${c.id}`)}
-                  />
-                ))
-              }
-            </div>
-          </section>
+            <section className="flex flex-col rounded-2xl bg-gradient-to-b from-gray-900/40 border border-white/[0.03]">
+              <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,255,255,0.4)]" />
+                <h2 className="text-lg font-bold text-cyan-300 drop-shadow-[0_0_6px_rgba(0,255,255,0.2)] tracking-wide">
+                  Nacionales
+                </h2>
+                {nacionales.length > 0 && (
+                  <span className="text-[10px] text-gray-600 font-mono ml-auto">{nacionales.length} carrera{(nacionales.length !== 1 ? "s" : "")}</span>
+                )}
+              </div>
+              {nacionales.length > 0 && (
+                <div className="space-y-1.5 px-3 pb-3">
+                  {nacionales.map((c) => (
+                    <TarjetaCarrera
+                      key={c.id}
+                      carrera={c}
+                      onClick={() => router.push(`/remates/carrera/${c.id}`)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
-          <section className="flex flex-col min-h-0 bg-gradient-to-b from-gray-900/40 to-transparent rounded-2xl p-3 border border-white/[0.03]">
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-              <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(200,0,255,0.4)]" />
-              <h2 className="text-lg font-bold text-purple-300 drop-shadow-[0_0_6px_rgba(200,0,255,0.2)] tracking-wide">
-                Americanas
-              </h2>
-              <span className="text-[10px] text-gray-600 font-mono ml-auto">{americanas.length} carrera{(americanas.length !== 1 ? "s" : "")}</span>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scroll">
-              {americanas.length === 0
-                ? <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                    <span className="text-2xl mb-2">🏇</span>
-                    <p className="text-xs">No hay carreras activas</p>
-                  </div>
-                : americanas.map((c) => (
-                  <TarjetaCarrera
-                    key={c.id}
-                    carrera={c}
-                    onClick={() => router.push(`/remates/carrera/${c.id}`)}
-                  />
-                ))
-              }
-            </div>
-          </section>
+            <section className="flex flex-col rounded-2xl bg-gradient-to-b from-gray-900/40 border border-white/[0.03]">
+              <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(200,0,255,0.4)]" />
+                <h2 className="text-lg font-bold text-purple-300 drop-shadow-[0_0_6px_rgba(200,0,255,0.2)] tracking-wide">
+                  Americanas
+                </h2>
+                {americanas.length > 0 && (
+                  <span className="text-[10px] text-gray-600 font-mono ml-auto">{americanas.length} carrera{(americanas.length !== 1 ? "s" : "")}</span>
+                )}
+              </div>
+              {americanas.length > 0 && (
+                <div className="space-y-1.5 px-3 pb-3">
+                  {americanas.map((c) => (
+                    <TarjetaCarrera
+                      key={c.id}
+                      carrera={c}
+                      onClick={() => router.push(`/remates/carrera/${c.id}`)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
+          </div>
         </div>
       </div>
     </main>
