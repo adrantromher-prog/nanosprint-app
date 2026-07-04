@@ -38,11 +38,6 @@ export async function POST(req: Request) {
 
     const saldoActual = Number(resUsuario.rows[0].saldo);
 
-    if (monto > saldoActual) {
-      client.release();
-      return NextResponse.json({ ok: false, error: "Saldo insuficiente." }, { status: 400 });
-    }
-
     const resPuja = await client.query(
       `SELECT monto, id_usuario FROM remates_pujas WHERE id_caballo = $1 ORDER BY monto DESC LIMIT 1`,
       [caballo_id]
@@ -58,6 +53,15 @@ export async function POST(req: Request) {
         ok: false,
         error: `Debes superar la puja actual de Bs. ${pujaAnterior.monto.toLocaleString()}.`
       }, { status: 400 });
+    }
+
+    // Validar saldo suficiente según sea aumento propio o nueva puja
+    const esMismoUsuario = pujaAnterior?.id_usuario === usuarioId;
+    const necesitaSaldo = esMismoUsuario ? monto - pujaAnterior!.monto : monto;
+
+    if (necesitaSaldo > saldoActual) {
+      client.release();
+      return NextResponse.json({ ok: false, error: "Saldo insuficiente." }, { status: 400 });
     }
 
     const resCarrera = await client.query(
@@ -112,21 +116,31 @@ export async function POST(req: Request) {
       [carrera_id, caballo_id, usuarioId, monto]
     );
 
-    await client.query(
-      `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
-      [monto, usuarioId]
-    );
+    if (esMismoUsuario) {
+      // Mismo usuario aumentando su puja — solo cobrar la diferencia
+      const diferencia = monto - pujaAnterior!.monto;
+      await client.query(
+        `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
+        [diferencia, usuarioId]
+      );
+    } else {
+      // Nuevo usuario pujando — cobrar monto completo y reembolsar al anterior
+      await client.query(
+        `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
+        [monto, usuarioId]
+      );
 
-    if (pujaAnterior && pujaAnterior.id_usuario !== usuarioId) {
-      await client.query(
-        `UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2`,
-        [pujaAnterior.monto, pujaAnterior.id_usuario]
-      );
-      await client.query(
-        `INSERT INTO historial (usuario_id, tipo, monto, asunto)
-         VALUES ($1, 'reembolso_puja', $2, $3)`,
-        [pujaAnterior.id_usuario, pujaAnterior.monto, 'Reembolso de puja - Fuiste superado']
-      );
+      if (pujaAnterior) {
+        await client.query(
+          `UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2`,
+          [pujaAnterior.monto, pujaAnterior.id_usuario]
+        );
+        await client.query(
+          `INSERT INTO historial (usuario_id, tipo, monto, asunto)
+           VALUES ($1, 'reembolso_puja', $2, $3)`,
+          [pujaAnterior.id_usuario, pujaAnterior.monto, 'Reembolso de puja - Fuiste superado']
+        );
+      }
     }
 
     await client.query("COMMIT");
