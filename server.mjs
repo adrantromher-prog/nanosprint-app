@@ -85,11 +85,13 @@ app.prepare().then(async () => {
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         orden INTEGER NOT NULL,
+        nombre VARCHAR(100) NOT NULL DEFAULT '',
         cantidad_caballos INTEGER NOT NULL,
         UNIQUE(polla_id, orden)
       )
     `);
     await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS cantidad_caballos INTEGER NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS nombre VARCHAR(100) NOT NULL DEFAULT ''`);
     console.log("✅ Tabla polla_carreras lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_apuestas (

@@ -19,6 +19,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Debes especificar exactamente 6 carreras" }, { status: 400 });
     }
     for (const c of carreras) {
+      if (!c.nombre || c.nombre.trim() === "") {
+        client.release();
+        return NextResponse.json({ ok: false, error: "Cada carrera debe tener un nombre (ej: Carrera 1)" }, { status: 400 });
+      }
       if (!c.cantidad_caballos || c.cantidad_caballos < 2 || c.cantidad_caballos > 20) {
         client.release();
         return NextResponse.json({ ok: false, error: "Cada carrera debe tener entre 2 y 20 caballos" }, { status: 400 });
@@ -35,8 +39,8 @@ export async function POST(req: Request) {
 
     for (let i = 0; i < carreras.length; i++) {
       await client.query(
-        `INSERT INTO polla_carreras (polla_id, orden, cantidad_caballos) VALUES ($1, $2, $3)`,
-        [pollaId, i + 1, carreras[i].cantidad_caballos]
+        `INSERT INTO polla_carreras (polla_id, orden, nombre, cantidad_caballos) VALUES ($1, $2, $3, $4)`,
+        [pollaId, i + 1, carreras[i].nombre.trim(), carreras[i].cantidad_caballos]
       );
     }
 

@@ -110,7 +110,7 @@ export default function PollaPage() {
               🏆 POLLA HÍPICA
             </h1>
             <p className="text-amber-400/80 font-bold text-lg">{polla.hipodromo}</p>
-            <p className="text-gray-400 text-sm">Carrera 1 a Carrera 6</p>
+            <p className="text-gray-400 text-sm">{polla.carreras?.[0]?.nombre || "Carrera 1"} a {polla.carreras?.[5]?.nombre || "Carrera 6"}</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => router.push(`/polla/clasificacion?polla_id=${polla.id}`)}
@@ -189,7 +189,7 @@ export default function PollaPage() {
                       <span className="text-xs font-bold text-amber-300">#{carrera.orden}</span>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Carrera #{carrera.orden}</h3>
+                      <h3 className="text-sm font-bold text-white">{carrera.nombre}</h3>
                       <p className="text-[10px] text-gray-500">{polla.hipodromo}</p>
                     </div>
                   </div>

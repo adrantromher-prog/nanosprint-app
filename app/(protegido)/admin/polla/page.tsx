@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 export default function AdminPolla() {
   const router = useRouter();
   const [hipodromo, setHipodromo] = useState("");
-  const [carreras, setCarreras] = useState<{ cantidad_caballos: number }[]>(
-    Array(6).fill(null).map(() => ({ cantidad_caballos: 0 }))
+  const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number }[]>(
+    Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0 }))
   );
   const [pollaActiva, setPollaActiva] = useState<any>(null);
   const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
@@ -33,17 +33,21 @@ export default function AdminPolla() {
 
   useEffect(() => { fetchPollaActiva(); }, []);
 
-  const actualizarCarrera = (index: number, val: number) => {
+  const actualizarCarrera = (index: number, field: "nombre" | "cantidad_caballos", val: string | number) => {
     const copia = [...carreras];
-    copia[index] = { cantidad_caballos: val };
+    copia[index] = { ...copia[index], [field]: val };
     setCarreras(copia);
   };
 
   const crearPolla = async () => {
     if (!hipodromo.trim()) { alert("Escribe el nombre del hipódromo"); return; }
     for (let i = 0; i < carreras.length; i++) {
+      if (!carreras[i].nombre.trim()) {
+        alert(`Escribe el nombre de la carrera ${i + 1} (ej: Carrera 1, Carrera 4, etc.)`);
+        return;
+      }
       if (carreras[i].cantidad_caballos < 2) {
-        alert(`La carrera ${i + 1} debe tener al menos 2 caballos`);
+        alert(`La carrera "${carreras[i].nombre}" debe tener al menos 2 caballos`);
         return;
       }
     }
@@ -145,7 +149,7 @@ export default function AdminPolla() {
             <h2 className="text-xl font-bold text-cyan-300">Resultados por Carrera</h2>
             {pollaActiva.carreras?.map((c: any) => (
               <div key={c.orden} className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4">
-                <h3 className="font-bold text-white mb-2">Carrera #{c.orden} ({c.cantidad_caballos} caballos)</h3>
+                <h3 className="font-bold text-white mb-2">{c.nombre} ({c.cantidad_caballos} caballos)</h3>
                 <div className="grid grid-cols-3 gap-3">
                   {["primer_lugar", "segundo_lugar", "tercer_lugar"].map((puesto, idx) => {
                     const labels = ["1er Lugar (5 pts)", "2do Lugar (3 pts)", "3er Lugar (1 pt)"];
@@ -198,16 +202,26 @@ export default function AdminPolla() {
                 placeholder="Ej: La Rinconada" />
             </label>
 
-            <p className="text-sm font-semibold text-gray-300 mb-3">Caballos por Carrera (6 carreras)</p>
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <p className="text-sm font-semibold text-gray-300 mb-3">Carreras (6)</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {carreras.map((c, i) => (
-                <label key={i} className="block">
-                  <span className="text-xs text-gray-400">Carrera #{i + 1}</span>
-                  <input type="number" min={2} max={20} value={c.cantidad_caballos || ""}
-                    onChange={e => actualizarCarrera(i, Number(e.target.value))}
-                    className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
-                    placeholder="Ej: 8" />
-                </label>
+                <div key={i} className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 font-bold mb-2">Carrera #{i + 1}</p>
+                  <label className="block mb-2">
+                    <span className="text-[10px] text-gray-500">Nombre</span>
+                    <input type="text" value={c.nombre}
+                      onChange={e => actualizarCarrera(i, "nombre", e.target.value)}
+                      className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-cyan-300/30 text-white text-sm"
+                      placeholder="Ej: Carrera 1, C4, 8va..." />
+                  </label>
+                  <label className="block">
+                    <span className="text-[10px] text-gray-500">Caballos</span>
+                    <input type="number" min={2} max={20} value={c.cantidad_caballos || ""}
+                      onChange={e => actualizarCarrera(i, "cantidad_caballos", Number(e.target.value))}
+                      className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-purple-300/30 text-white text-sm"
+                      placeholder="Ej: 8" />
+                  </label>
+                </div>
               ))}
             </div>
 
