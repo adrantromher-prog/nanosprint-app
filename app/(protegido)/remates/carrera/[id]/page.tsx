@@ -136,12 +136,19 @@ export default function DetalleCarrera() {
     }
   }, [id, fetchCarrera]));
 
+  // Polling frecuente como respaldo por si WebSocket falla
+  const lastFetchRef = useRef(0);
   useEffect(() => {
     fetchCarrera();
     fetchUser();
     const intervalo = setInterval(() => {
+      const now = Date.now();
+      if (now - lastFetchRef.current > 2000) {
+        lastFetchRef.current = now;
+        fetchCarrera();
+      }
       fetchUser();
-    }, 10000);
+    }, 3000);
     return () => clearInterval(intervalo);
   }, [id, fetchCarrera, fetchUser]);
 
