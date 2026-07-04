@@ -35,6 +35,18 @@ app.prepare().then(async () => {
     await pool.query(`INSERT INTO jackpot_remates (id, monto) VALUES (1, 0) ON CONFLICT (id) DO NOTHING`);
     console.log("✅ Tabla jackpot_remates lista");
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS historial (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL,
+        tipo VARCHAR(50) NOT NULL,
+        monto NUMERIC(12,2) NOT NULL,
+        asunto TEXT,
+        fecha TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log("✅ Tabla historial lista");
+
     // Generar codigo_referido para usuarios existentes que no tengan uno
     const sinCodigo = await pool.query(`SELECT id FROM usuarios WHERE codigo_referido IS NULL`);
     for (const u of sinCodigo.rows) {
