@@ -53,8 +53,13 @@ app.prepare().then(async () => {
   const wss = new WebSocketServer({ server });
   setWSS(wss);
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", (ws, req) => {
+    const ip = req?.socket?.remoteAddress || "desconocida";
+    console.log(`🟢 Cliente WebSocket conectado desde ${ip} (total: ${wss.clients.size})`);
     ws.on("error", () => {});
+    ws.on("close", () => {
+      console.log(`🔴 Cliente WebSocket desconectado (total: ${wss.clients.size})`);
+    });
   });
 
   server.listen(port, hostname, () => {
