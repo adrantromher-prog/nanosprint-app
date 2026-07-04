@@ -106,6 +106,8 @@ app.prepare().then(async () => {
         UNIQUE(polla_id, usuario_id, carrera_orden)
       )
     `);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS carrera_orden INTEGER NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS caballo_numero INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE polla_apuestas DROP COLUMN IF EXISTS carrera_remate_id`);
     await pool.query(`ALTER TABLE polla_apuestas DROP COLUMN IF EXISTS caballo_id`);
     console.log("✅ Tabla polla_apuestas lista");
@@ -120,6 +122,7 @@ app.prepare().then(async () => {
         UNIQUE(polla_id, carrera_orden)
       )
     `);
+    await pool.query(`ALTER TABLE polla_resultados ADD COLUMN IF NOT EXISTS carrera_orden INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE polla_resultados DROP COLUMN IF EXISTS carrera_remate_id`);
     console.log("✅ Tabla polla_resultados lista");
     await pool.query(`
