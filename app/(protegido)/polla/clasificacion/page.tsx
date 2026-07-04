@@ -84,21 +84,15 @@ export default function PollaClasificacion() {
         {pollaInfo && (
           <div className="bg-gradient-to-r from-yellow-900/30 via-amber-800/30 to-yellow-900/30 border border-yellow-400/40 rounded-xl md:rounded-2xl p-3 md:p-4 mb-3 md:mb-6 text-center">
             {!pollaInfo.activa && pollaInfo.cerrada_en ? (
-              <>
-                <p className="text-yellow-300 font-bold text-sm md:text-lg">🏆 Polla Cerrada</p>
-                <div className="flex justify-center gap-4 md:gap-6 mt-1.5 md:mt-2 text-[10px] md:text-sm">
-                  <div><span className="text-yellow-300 font-bold">1°:</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
-                  <div><span className="text-gray-300 font-bold">2°:</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
-                </div>
-              </>
+              <div className="flex justify-center gap-6 md:gap-10">
+                <div><span className="text-yellow-300 font-black text-lg md:text-3xl">Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</span><p className="text-yellow-200/60 text-[9px] md:text-xs uppercase tracking-wide">1° Lugar</p></div>
+                <div><span className="text-gray-300 font-black text-lg md:text-3xl">Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</span><p className="text-gray-300/60 text-[9px] md:text-xs uppercase tracking-wide">2° Lugar</p></div>
+              </div>
             ) : (
-              <>
-                <p className="text-yellow-300 font-bold text-sm md:text-lg">Premios Estimados</p>
-                <div className="flex justify-center gap-4 md:gap-6 mt-1.5 md:mt-2 text-[10px] md:text-sm">
-                  <div><span className="text-yellow-300 font-bold">1°:</span> Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.65).toLocaleString()}</div>
-                  <div><span className="text-gray-300 font-bold">2°:</span> Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.20).toLocaleString()}</div>
-                </div>
-              </>
+              <div className="flex justify-center gap-6 md:gap-10">
+                <div><span className="text-yellow-300 font-black text-lg md:text-3xl">Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.65).toLocaleString()}</span><p className="text-yellow-200/60 text-[9px] md:text-xs uppercase tracking-wide">1° Lugar</p></div>
+                <div><span className="text-gray-300 font-black text-lg md:text-3xl">Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.20).toLocaleString()}</span><p className="text-gray-300/60 text-[9px] md:text-xs uppercase tracking-wide">2° Lugar</p></div>
+              </div>
             )}
             <p className="text-gray-500 text-[8px] md:text-[10px] mt-1">{pollaInfo.total_participantes || 0} ticket(s)</p>
           </div>
@@ -116,57 +110,43 @@ export default function PollaClasificacion() {
           </div>
         ) : (
           <div className="space-y-2 md:space-y-3">
-            {clasificacion.map((p, index) => (
-              <div key={`${p.usuario_id}-${p.ticket}`}
-                className={`rounded-xl md:rounded-2xl border p-2.5 md:p-4 transition-all ${
-                  index === 0
-                    ? "bg-gradient-to-r from-yellow-900/30 via-amber-800/20 to-yellow-900/30 border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)]"
-                    : "bg-gray-900/60 border-gray-700/50"
-                }`}>
-                <div className="flex items-center justify-between mb-2 gap-1">
-                  <div className="flex items-center gap-2 md:gap-3 min-w-0">
-                    <div className={`w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-lg shrink-0 ${
+            {clasificacion.map((p, index) => {
+              const nums = (p.selecciones || [])
+                .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden)
+                .map((s: any) => s.caballo_numero)
+                .join("-");
+              return (
+                <div key={`${p.usuario_id}-${p.ticket}`}
+                  className={`rounded-xl md:rounded-2xl border p-2.5 md:p-3 transition-all ${
+                    index === 0
+                      ? "bg-gradient-to-r from-yellow-900/30 via-amber-800/20 to-yellow-900/30 border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)]"
+                      : "bg-gray-900/60 border-gray-700/50"
+                  }`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center font-bold text-[10px] md:text-base shrink-0 ${
                       index === 0 ? "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50" :
                       index === 1 ? "bg-gray-400/20 text-gray-300 border border-gray-400/50" :
                       "bg-white/5 text-gray-400 border border-white/10"
                     }`}>
                       {getPuestoIcon(index)}
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-white text-xs md:text-base truncate">{p.sobrenombre}</p>
-                      <p className="text-[8px] md:text-[10px] text-gray-500">Ticket #{p.ticket}</p>
+                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-wrap">
+                      <span className="font-bold text-white text-xs md:text-sm truncate">{p.sobrenombre}</span>
+                      {nums && (
+                        <span className={`font-mono font-bold text-xs md:text-sm ${getPuestoColor(index)}`}>{nums}</span>
+                      )}
+                    </div>
+                    <div className="ml-auto text-right shrink-0">
+                      <p className={`text-xs md:text-base font-black ${getPuestoColor(index)}`}>{Number(p.puntos)} pts</p>
+                      {Number(p.premio) > 0 && (
+                        <p className="text-green-300 font-bold text-[9px] md:text-xs">+Bs. {Number(p.premio).toLocaleString()}</p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-sm md:text-xl font-black ${getPuestoColor(index)}`}>{Number(p.puntos)} pts</p>
-                    {Number(p.premio) > 0 && (
-                      <p className="text-green-300 font-bold text-[10px] md:text-sm">+Bs. {Number(p.premio).toLocaleString()}</p>
-                    )}
-                  </div>
+                  <p className="text-[7px] md:text-[9px] text-gray-500 mt-0.5">Ticket #{p.ticket}</p>
                 </div>
-
-                {p.selecciones?.length > 0 && (
-                  <div className="grid grid-cols-6 gap-1 md:gap-1.5 mt-1.5 md:mt-2">
-                    {p.selecciones.map((s: any) => {
-                      const bgColor = s.puntos === 5 ? "bg-yellow-500/20 border-yellow-400/40" :
-                        s.puntos === 3 ? "bg-gray-400/20 border-gray-400/40" :
-                        s.puntos === 1 ? "bg-orange-500/20 border-orange-400/40" :
-                        "bg-red-500/10 border-red-400/30";
-                      const textColor = s.puntos >= 5 ? "text-yellow-300" :
-                        s.puntos >= 3 ? "text-gray-300" :
-                        s.puntos >= 1 ? "text-orange-300" : "text-red-400";
-                      return (
-                        <div key={s.carrera_orden} className={`text-center px-0.5 md:px-1.5 py-0.5 md:py-1.5 rounded-md md:rounded-lg border ${bgColor}`}>
-                          <p className="text-[7px] md:text-[10px] text-gray-500">C{s.carrera_orden}</p>
-                          <p className={`text-[8px] md:text-[11px] font-bold ${textColor}`}>#{s.caballo_numero}</p>
-                          <p className={`text-[7px] md:text-[10px] font-bold ${textColor}`}>+{s.puntos}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
