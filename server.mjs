@@ -35,6 +35,22 @@ app.prepare().then(async () => {
     await pool.query(`INSERT INTO jackpot_remates (id, monto) VALUES (1, 0) ON CONFLICT (id) DO NOTHING`);
     console.log("✅ Tabla jackpot_remates lista");
 
+    // Generar codigo_referido para usuarios existentes que no tengan uno
+    const sinCodigo = await pool.query(`SELECT id FROM usuarios WHERE codigo_referido IS NULL`);
+    for (const u of sinCodigo.rows) {
+      for (let i = 0; i < 50; i++) {
+        const codigo = String(Math.floor(10000 + Math.random() * 90000));
+        const existe = await pool.query("SELECT id FROM usuarios WHERE codigo_referido = $1", [codigo]);
+        if (existe.rows.length === 0) {
+          await pool.query("UPDATE usuarios SET codigo_referido = $1 WHERE id = $2", [codigo, u.id]);
+          break;
+        }
+      }
+    }
+    if (sinCodigo.rows.length > 0) {
+      console.log(`✅ Códigos generados para ${sinCodigo.rows.length} usuarios existentes`);
+    }
+
     // Verificar que las columnas existen
     const cols = await pool.query(
       `SELECT column_name FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name IN ('codigo_referido','referido_por','referido_saldo')`

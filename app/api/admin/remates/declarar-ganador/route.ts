@@ -45,16 +45,7 @@ export async function POST(req: Request) {
 
     const casa = Math.round(totalPujas * 0.20);
     const aporteJackpot = Math.round(casa * 0.25);
-    const comisionReferido = Math.round(casa * 0.25);
     const totalGanador = totalPujas - casa;
-
-    let referrerId: number | null = null;
-    if (winnerUserId) {
-      const ref = await client.query("SELECT referido_por FROM usuarios WHERE id = $1", [winnerUserId]);
-      if (ref.rows.length > 0 && ref.rows[0].referido_por) {
-        referrerId = ref.rows[0].referido_por;
-      }
-    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS historial (
@@ -85,18 +76,6 @@ export async function POST(req: Request) {
       }
     }
 
-    if (referrerId) {
-      await client.query(
-        `UPDATE usuarios SET referido_saldo = COALESCE(referido_saldo, 0) + $1 WHERE id = $2`,
-        [comisionReferido, referrerId]
-      );
-      await client.query(
-        `INSERT INTO historial (usuario_id, tipo, monto, asunto)
-         VALUES ($1, 'comision_referido', $2, $3)`,
-        [referrerId, comisionReferido, 'Comisión por referido']
-      );
-    }
-
     await client.query(
       `UPDATE carreras_remate SET ganador = $1, estado = 'cerrada' WHERE id = $2`,
       [numero_ganador, carrera_id]
@@ -112,7 +91,7 @@ export async function POST(req: Request) {
 
     broadcast({ type: "ganador", carrera_id });
 
-    return NextResponse.json({ ok: true, totalGanador, comisionReferido: referrerId ? comisionReferido : 0 });
+    return NextResponse.json({ ok: true, totalGanador });
   } catch (error) {
     await client.query("ROLLBACK");
     client.release();
