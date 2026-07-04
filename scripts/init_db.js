@@ -121,6 +121,7 @@ async function init() {
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         orden INTEGER NOT NULL,
+        nombre VARCHAR(100) NOT NULL DEFAULT '',
         cantidad_caballos INTEGER NOT NULL,
         UNIQUE(polla_id, orden)
       )
