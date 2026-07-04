@@ -30,6 +30,11 @@ export async function GET() {
       [p.id]
     );
 
+    const totalTickets = await pool.query(
+      `SELECT COUNT(*) as count FROM (SELECT 1 FROM polla_apuestas WHERE polla_id = $1 GROUP BY usuario_id, ticket) sub`,
+      [p.id]
+    );
+
     return NextResponse.json({
       ok: true,
       polla: {
@@ -43,6 +48,7 @@ export async function GET() {
         cerrada_en: p.cerrada_en,
         carreras: carreras.rows,
         resultados: resultados.rows,
+        total_tickets: Number(totalTickets.rows[0].count),
       }
     });
   } catch (error) {

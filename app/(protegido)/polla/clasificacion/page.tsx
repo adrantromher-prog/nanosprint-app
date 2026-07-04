@@ -81,13 +81,26 @@ export default function PollaClasificacion() {
           </div>
         </div>
 
-        {pollaInfo && !pollaInfo.activa && pollaInfo.cerrada_en && (
+        {pollaInfo && (
           <div className="bg-gradient-to-r from-yellow-900/30 via-amber-800/30 to-yellow-900/30 border border-yellow-400/40 rounded-2xl p-4 mb-6 text-center">
-            <p className="text-yellow-300 font-bold text-lg">🏆 Polla Cerrada</p>
-            <div className="flex justify-center gap-6 mt-2 text-sm">
-              <div><span className="text-yellow-300 font-bold">1° Lugar:</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
-              <div><span className="text-gray-300 font-bold">2° Lugar:</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
-            </div>
+            {!pollaInfo.activa && pollaInfo.cerrada_en ? (
+              <>
+                <p className="text-yellow-300 font-bold text-lg">🏆 Polla Cerrada</p>
+                <div className="flex justify-center gap-6 mt-2 text-sm">
+                  <div><span className="text-yellow-300 font-bold">1° Lugar:</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
+                  <div><span className="text-gray-300 font-bold">2° Lugar:</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-yellow-300 font-bold text-lg">Premios Estimados</p>
+                <div className="flex justify-center gap-6 mt-2 text-sm">
+                  <div><span className="text-yellow-300 font-bold">1° Lugar:</span> Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.65).toLocaleString()}</div>
+                  <div><span className="text-gray-300 font-bold">2° Lugar:</span> Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.20).toLocaleString()}</div>
+                </div>
+              </>
+            )}
+            <p className="text-gray-500 text-[10px] mt-1">{pollaInfo.total_participantes || 0} ticket(s)</p>
           </div>
         )}
 

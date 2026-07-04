@@ -14,12 +14,12 @@ export async function GET(req: Request) {
 
     const participantes = await pool.query(
       `SELECT
-        pp.ticket,
-        pp.usuario_id,
+        t.ticket,
+        t.usuario_id,
         u.sobrenombre,
-        pp.puntos,
-        pp.premio,
-        pp.pagado,
+        COALESCE(pp.puntos, 0) as puntos,
+        COALESCE(pp.premio, 0) as premio,
+        COALESCE(pp.pagado, false) as pagado,
         COALESCE(
           json_agg(
             json_build_object(
@@ -30,12 +30,14 @@ export async function GET(req: Request) {
           ) FILTER (WHERE pa.id IS NOT NULL),
           '[]'::json
         ) as selecciones
-      FROM polla_puntos pp
-      JOIN usuarios u ON u.id = pp.usuario_id
-      LEFT JOIN polla_apuestas pa ON pa.polla_id = pp.polla_id AND pa.usuario_id = pp.usuario_id AND pa.ticket = pp.ticket
-      WHERE pp.polla_id = $1
-      GROUP BY pp.ticket, pp.usuario_id, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
-      ORDER BY pp.puntos DESC, pp.premio DESC`,
+      FROM (
+        SELECT DISTINCT usuario_id, ticket FROM polla_apuestas WHERE polla_id = $1
+      ) t
+      JOIN usuarios u ON u.id = t.usuario_id
+      LEFT JOIN polla_puntos pp ON pp.polla_id = $1 AND pp.usuario_id = t.usuario_id AND pp.ticket = t.ticket
+      LEFT JOIN polla_apuestas pa ON pa.polla_id = $1 AND pa.usuario_id = t.usuario_id AND pa.ticket = t.ticket
+      GROUP BY t.ticket, t.usuario_id, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
+      ORDER BY COALESCE(pp.puntos, 0) DESC, COALESCE(pp.premio, 0) DESC`,
       [pollaId]
     );
 

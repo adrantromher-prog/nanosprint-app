@@ -58,6 +58,7 @@ export default function PollaPage() {
     setCargando(false);
 
     if (data.ok) {
+      setSelecciones({});
       alert(`¡Apuesta registrada! Ticket #${data.ticket}`);
       fetchData();
     } else {
@@ -147,18 +148,18 @@ export default function PollaPage() {
         </div>
 
         <div className="bg-gradient-to-r from-amber-900/30 via-yellow-800/20 to-amber-900/30 border border-yellow-400/30 rounded-2xl p-4 mb-4 text-sm">
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-2 gap-3 text-center">
             <div>
-              <p className="text-yellow-300 font-bold text-lg">1° Lugar</p>
-              <p className="text-yellow-200/60 text-[10px] uppercase tracking-wide">65% del pozo</p>
+              <p className="text-yellow-300 font-bold text-lg">Bs. {Math.floor(costo * (polla.total_tickets || 1) * 0.65).toLocaleString()}</p>
+              <p className="text-yellow-200/60 text-[10px] uppercase tracking-wide">1° Lugar</p>
             </div>
             <div>
-              <p className="text-gray-300 font-bold text-lg">2° Lugar</p>
-              <p className="text-gray-400/60 text-[10px] uppercase tracking-wide">20% del pozo</p>
+              <p className="text-gray-300 font-bold text-lg">Bs. {Math.floor(costo * (polla.total_tickets || 1) * 0.20).toLocaleString()}</p>
+              <p className="text-gray-400/60 text-[10px] uppercase tracking-wide">2° Lugar</p>
             </div>
           </div>
           <div className="text-center mt-2">
-            <span className="text-amber-300/70 text-xs font-mono">Costo: Bs. {costo.toLocaleString()} por ticket</span>
+            <span className="text-amber-300/70 text-xs font-mono">{polla.total_tickets || 0} ticket(s) · Bs. {costo.toLocaleString()} c/u</span>
           </div>
         </div>
 
