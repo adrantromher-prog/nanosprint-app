@@ -23,12 +23,14 @@ export default function Clasificacion() {
   return (
     <main className="relative h-dvh w-full text-white overflow-hidden">
 
-      <video
-        src="/fondos/fondoapuesta.mp4"
-        autoPlay loop muted playsInline
-        className="absolute inset-0 w-full h-full object-cover scale-[1.2] brightness-[0.75] contrast-[1.2] saturate-[1.2] blur-[1.5px]"
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
+      <div className="absolute inset-0 opacity-20"
+        style={{
+          background: `radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,255,255,0.15), transparent),
+                      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(200,0,255,0.1), transparent),
+                      radial-gradient(ellipse 50% 40% at 20% 70%, rgba(255,200,0,0.08), transparent)`
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
 
       <div className="relative z-10 flex flex-col h-full p-4 gap-4">
 
