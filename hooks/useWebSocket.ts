@@ -22,7 +22,11 @@ type WSEvent =
   | { type: "carrera_cerrada"; carrera_id: number }
   | { type: "carrera_eliminada"; carrera_id: number }
   | { type: "caballo_retirado"; caballo_id: number }
-  | { type: "jackpot_actualizado"; monto: number };
+  | { type: "jackpot_actualizado"; monto: number }
+  | { type: "polla_creada"; polla_id: number }
+  | { type: "polla_apuesta"; polla_id: number; usuario_id: number }
+  | { type: "polla_resultados"; polla_id: number }
+  | { type: "polla_cerrada"; polla_id: number };
 
 export default function useWebSocket(handler: (event: WSEvent) => void) {
   const wsRef = useRef<WebSocket | null>(null);

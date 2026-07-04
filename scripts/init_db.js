@@ -102,6 +102,71 @@ async function init() {
     `);
     console.log("Tabla configuracion lista");
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS polla_config (
+        id SERIAL PRIMARY KEY,
+        activa BOOLEAN NOT NULL DEFAULT false,
+        costo NUMERIC(12,2) NOT NULL DEFAULT 700.00,
+        premio_1 NUMERIC(12,2) NOT NULL DEFAULT 0,
+        premio_2 NUMERIC(12,2) NOT NULL DEFAULT 0,
+        premio_3 NUMERIC(12,2) NOT NULL DEFAULT 0,
+        creada_en TIMESTAMP DEFAULT NOW(),
+        cerrada_en TIMESTAMP
+      )
+    `);
+    console.log("Tabla polla_config lista");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS polla_carreras (
+        id SERIAL PRIMARY KEY,
+        polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
+        carrera_remate_id INTEGER NOT NULL REFERENCES carreras_remate(id) ON DELETE CASCADE,
+        orden INTEGER NOT NULL,
+        UNIQUE(polla_id, carrera_remate_id)
+      )
+    `);
+    console.log("Tabla polla_carreras lista");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS polla_apuestas (
+        id SERIAL PRIMARY KEY,
+        polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
+        usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        carrera_remate_id INTEGER NOT NULL REFERENCES carreras_remate(id) ON DELETE CASCADE,
+        caballo_id INTEGER NOT NULL REFERENCES carreras_caballos(id),
+        puntos INTEGER NOT NULL DEFAULT 0,
+        fecha TIMESTAMP DEFAULT NOW(),
+        UNIQUE(polla_id, usuario_id, carrera_remate_id)
+      )
+    `);
+    console.log("Tabla polla_apuestas lista");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS polla_resultados (
+        id SERIAL PRIMARY KEY,
+        polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
+        carrera_remate_id INTEGER NOT NULL REFERENCES carreras_remate(id) ON DELETE CASCADE,
+        primer_lugar INTEGER REFERENCES carreras_caballos(id),
+        segundo_lugar INTEGER REFERENCES carreras_caballos(id),
+        tercer_lugar INTEGER REFERENCES carreras_caballos(id),
+        UNIQUE(polla_id, carrera_remate_id)
+      )
+    `);
+    console.log("Tabla polla_resultados lista");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS polla_puntos (
+        id SERIAL PRIMARY KEY,
+        polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
+        usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        puntos INTEGER NOT NULL DEFAULT 0,
+        premio NUMERIC(12,2) NOT NULL DEFAULT 0,
+        pagado BOOLEAN NOT NULL DEFAULT false,
+        UNIQUE(polla_id, usuario_id)
+      )
+    `);
+    console.log("Tabla polla_puntos lista");
+
     console.log("Base de datos inicializada correctamente");
     process.exit(0);
   } catch (e) {

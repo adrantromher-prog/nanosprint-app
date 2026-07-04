@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaUsers, FaHorseHead, FaTools, FaChartBar } from "react-icons/fa";
+import { FaUsers, FaHorseHead, FaTools, FaChartBar, FaTrophy } from "react-icons/fa";
 
 export default function AdminHome() {
   const router = useRouter();
@@ -90,6 +90,19 @@ export default function AdminHome() {
             <div>
               <h2 className="text-xl md:text-3xl font-semibold">Usuarios</h2>
               <p className="text-gray-400 mt-1 text-sm md:text-base">Consulta, edita y gestiona los usuarios registrados.</p>
+            </div>
+          </div>
+        </div>
+
+        <div onClick={() => router.push("/admin/polla")}
+          className="cursor-pointer bg-gray-900 hover:bg-gray-800 transition-all p-4 md:p-8 rounded-2xl shadow-xl border border-gray-700 hover:shadow-2xl hover:scale-[1.02]">
+          <div className="flex items-center gap-4">
+            <div className="bg-amber-700 p-3 md:p-4 rounded-xl">
+              <FaTrophy size={28} className="md:w-10 md:h-10" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-3xl font-semibold">Polla Hípica</h2>
+              <p className="text-gray-400 mt-1 text-sm md:text-base">Crea y administra la Polla Hípica.</p>
             </div>
           </div>
         </div>
