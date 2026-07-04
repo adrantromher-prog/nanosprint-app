@@ -124,7 +124,7 @@ export default function PollaClasificacion() {
                       : "bg-white/[0.02] border-white/[0.06]"
                   }`}>
                   <div className="px-3 py-2.5">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 ${
                         index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
                         index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
@@ -132,20 +132,18 @@ export default function PollaClasificacion() {
                       }`}>
                         {getPuestoIcon(index)}
                       </div>
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span className="font-semibold text-white/80 text-[13px] truncate">{p.sobrenombre}</span>
-                        {nums && (
-                          <span className={`font-mono font-bold text-[13px] ${getPuestoColor(index)}`}>{nums}</span>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0">
+                      <span className="text-white/30 text-[10px] font-mono shrink-0">#{p.ticket}</span>
+                      <span className="font-semibold text-white/80 text-[13px] truncate">{p.sobrenombre}</span>
+                      {nums && (
+                        <span className={`font-mono font-bold text-[13px] ${getPuestoColor(index)} shrink-0`}>{nums}</span>
+                      )}
+                      <div className="ml-auto text-right shrink-0">
                         <p className={`text-sm font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[10px] text-white/30">pts</span></p>
                         {Number(p.premio) > 0 && (
                           <p className="text-emerald-400/80 font-semibold text-[10px]">+Bs. {Number(p.premio).toLocaleString()}</p>
                         )}
                       </div>
                     </div>
-                    <p className="text-white/15 text-[9px] mt-1 ml-9">Ticket #{p.ticket}</p>
                   </div>
                 </div>
               );
