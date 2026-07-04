@@ -42,7 +42,7 @@ export default function LoginPage() {
       />
 
       {/* CONTENIDO */}
-      <div className="relative z-10 flex items-end justify-center h-full pb-10 px-4">
+      <div className="relative z-10 flex items-center justify-center h-full px-4">
 
         {/* TARJETA FUTURISTA */}
         <div
