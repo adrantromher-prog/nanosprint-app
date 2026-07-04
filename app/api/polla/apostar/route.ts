@@ -99,13 +99,13 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    broadcast({ type: "polla_apuesta", polla_id, usuario_id: usuarioId });
+    try { broadcast({ type: "polla_apuesta", polla_id, usuario_id: usuarioId }); } catch {}
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    await client.query("ROLLBACK");
-    client.release();
+    try { await client.query("ROLLBACK"); } catch {}
+    try { client.release(); } catch {}
     console.error("Error en apuesta polla:", error);
-    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
   }
 }

@@ -47,13 +47,13 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    broadcast({ type: "polla_creada", polla_id: pollaId });
+    try { broadcast({ type: "polla_creada", polla_id: pollaId }); } catch {}
 
     return NextResponse.json({ ok: true, polla_id: pollaId });
   } catch (error) {
-    await client.query("ROLLBACK");
-    client.release();
+    try { await client.query("ROLLBACK"); } catch {}
+    try { client.release(); } catch {}
     console.error("Error creando polla:", error);
-    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
   }
 }
