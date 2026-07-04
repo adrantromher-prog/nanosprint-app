@@ -133,11 +133,12 @@ async function init() {
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        ticket INTEGER NOT NULL DEFAULT 1,
         carrera_orden INTEGER NOT NULL,
         caballo_numero INTEGER NOT NULL,
         puntos INTEGER NOT NULL DEFAULT 0,
         fecha TIMESTAMP DEFAULT NOW(),
-        UNIQUE(polla_id, usuario_id, carrera_orden)
+        UNIQUE(polla_id, usuario_id, ticket, carrera_orden)
       )
     `);
     console.log("Tabla polla_apuestas lista");
@@ -160,10 +161,11 @@ async function init() {
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        ticket INTEGER NOT NULL DEFAULT 1,
         puntos INTEGER NOT NULL DEFAULT 0,
         premio NUMERIC(12,2) NOT NULL DEFAULT 0,
         pagado BOOLEAN NOT NULL DEFAULT false,
-        UNIQUE(polla_id, usuario_id)
+        UNIQUE(polla_id, usuario_id, ticket)
       )
     `);
     console.log("Tabla polla_puntos lista");

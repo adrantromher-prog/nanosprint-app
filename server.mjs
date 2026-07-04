@@ -99,17 +99,21 @@ app.prepare().then(async () => {
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        ticket INTEGER NOT NULL DEFAULT 1,
         carrera_orden INTEGER NOT NULL,
         caballo_numero INTEGER NOT NULL,
         puntos INTEGER NOT NULL DEFAULT 0,
         fecha TIMESTAMP DEFAULT NOW(),
-        UNIQUE(polla_id, usuario_id, carrera_orden)
+        UNIQUE(polla_id, usuario_id, ticket, carrera_orden)
       )
     `);
     await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS carrera_orden INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS caballo_numero INTEGER NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS ticket INTEGER NOT NULL DEFAULT 1`);
+    await pool.query(`ALTER TABLE polla_apuestas DROP CONSTRAINT IF EXISTS polla_apuestas_polla_id_usuario_id_carrera_orden_key`);
     await pool.query(`ALTER TABLE polla_apuestas DROP COLUMN IF EXISTS carrera_remate_id`);
     await pool.query(`ALTER TABLE polla_apuestas DROP COLUMN IF EXISTS caballo_id`);
+    try { await pool.query(`ALTER TABLE polla_apuestas ADD CONSTRAINT polla_apuestas_ticket_unique UNIQUE (polla_id, usuario_id, ticket, carrera_orden)`); } catch (e) { if (!e.message?.includes('already exists')) throw e; }
     console.log("✅ Tabla polla_apuestas lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_resultados (
@@ -130,12 +134,16 @@ app.prepare().then(async () => {
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+        ticket INTEGER NOT NULL DEFAULT 1,
         puntos INTEGER NOT NULL DEFAULT 0,
         premio NUMERIC(12,2) NOT NULL DEFAULT 0,
         pagado BOOLEAN NOT NULL DEFAULT false,
-        UNIQUE(polla_id, usuario_id)
+        UNIQUE(polla_id, usuario_id, ticket)
       )
     `);
+    await pool.query(`ALTER TABLE polla_puntos ADD COLUMN IF NOT EXISTS ticket INTEGER NOT NULL DEFAULT 1`);
+    await pool.query(`ALTER TABLE polla_puntos DROP CONSTRAINT IF EXISTS polla_puntos_polla_id_usuario_id_key`);
+    try { await pool.query(`ALTER TABLE polla_puntos ADD CONSTRAINT polla_puntos_ticket_unique UNIQUE (polla_id, usuario_id, ticket)`); } catch (e) { if (!e.message?.includes('already exists')) throw e; }
     console.log("✅ Tabla polla_puntos lista");
 
     await pool.end();

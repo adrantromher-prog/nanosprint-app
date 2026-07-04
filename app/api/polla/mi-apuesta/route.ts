@@ -23,29 +23,35 @@ export async function GET() {
       return NextResponse.json({ ok: true, apuesta: null });
     }
 
-    const apuesta = await pool.query(
-      `SELECT carrera_orden, caballo_numero, puntos
+    const apuestas = await pool.query(
+      `SELECT ticket, carrera_orden, caballo_numero, puntos
        FROM polla_apuestas WHERE polla_id = $1 AND usuario_id = $2
-       ORDER BY carrera_orden ASC`,
+       ORDER BY ticket ASC, carrera_orden ASC`,
       [polla.rows[0].id, usuarioId]
     );
 
-    if (apuesta.rows.length === 0) {
+    if (apuestas.rows.length === 0) {
       return NextResponse.json({ ok: true, apuesta: null });
     }
 
-    const totalPuntos = apuesta.rows.reduce((sum, r) => sum + Number(r.puntos), 0);
+    const tickets: any[] = [];
+    const map: { [ticket: number]: any } = {};
+    for (const r of apuestas.rows) {
+      if (!map[r.ticket]) {
+        map[r.ticket] = { ticket: r.ticket, selecciones: [], total_puntos: 0 };
+        tickets.push(map[r.ticket]);
+      }
+      map[r.ticket].selecciones.push({
+        carrera_orden: r.carrera_orden,
+        caballo_numero: r.caballo_numero,
+        puntos: Number(r.puntos),
+      });
+      map[r.ticket].total_puntos += Number(r.puntos);
+    }
 
     return NextResponse.json({
       ok: true,
-      apuesta: {
-        selecciones: apuesta.rows.map(r => ({
-          carrera_orden: r.carrera_orden,
-          caballo_numero: r.caballo_numero,
-          puntos: Number(r.puntos),
-        })),
-        total_puntos: totalPuntos,
-      }
+      apuesta: tickets.length > 0 ? tickets : null,
     });
   } catch (error) {
     console.error("Error obteniendo mi apuesta:", error);

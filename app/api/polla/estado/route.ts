@@ -17,7 +17,7 @@ export async function GET() {
     const p = polla.rows[0];
 
     const totalParticipantes = await pool.query(
-      `SELECT COUNT(DISTINCT usuario_id) as count FROM polla_apuestas WHERE polla_id = $1`,
+      `SELECT COUNT(*) as count FROM (SELECT 1 FROM polla_apuestas WHERE polla_id = $1 GROUP BY usuario_id, ticket) sub`,
       [p.id]
     );
 

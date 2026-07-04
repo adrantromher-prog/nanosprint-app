@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     const puntajes = await client.query(
-      `SELECT pp.usuario_id, pp.puntos, u.sobrenombre
+      `SELECT pp.usuario_id, pp.ticket, pp.puntos, u.sobrenombre
        FROM polla_puntos pp
        JOIN usuarios u ON u.id = pp.usuario_id
        WHERE pp.polla_id = $1
@@ -66,8 +66,8 @@ export async function POST(req: Request) {
 
       for (const p of grupo) {
         await client.query(
-          `UPDATE polla_puntos SET premio = $1 WHERE polla_id = $2 AND usuario_id = $3`,
-          [premioIndividual, polla_id, p.usuario_id]
+          `UPDATE polla_puntos SET premio = $1 WHERE polla_id = $2 AND usuario_id = $3 AND ticket = $4`,
+          [premioIndividual, polla_id, p.usuario_id, p.ticket]
         );
 
         if (premioIndividual > 0) {
@@ -83,8 +83,8 @@ export async function POST(req: Request) {
         }
 
         await client.query(
-          `UPDATE polla_puntos SET pagado = true WHERE polla_id = $1 AND usuario_id = $2`,
-          [polla_id, p.usuario_id]
+          `UPDATE polla_puntos SET pagado = true WHERE polla_id = $1 AND usuario_id = $2 AND ticket = $3`,
+          [polla_id, p.usuario_id, p.ticket]
         );
       }
     }

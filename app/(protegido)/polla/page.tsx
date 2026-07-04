@@ -9,7 +9,7 @@ export default function PollaPage() {
   const [polla, setPolla] = useState<any>(null);
   const [usuario, setUsuario] = useState<any>(null);
   const [selecciones, setSelecciones] = useState<{ [carreraOrden: number]: number }>({});
-  const [miApuesta, setMiApuesta] = useState<any>(null);
+  const [misTickets, setMisTickets] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -20,7 +20,8 @@ export default function PollaPage() {
     ]);
     if (resPolla.ok) setPolla(resPolla.polla);
     if (resUser.nombre) setUsuario(resUser);
-    if (resApuesta.ok) setMiApuesta(resApuesta.apuesta);
+    if (resApuesta.ok) setMisTickets(resApuesta.apuesta || []);
+    setSelecciones({});
   }, []);
 
   useWebSocket(useCallback((event) => {
@@ -57,7 +58,7 @@ export default function PollaPage() {
     setCargando(false);
 
     if (data.ok) {
-      alert("¡Apuesta registrada con éxito!");
+      alert(`¡Apuesta registrada! Ticket #${data.ticket}`);
       fetchData();
     } else {
       alert(data.error || "Error al registrar apuesta");
@@ -89,9 +90,13 @@ export default function PollaPage() {
     );
   }
 
-  const totalParticipantes = polla.resultados?.length > 0 ? (polla as any).total_participantes || 0 : 0;
-  const yaParticipo = miApuesta !== null;
   const todasConResultado = polla.resultados?.length >= 6;
+  const costo = Number(polla.costo);
+
+  const todoSeleccionado = Object.keys(selecciones).length === 6;
+
+  const getSeleccionEnTicket = (ticket: any, carreraOrden: number) =>
+    ticket.selecciones?.find((s: any) => s.carrera_orden === carreraOrden);
 
   return (
     <main className="relative min-h-screen w-full text-white overflow-hidden">
@@ -133,9 +138,9 @@ export default function PollaPage() {
               <p className="text-white text-sm font-bold">{usuario.nombre}</p>
               <p className="text-green-300 font-extrabold text-sm">Bs. {Number(usuario.saldo).toLocaleString()}</p>
             </div>
-            {yaParticipo && (
+            {misTickets.length > 0 && (
               <div className="ml-auto px-3 py-1 rounded-full bg-green-500/20 border border-green-400/50 text-green-300 text-xs font-bold">
-                ✅ Participas
+                {misTickets.length} ticket(s)
               </div>
             )}
           </div>
@@ -144,24 +149,20 @@ export default function PollaPage() {
         <div className="bg-gradient-to-r from-amber-900/30 via-yellow-800/20 to-amber-900/30 border border-yellow-400/30 rounded-2xl p-4 mb-4 text-sm">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-yellow-300 font-bold text-lg">65%</p>
-              <p className="text-yellow-200/60 text-[10px] uppercase tracking-wide">1er Lugar</p>
+              <p className="text-yellow-300 font-bold text-lg">1° Lugar</p>
+              <p className="text-yellow-200/60 text-[10px] uppercase tracking-wide">65% del pozo</p>
             </div>
             <div>
-              <p className="text-gray-300 font-bold text-lg">20%</p>
-              <p className="text-gray-400/60 text-[10px] uppercase tracking-wide">2do Lugar</p>
-            </div>
-            <div>
-              <p className="text-red-300 font-bold text-lg">15%</p>
-              <p className="text-red-300/60 text-[10px] uppercase tracking-wide">Casa</p>
+              <p className="text-gray-300 font-bold text-lg">2° Lugar</p>
+              <p className="text-gray-400/60 text-[10px] uppercase tracking-wide">20% del pozo</p>
             </div>
           </div>
           <div className="text-center mt-2">
-            <span className="text-amber-300/70 text-xs font-mono">Costo: Bs. {Number(polla.costo).toLocaleString()}</span>
+            <span className="text-amber-300/70 text-xs font-mono">Costo: Bs. {costo.toLocaleString()} por ticket</span>
           </div>
         </div>
 
-        {!yaParticipo && !todasConResultado && (
+        {!todasConResultado && (
           <div className="bg-amber-500/10 border border-amber-400/30 rounded-xl p-3 text-sm text-amber-200 mb-4">
             Toca los cuadritos para seleccionar 1 caballo por cada carrera
           </div>
@@ -173,10 +174,20 @@ export default function PollaPage() {
           </div>
         )}
 
+        {misTickets.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {misTickets.map((t: any) => (
+              <div key={t.ticket}
+                className="px-3 py-1.5 rounded-lg bg-green-900/30 border border-green-400/30 text-green-300 text-xs font-bold">
+                Ticket #{t.ticket} — {t.total_puntos} pts
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="space-y-3">
           {polla.carreras?.map((carrera: any) => {
             const resultado = polla.resultados?.find((r: any) => r.carrera_orden === carrera.orden);
-            const miSeleccion = miApuesta?.selecciones?.find((s: any) => s.carrera_orden === carrera.orden);
             const seleccionLocal = selecciones[carrera.orden];
             const caballos = Array.from({ length: carrera.cantidad_caballos }, (_, i) => i + 1);
 
@@ -204,34 +215,38 @@ export default function PollaPage() {
 
                 <div className="flex flex-wrap gap-2">
                   {caballos.map((num) => {
-                    const selected = miSeleccion?.caballo_numero === num || seleccionLocal === num;
+                    const estaEnTicketLocal = seleccionLocal === num;
+                    const tieneTicketConEste = misTickets.some(t => getSeleccionEnTicket(t, carrera.orden)?.caballo_numero === num);
+                    const selected = estaEnTicketLocal || tieneTicketConEste;
                     const esGanador = resultado?.primer_lugar === num;
                     const esSegundo = resultado?.segundo_lugar === num;
                     const esTercero = resultado?.tercer_lugar === num;
 
                     let borderColor = "border-gray-600/50 hover:border-amber-400/50";
-                    if (selected && yaParticipo) {
+                    if (selected && tieneTicketConEste && !estaEnTicketLocal) {
                       if (esGanador) borderColor = "border-yellow-400/80 bg-yellow-500/20";
                       else if (esSegundo) borderColor = "border-gray-300/80 bg-gray-400/20";
                       else if (esTercero) borderColor = "border-orange-400/80 bg-orange-500/20";
                       else borderColor = "border-red-400/60 bg-red-500/15";
-                    } else if (selected) {
+                    } else if (estaEnTicketLocal) {
                       borderColor = "border-amber-400/80 bg-amber-500/20 shadow-[0_0_12px_rgba(255,200,0,0.25)]";
                     }
 
+                    const estaDeshabilitado = todasConResultado;
+
                     return (
                       <button key={num}
-                        onClick={() => !yaParticipo && !todasConResultado && seleccionarCaballo(carrera.orden, num)}
-                        disabled={yaParticipo || todasConResultado}
-                        className={`relative w-12 h-12 rounded-xl border-2 flex items-center justify-center font-bold text-base transition-all duration-150 ${borderColor} ${selected ? "scale-110" : "hover:scale-105"} ${(yaParticipo || todasConResultado) ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
+                        onClick={() => !estaDeshabilitado && seleccionarCaballo(carrera.orden, num)}
+                        disabled={estaDeshabilitado}
+                        className={`relative w-12 h-12 rounded-xl border-2 flex items-center justify-center font-bold text-base transition-all duration-150 ${borderColor} ${selected ? "scale-110" : "hover:scale-105"} ${estaDeshabilitado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
                         <span className={`${selected ? "text-white" : "text-gray-400"}`}>{num}</span>
                         {esGanador && <span className="absolute -top-1.5 -right-1.5 text-[10px]">👑</span>}
                         {esSegundo && <span className="absolute -top-1.5 -right-1.5 text-[10px]">🥈</span>}
                         {esTercero && <span className="absolute -top-1.5 -right-1.5 text-[10px]">🥉</span>}
-                        {miSeleccion?.caballo_numero === num && miApuesta && (
+                        {tieneTicketConEste && !estaEnTicketLocal && (
                           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] whitespace-nowrap">
                             <span className={`font-bold ${esGanador ? "text-yellow-300" : esSegundo ? "text-gray-300" : esTercero ? "text-orange-300" : "text-red-400"}`}>
-                              {miSeleccion.puntos > 0 ? `+${miSeleccion.puntos}` : "0"}
+                              ✓
                             </span>
                           </div>
                         )}
@@ -244,17 +259,18 @@ export default function PollaPage() {
           })}
         </div>
 
-        {!yaParticipo && !todasConResultado && (
-          <button onClick={enviarApuesta} disabled={cargando || Object.keys(selecciones).length !== 6}
+        {!todasConResultado && (
+          <button onClick={enviarApuesta} disabled={cargando || !todoSeleccionado}
             className="mt-6 w-full py-4 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-500 border border-yellow-400/70 text-white font-bold text-lg shadow-[0_0_24px_rgba(255,200,0,0.4)] hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            {cargando ? "Procesando..." : `Seleccionados ${Object.keys(selecciones).length}/6 — Bs. ${Number(polla.costo).toLocaleString()}`}
+            {cargando ? "Procesando..." : `Seleccionados ${Object.keys(selecciones).length}/6 — Bs. ${costo.toLocaleString()}`}
           </button>
         )}
 
-        {yaParticipo && (
-          <div className="mt-6 bg-green-900/30 border border-green-400/40 rounded-2xl p-4 text-center">
-            <p className="text-green-300 font-bold text-lg">✅ Ya participas en esta Polla</p>
-            <p className="text-green-200/70 text-sm">Tus puntos acumulados: <strong>{miApuesta.total_puntos}</strong></p>
+        {misTickets.length > 0 && (
+          <div className="mt-4 bg-green-900/20 border border-green-400/20 rounded-2xl p-3 text-center">
+            <p className="text-green-300/70 text-xs">
+              Tienes {misTickets.length} ticket(s) activos. Puedes comprar más tickets si quieres.
+            </p>
           </div>
         )}
       </div>

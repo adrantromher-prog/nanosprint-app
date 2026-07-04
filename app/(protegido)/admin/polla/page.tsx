@@ -108,7 +108,7 @@ export default function AdminPolla() {
   };
 
   const cerrarPolla = async () => {
-    if (!confirm("¿Estás seguro? 65% para 1er lugar, 20% para 2do lugar, 15% para la casa.")) return;
+    if (!confirm("¿Estás seguro? 1er lugar recibe el 65% del pozo, 2do lugar el 20%.")) return;
     const res = await fetch("/api/admin/polla/cerrar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -85,8 +85,8 @@ export default function PollaClasificacion() {
           <div className="bg-gradient-to-r from-yellow-900/30 via-amber-800/30 to-yellow-900/30 border border-yellow-400/40 rounded-2xl p-4 mb-6 text-center">
             <p className="text-yellow-300 font-bold text-lg">🏆 Polla Cerrada</p>
             <div className="flex justify-center gap-6 mt-2 text-sm">
-              <div><span className="text-yellow-300 font-bold">1er (65%):</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
-              <div><span className="text-gray-300 font-bold">2do (20%):</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
+              <div><span className="text-yellow-300 font-bold">1° Lugar:</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
+              <div><span className="text-gray-300 font-bold">2° Lugar:</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
             </div>
           </div>
         )}
@@ -104,7 +104,7 @@ export default function PollaClasificacion() {
         ) : (
           <div className="space-y-3">
             {clasificacion.map((p, index) => (
-              <div key={p.usuario_id}
+              <div key={`${p.usuario_id}-${p.ticket}`}
                 className={`rounded-2xl border p-4 transition-all ${
                   index === 0
                     ? "bg-gradient-to-r from-yellow-900/30 via-amber-800/20 to-yellow-900/30 border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)]"
@@ -121,6 +121,7 @@ export default function PollaClasificacion() {
                     </div>
                     <div>
                       <p className="font-bold text-white">{p.sobrenombre}</p>
+                      <p className="text-[10px] text-gray-500">Ticket #{p.ticket}</p>
                     </div>
                   </div>
                   <div className="text-right">

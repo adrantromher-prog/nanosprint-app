@@ -14,6 +14,7 @@ export async function GET(req: Request) {
 
     const participantes = await pool.query(
       `SELECT
+        pp.ticket,
         pp.usuario_id,
         u.sobrenombre,
         pp.puntos,
@@ -31,9 +32,9 @@ export async function GET(req: Request) {
         ) as selecciones
       FROM polla_puntos pp
       JOIN usuarios u ON u.id = pp.usuario_id
-      LEFT JOIN polla_apuestas pa ON pa.polla_id = pp.polla_id AND pa.usuario_id = pp.usuario_id
+      LEFT JOIN polla_apuestas pa ON pa.polla_id = pp.polla_id AND pa.usuario_id = pp.usuario_id AND pa.ticket = pp.ticket
       WHERE pp.polla_id = $1
-      GROUP BY pp.usuario_id, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
+      GROUP BY pp.ticket, pp.usuario_id, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
       ORDER BY pp.puntos DESC, pp.premio DESC`,
       [pollaId]
     );

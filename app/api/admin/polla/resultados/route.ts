@@ -56,19 +56,19 @@ export async function POST(req: Request) {
     }
 
     const totales = await client.query(
-      `SELECT usuario_id, SUM(puntos) as total_puntos
+      `SELECT usuario_id, ticket, SUM(puntos) as total_puntos
        FROM polla_apuestas WHERE polla_id = $1
-       GROUP BY usuario_id`,
+       GROUP BY usuario_id, ticket`,
       [polla_id]
     );
 
     for (const t of totales.rows) {
       await client.query(
-        `INSERT INTO polla_puntos (polla_id, usuario_id, puntos, premio)
-         VALUES ($1, $2, $3, 0)
-         ON CONFLICT (polla_id, usuario_id)
+        `INSERT INTO polla_puntos (polla_id, usuario_id, ticket, puntos, premio)
+         VALUES ($1, $2, $3, $4, 0)
+         ON CONFLICT (polla_id, usuario_id, ticket)
          DO UPDATE SET puntos = EXCLUDED.puntos`,
-        [polla_id, t.usuario_id, Number(t.total_puntos)]
+        [polla_id, t.usuario_id, t.ticket, Number(t.total_puntos)]
       );
     }
 

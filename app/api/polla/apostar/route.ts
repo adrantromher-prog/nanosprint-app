@@ -37,15 +37,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Polla no disponible o ya cerró" }, { status: 400 });
     }
 
-    const yaAposto = await client.query(
-      `SELECT id FROM polla_apuestas WHERE polla_id = $1 AND usuario_id = $2 LIMIT 1`,
+    const ticket = await client.query(
+      `SELECT COALESCE(MAX(ticket), 0) + 1 as next_ticket FROM polla_apuestas WHERE polla_id = $1 AND usuario_id = $2`,
       [polla_id, usuarioId]
     );
-    if (yaAposto.rows.length > 0) {
-      await client.query("ROLLBACK");
-      client.release();
-      return NextResponse.json({ ok: false, error: "Ya participas en esta polla" }, { status: 400 });
-    }
+    const ticketNum = Number(ticket.rows[0].next_ticket);
 
     const carreras = await client.query(
       `SELECT orden, cantidad_caballos FROM polla_carreras WHERE polla_id = $1`,
@@ -90,18 +86,25 @@ export async function POST(req: Request) {
 
     for (const [carreraOrden, caballoNumero] of Object.entries(selecciones)) {
       await client.query(
-        `INSERT INTO polla_apuestas (polla_id, usuario_id, carrera_orden, caballo_numero)
-         VALUES ($1, $2, $3, $4)`,
-        [polla_id, usuarioId, parseInt(carreraOrden), caballoNumero]
+        `INSERT INTO polla_apuestas (polla_id, usuario_id, ticket, carrera_orden, caballo_numero)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [polla_id, usuarioId, ticketNum, parseInt(carreraOrden), caballoNumero]
       );
     }
+
+    await client.query(
+      `INSERT INTO polla_puntos (polla_id, usuario_id, ticket, puntos, premio)
+       VALUES ($1, $2, $3, 0, 0)
+       ON CONFLICT (polla_id, usuario_id, ticket) DO NOTHING`,
+      [polla_id, usuarioId, ticketNum]
+    );
 
     await client.query("COMMIT");
     client.release();
 
     try { broadcast({ type: "polla_apuesta", polla_id, usuario_id: usuarioId }); } catch {}
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, ticket: ticketNum });
   } catch (error) {
     try { await client.query("ROLLBACK"); } catch {}
     try { client.release(); } catch {}
