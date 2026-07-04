@@ -173,8 +173,14 @@ export default function LobbyRemates() {
     return () => clearInterval(intervalo);
   }, [recargarCarreras]);
 
-  const nacionales = carreras.filter((c) => c.tipo === "nacional");
-  const americanas = carreras.filter((c) => c.tipo === "americana");
+  const ordenar = (a: Carrera, b: Carrera) => {
+    const aAbierta = a.estado === "abierta" && !a.ganador ? 0 : 1;
+    const bAbierta = b.estado === "abierta" && !b.ganador ? 0 : 1;
+    if (aAbierta !== bAbierta) return aAbierta - bAbierta;
+    return a.hora_cierre.localeCompare(b.hora_cierre);
+  };
+  const nacionales = [...carreras].filter((c) => c.tipo === "nacional").sort(ordenar);
+  const americanas = [...carreras].filter((c) => c.tipo === "americana").sort(ordenar);
 
   if (!usuario) {
     return (
