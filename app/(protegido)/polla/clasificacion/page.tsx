@@ -34,82 +34,83 @@ export default function PollaClasificacion() {
   useEffect(() => { if (pollaId) fetchClasificacion(); }, [pollaId, fetchClasificacion]);
 
   const getPuestoColor = (index: number) => {
-    if (index === 0) return "text-yellow-300";
+    if (index === 0) return "text-amber-300";
     if (index === 1) return "text-gray-300";
-    return "text-white";
+    return "text-white/60";
   };
 
   const getPuestoIcon = (index: number) => {
-    if (index === 0) return "👑";
-    if (index === 1) return "🥈";
-    return `#${index + 1}`;
+    if (index === 0) return "1";
+    if (index === 1) return "2";
+    return `${index + 1}`;
   };
 
   return (
-    <main className="relative min-h-screen w-full text-white overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
-      <div className="absolute inset-0 opacity-20"
+    <main className="relative min-h-screen w-full text-white bg-[#0a0b0e]">
+      <div className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(ellipse 80% 60% at 50% -20%, rgba(255,200,0,0.15), transparent),
-                      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(0,255,255,0.08), transparent)`
+          background: `radial-gradient(ellipse 90% 50% at 50% -10%, rgba(180,120,20,0.06), transparent),
+                      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(0,200,255,0.03), transparent)`
         }}
       />
 
-      <style>{`
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-      `}</style>
-
-      <div className="relative z-10 p-3 md:p-4 max-w-4xl mx-auto">
-        <div className="flex items-start justify-between mb-3 md:mb-6 gap-2">
+      <div className="relative z-10 px-3 md:px-4 py-3 max-w-lg mx-auto">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-lg md:text-3xl lg:text-4xl font-bold text-amber-300 drop-shadow-[0_0_12px_rgba(255,200,0,0.4)]">
-              📊 Clasif.
-            </h1>
-            <p className="text-gray-400 text-[10px] md:text-sm">Polla {pollaId ? `#${pollaId}` : ""}</p>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-amber-400/90">Clasificación</h1>
+            <p className="text-white/30 text-xs font-medium">Polla {pollaId ? `#${pollaId}` : ""}</p>
           </div>
-          <div className="flex gap-1.5 shrink-0">
+          <div className="flex gap-1.5">
             <button onClick={() => router.push("/polla")}
-              className="px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl bg-amber-700/70 border border-amber-400/70 text-white font-bold text-[10px] md:text-sm hover:brightness-110 active:scale-95 transition-all">
-              ← Polla
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
+              Volver
             </button>
             <button onClick={() => router.push("/home")}
-              className="px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl bg-white/10 border border-white/20 text-white font-bold text-[10px] md:text-sm hover:bg-white/20 active:scale-95 transition-all">
-              Home
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
+              Salir
             </button>
           </div>
         </div>
 
         {pollaInfo && (
-          <div className="bg-gradient-to-r from-yellow-900/30 via-amber-800/30 to-yellow-900/30 border border-yellow-400/40 rounded-xl md:rounded-2xl p-3 md:p-4 mb-3 md:mb-6 text-center">
-            {!pollaInfo.activa && pollaInfo.cerrada_en ? (
-              <div className="flex justify-center gap-6 md:gap-10">
-                <div><span className="text-yellow-300 font-black text-lg md:text-3xl">Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</span><p className="text-yellow-200/60 text-[9px] md:text-xs uppercase tracking-wide">1° Lugar</p></div>
-                <div><span className="text-gray-300 font-black text-lg md:text-3xl">Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</span><p className="text-gray-300/60 text-[9px] md:text-xs uppercase tracking-wide">2° Lugar</p></div>
+          <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3 mb-4">
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <p className="text-amber-300 font-black text-xl md:text-3xl tabular-nums">
+                  Bs. {!pollaInfo.activa && pollaInfo.cerrada_en
+                    ? Number(pollaInfo.premio_1 || 0).toLocaleString()
+                    : Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.65).toLocaleString()
+                  }
+                </p>
+                <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
               </div>
-            ) : (
-              <div className="flex justify-center gap-6 md:gap-10">
-                <div><span className="text-yellow-300 font-black text-lg md:text-3xl">Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.65).toLocaleString()}</span><p className="text-yellow-200/60 text-[9px] md:text-xs uppercase tracking-wide">1° Lugar</p></div>
-                <div><span className="text-gray-300 font-black text-lg md:text-3xl">Bs. {Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.20).toLocaleString()}</span><p className="text-gray-300/60 text-[9px] md:text-xs uppercase tracking-wide">2° Lugar</p></div>
+              <div className="w-px h-8 bg-amber-400/10" />
+              <div className="text-center">
+                <p className="text-gray-300 font-black text-xl md:text-3xl tabular-nums">
+                  Bs. {!pollaInfo.activa && pollaInfo.cerrada_en
+                    ? Number(pollaInfo.premio_2 || 0).toLocaleString()
+                    : Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.20).toLocaleString()
+                  }
+                </p>
+                <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
               </div>
-            )}
-            <p className="text-gray-500 text-[8px] md:text-[10px] mt-1">{pollaInfo.total_participantes || 0} ticket(s)</p>
+            </div>
+            <div className="text-center mt-1.5">
+              <span className="text-white/20 text-[10px]">{pollaInfo.total_participantes || 0} ticket{(pollaInfo.total_participantes || 0) !== 1 ? "s" : ""}</span>
+            </div>
           </div>
         )}
 
         {!pollaId ? (
-          <div className="text-center py-8 md:py-12 text-gray-400">
-            <p className="text-2xl md:text-4xl mb-3">🏇</p>
-            <p className="text-xs md:text-sm">Cargando...</p>
+          <div className="text-center py-12">
+            <p className="text-white/20 text-sm">Cargando...</p>
           </div>
         ) : clasificacion.length === 0 ? (
-          <div className="text-center py-8 md:py-12 text-gray-400">
-            <p className="text-2xl md:text-4xl mb-3">🏇</p>
-            <p className="text-xs md:text-sm">Aún no hay participantes en esta polla</p>
+          <div className="text-center py-12">
+            <p className="text-white/20 text-sm">Aún no hay participantes</p>
           </div>
         ) : (
-          <div className="space-y-2 md:space-y-3">
+          <div className="space-y-1.5">
             {clasificacion.map((p, index) => {
               const nums = (p.selecciones || [])
                 .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden)
@@ -117,38 +118,44 @@ export default function PollaClasificacion() {
                 .join("-");
               return (
                 <div key={`${p.usuario_id}-${p.ticket}`}
-                  className={`rounded-xl md:rounded-2xl border p-2.5 md:p-3 transition-all ${
+                  className={`rounded-xl border transition-all ${
                     index === 0
-                      ? "bg-gradient-to-r from-yellow-900/30 via-amber-800/20 to-yellow-900/30 border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)]"
-                      : "bg-gray-900/60 border-gray-700/50"
+                      ? "bg-gradient-to-r from-amber-500/8 to-amber-600/5 border-amber-400/20"
+                      : "bg-white/[0.02] border-white/[0.06]"
                   }`}>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center font-bold text-[10px] md:text-base shrink-0 ${
-                      index === 0 ? "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50" :
-                      index === 1 ? "bg-gray-400/20 text-gray-300 border border-gray-400/50" :
-                      "bg-white/5 text-gray-400 border border-white/10"
-                    }`}>
-                      {getPuestoIcon(index)}
+                  <div className="px-3 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 ${
+                        index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
+                        index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
+                        "bg-white/5 text-white/40 border border-white/10"
+                      }`}>
+                        {getPuestoIcon(index)}
+                      </div>
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className="font-semibold text-white/80 text-[13px] truncate">{p.sobrenombre}</span>
+                        {nums && (
+                          <span className={`font-mono font-bold text-[13px] ${getPuestoColor(index)}`}>{nums}</span>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-sm font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[10px] text-white/30">pts</span></p>
+                        {Number(p.premio) > 0 && (
+                          <p className="text-emerald-400/80 font-semibold text-[10px]">+Bs. {Number(p.premio).toLocaleString()}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-wrap">
-                      <span className="font-bold text-white text-xs md:text-sm truncate">{p.sobrenombre}</span>
-                      {nums && (
-                        <span className={`font-mono font-bold text-xs md:text-sm ${getPuestoColor(index)}`}>{nums}</span>
-                      )}
-                    </div>
-                    <div className="ml-auto text-right shrink-0">
-                      <p className={`text-xs md:text-base font-black ${getPuestoColor(index)}`}>{Number(p.puntos)} pts</p>
-                      {Number(p.premio) > 0 && (
-                        <p className="text-green-300 font-bold text-[9px] md:text-xs">+Bs. {Number(p.premio).toLocaleString()}</p>
-                      )}
-                    </div>
+                    <p className="text-white/15 text-[9px] mt-1 ml-9">Ticket #{p.ticket}</p>
                   </div>
-                  <p className="text-[7px] md:text-[9px] text-gray-500 mt-0.5">Ticket #{p.ticket}</p>
                 </div>
               );
             })}
           </div>
         )}
+
+        <div className="mt-8 text-center">
+          <p className="text-white/[0.04] text-[8px] uppercase tracking-[0.3em] font-medium">NanoSprint</p>
+        </div>
       </div>
     </main>
   );
