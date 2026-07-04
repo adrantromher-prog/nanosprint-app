@@ -36,14 +36,12 @@ export default function PollaClasificacion() {
   const getPuestoColor = (index: number) => {
     if (index === 0) return "text-yellow-300";
     if (index === 1) return "text-gray-300";
-    if (index === 2) return "text-orange-300";
     return "text-white";
   };
 
   const getPuestoIcon = (index: number) => {
     if (index === 0) return "👑";
     if (index === 1) return "🥈";
-    if (index === 2) return "🥉";
     return `#${index + 1}`;
   };
 
@@ -87,9 +85,8 @@ export default function PollaClasificacion() {
           <div className="bg-gradient-to-r from-yellow-900/30 via-amber-800/30 to-yellow-900/30 border border-yellow-400/40 rounded-2xl p-4 mb-6 text-center">
             <p className="text-yellow-300 font-bold text-lg">🏆 Polla Cerrada</p>
             <div className="flex justify-center gap-6 mt-2 text-sm">
-              <div><span className="text-yellow-300 font-bold">1er:</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
-              <div><span className="text-gray-300 font-bold">2do:</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
-              <div><span className="text-orange-300 font-bold">3ro:</span> Bs. {Number(pollaInfo.premio_3 || 0).toLocaleString()}</div>
+              <div><span className="text-yellow-300 font-bold">1er (65%):</span> Bs. {Number(pollaInfo.premio_1 || 0).toLocaleString()}</div>
+              <div><span className="text-gray-300 font-bold">2do (20%):</span> Bs. {Number(pollaInfo.premio_2 || 0).toLocaleString()}</div>
             </div>
           </div>
         )}
@@ -118,7 +115,6 @@ export default function PollaClasificacion() {
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
                       index === 0 ? "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50" :
                       index === 1 ? "bg-gray-400/20 text-gray-300 border border-gray-400/50" :
-                      index === 2 ? "bg-orange-500/20 text-orange-300 border border-orange-400/50" :
                       "bg-white/5 text-gray-400 border border-white/10"
                     }`}>
                       {getPuestoIcon(index)}
@@ -146,8 +142,8 @@ export default function PollaClasificacion() {
                         s.puntos >= 3 ? "text-gray-300" :
                         s.puntos >= 1 ? "text-orange-300" : "text-red-400";
                       return (
-                        <div key={s.carrera_remate_id} className={`text-center px-1.5 py-1.5 rounded-lg border ${bgColor}`}>
-                          <p className="text-[10px] text-gray-500">C{s.orden}</p>
+                        <div key={s.carrera_orden} className={`text-center px-1.5 py-1.5 rounded-lg border ${bgColor}`}>
+                          <p className="text-[10px] text-gray-500">C{s.carrera_orden}</p>
                           <p className={`text-[11px] font-bold ${textColor}`}>#{s.caballo_numero}</p>
                           <p className={`text-[10px] font-bold ${textColor}`}>+{s.puntos}</p>
                         </div>

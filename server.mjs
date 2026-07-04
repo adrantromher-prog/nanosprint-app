@@ -69,35 +69,38 @@ app.prepare().then(async () => {
       CREATE TABLE IF NOT EXISTS polla_config (
         id SERIAL PRIMARY KEY,
         activa BOOLEAN NOT NULL DEFAULT false,
+        hipodromo VARCHAR(200) NOT NULL DEFAULT '',
         costo NUMERIC(12,2) NOT NULL DEFAULT 700.00,
         premio_1 NUMERIC(12,2) NOT NULL DEFAULT 0,
         premio_2 NUMERIC(12,2) NOT NULL DEFAULT 0,
-        premio_3 NUMERIC(12,2) NOT NULL DEFAULT 0,
         creada_en TIMESTAMP DEFAULT NOW(),
         cerrada_en TIMESTAMP
       )
     `);
+    await pool.query(`ALTER TABLE polla_config ADD COLUMN IF NOT EXISTS hipodromo VARCHAR(200) NOT NULL DEFAULT ''`);
+    await pool.query(`ALTER TABLE polla_config DROP COLUMN IF EXISTS premio_3`);
     console.log("✅ Tabla polla_config lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_carreras (
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
-        carrera_remate_id INTEGER NOT NULL REFERENCES carreras_remate(id) ON DELETE CASCADE,
         orden INTEGER NOT NULL,
-        UNIQUE(polla_id, carrera_remate_id)
+        cantidad_caballos INTEGER NOT NULL,
+        UNIQUE(polla_id, orden)
       )
     `);
+    await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS cantidad_caballos INTEGER NOT NULL DEFAULT 0`);
     console.log("✅ Tabla polla_carreras lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_apuestas (
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
         usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
-        carrera_remate_id INTEGER NOT NULL REFERENCES carreras_remate(id) ON DELETE CASCADE,
-        caballo_id INTEGER NOT NULL REFERENCES carreras_caballos(id),
+        carrera_orden INTEGER NOT NULL,
+        caballo_numero INTEGER NOT NULL,
         puntos INTEGER NOT NULL DEFAULT 0,
         fecha TIMESTAMP DEFAULT NOW(),
-        UNIQUE(polla_id, usuario_id, carrera_remate_id)
+        UNIQUE(polla_id, usuario_id, carrera_orden)
       )
     `);
     console.log("✅ Tabla polla_apuestas lista");
@@ -105,11 +108,11 @@ app.prepare().then(async () => {
       CREATE TABLE IF NOT EXISTS polla_resultados (
         id SERIAL PRIMARY KEY,
         polla_id INTEGER NOT NULL REFERENCES polla_config(id) ON DELETE CASCADE,
-        carrera_remate_id INTEGER NOT NULL REFERENCES carreras_remate(id) ON DELETE CASCADE,
-        primer_lugar INTEGER REFERENCES carreras_caballos(id),
-        segundo_lugar INTEGER REFERENCES carreras_caballos(id),
-        tercer_lugar INTEGER REFERENCES carreras_caballos(id),
-        UNIQUE(polla_id, carrera_remate_id)
+        carrera_orden INTEGER NOT NULL,
+        primer_lugar INTEGER,
+        segundo_lugar INTEGER,
+        tercer_lugar INTEGER,
+        UNIQUE(polla_id, carrera_orden)
       )
     `);
     console.log("✅ Tabla polla_resultados lista");

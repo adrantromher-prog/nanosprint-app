@@ -5,16 +5,12 @@ import { useRouter } from "next/navigation";
 
 export default function AdminPolla() {
   const router = useRouter();
-  const [carreras, setCarreras] = useState<any[]>([]);
-  const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
+  const [hipodromo, setHipodromo] = useState("");
+  const [carreras, setCarreras] = useState<{ cantidad_caballos: number }[]>(
+    Array(6).fill(null).map(() => ({ cantidad_caballos: 0 }))
+  );
   const [pollaActiva, setPollaActiva] = useState<any>(null);
-  const [resultados, setResultados] = useState<{ [carreraId: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
-
-  const fetchCarreras = async () => {
-    const res = await fetch("/api/remates/activas");
-    const data = await res.json();
-    if (data.ok) setCarreras(data.carreras);
-  };
+  const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
 
   const fetchPollaActiva = async () => {
     const res = await fetch("/api/polla/activa");
@@ -24,7 +20,7 @@ export default function AdminPolla() {
       if (data.polla) {
         const r: any = {};
         for (const res of data.polla.resultados || []) {
-          r[res.carrera_remate_id] = {
+          r[res.carrera_orden] = {
             primer_lugar: res.primer_lugar,
             segundo_lugar: res.segundo_lugar,
             tercer_lugar: res.tercer_lugar,
@@ -35,67 +31,80 @@ export default function AdminPolla() {
     }
   };
 
-  useEffect(() => {
-    fetchCarreras();
-    fetchPollaActiva();
-  }, []);
+  useEffect(() => { fetchPollaActiva(); }, []);
 
-  const toggleCarrera = (id: number) => {
-    setSeleccionadas(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const actualizarCarrera = (index: number, val: number) => {
+    const copia = [...carreras];
+    copia[index] = { cantidad_caballos: val };
+    setCarreras(copia);
   };
 
   const crearPolla = async () => {
-    if (seleccionadas.length !== 6) {
-      alert("Selecciona exactamente 6 carreras");
-      return;
+    if (!hipodromo.trim()) { alert("Escribe el nombre del hipódromo"); return; }
+    for (let i = 0; i < carreras.length; i++) {
+      if (carreras[i].cantidad_caballos < 2) {
+        alert(`La carrera ${i + 1} debe tener al menos 2 caballos`);
+        return;
+      }
     }
     const res = await fetch("/api/admin/polla/crear", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ carrera_ids: seleccionadas }),
+      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras }),
     });
     const data = await res.json();
     if (data.ok) {
       alert("Polla creada exitosamente");
       fetchPollaActiva();
-      setSeleccionadas([]);
     } else {
       alert(data.error || "Error al crear polla");
     }
   };
 
-  const setResultado = (carreraId: number, puesto: "primer_lugar" | "segundo_lugar" | "tercer_lugar", caballoId: number) => {
+  const setResultado = (carreraOrden: number, puesto: "primer_lugar" | "segundo_lugar" | "tercer_lugar", caballoNum: number) => {
     setResultados(prev => ({
       ...prev,
-      [carreraId]: { ...prev[carreraId], [puesto]: caballoId }
+      [carreraOrden]: { ...prev[carreraOrden], [puesto]: caballoNum }
     }));
   };
 
   const guardarResultados = async () => {
     if (!pollaActiva) return;
-    for (const [carreraId, res] of Object.entries(resultados)) {
-      if (!res.primer_lugar || !res.segundo_lugar || !res.tercer_lugar) {
-        alert(`Completa los 3 puestos para la carrera ${carreraId}`);
-        return;
+
+    const resultadosArray = pollaActiva.carreras.map((c: any) => {
+      const r = resultados[c.orden];
+      if (!r?.primer_lugar || !r?.segundo_lugar || !r?.tercer_lugar) {
+        return null;
       }
+      return {
+        carrera_orden: c.orden,
+        primer_lugar: r.primer_lugar,
+        segundo_lugar: r.segundo_lugar,
+        tercer_lugar: r.tercer_lugar,
+      };
+    });
+
+    if (resultadosArray.some((r: any) => r === null)) {
+      alert("Completa los 3 puestos (1ro, 2do, 3ro) para todas las carreras");
+      return;
     }
-    for (const [carreraId, res] of Object.entries(resultados)) {
-      await fetch("/api/admin/polla/resultados", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          polla_id: pollaActiva.id,
-          carrera_remate_id: parseInt(carreraId),
-          ...res,
-        }),
-      });
+
+    const res = await fetch("/api/admin/polla/resultados", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ polla_id: pollaActiva.id, resultados: resultadosArray }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert("Resultados guardados y puntajes calculados");
+      fetchPollaActiva();
+    } else {
+      alert(data.error || "Error al guardar resultados");
     }
-    alert("Resultados guardados y puntajes calculados");
-    fetchPollaActiva();
   };
 
   const cerrarPolla = async () => {
-    if (!confirm("¿Estás seguro? Se entregarán los premios a los ganadores según la configuración (50%, 30%, 20%).")) return;
+    if (!confirm("¿Estás seguro? 65% para 1er lugar, 20% para 2do lugar, 15% para la casa.")) return;
     const res = await fetch("/api/admin/polla/cerrar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -103,7 +112,7 @@ export default function AdminPolla() {
     });
     const data = await res.json();
     if (data.ok) {
-      alert(`Polla cerrada. Premios: 1ro Bs.${data.premio1}, 2do Bs.${data.premio2}, 3ro Bs.${data.premio3}`);
+      alert(`Polla cerrada. 1ro: Bs.${data.premio1}, 2do: Bs.${data.premio2}`);
       fetchPollaActiva();
     } else {
       alert(data.error || "Error al cerrar polla");
@@ -128,30 +137,30 @@ export default function AdminPolla() {
         <div>
           <div className="bg-green-900/40 border border-green-400/50 rounded-2xl p-4 mb-6">
             <p className="text-green-300 font-bold text-lg">✅ Polla activa #{pollaActiva.id}</p>
+            <p className="text-green-200/70">Hipódromo: {pollaActiva.hipodromo}</p>
             <p className="text-green-200/70">Costo: Bs. {Number(pollaActiva.costo).toLocaleString()}</p>
           </div>
 
           <div className="space-y-4 mb-6">
             <h2 className="text-xl font-bold text-cyan-300">Resultados por Carrera</h2>
             {pollaActiva.carreras?.map((c: any) => (
-              <div key={c.carrera_remate_id} className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4">
-                <h3 className="font-bold text-white mb-2">
-                  Carrera #{c.orden}: {c.hipodromo} - #{c.numero_carrera}
-                </h3>
+              <div key={c.orden} className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4">
+                <h3 className="font-bold text-white mb-2">Carrera #{c.orden} ({c.cantidad_caballos} caballos)</h3>
                 <div className="grid grid-cols-3 gap-3">
                   {["primer_lugar", "segundo_lugar", "tercer_lugar"].map((puesto, idx) => {
                     const labels = ["1er Lugar (5 pts)", "2do Lugar (3 pts)", "3er Lugar (1 pt)"];
+                    const nums = Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1);
                     return (
                       <div key={puesto}>
                         <label className="text-xs text-gray-400 block mb-1">{labels[idx]}</label>
                         <select
-                          value={(resultados[c.carrera_remate_id] as any)?.[puesto] || ""}
-                          onChange={(e) => setResultado(c.carrera_remate_id, puesto as any, Number(e.target.value))}
+                          value={(resultados[c.orden] as any)?.[puesto] || ""}
+                          onChange={(e) => setResultado(c.orden, puesto as any, Number(e.target.value))}
                           className="w-full px-2 py-1.5 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
                         >
                           <option value="">Seleccionar</option>
-                          {c.caballos?.filter((h: any) => !h.retirado).map((h: any) => (
-                            <option key={h.id} value={h.id}>#{h.numero} {h.nombre}</option>
+                          {nums.map(n => (
+                            <option key={n} value={n}>Caballo #{n}</option>
                           ))}
                         </select>
                       </div>
@@ -179,34 +188,33 @@ export default function AdminPolla() {
         </div>
       ) : (
         <div>
-          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 mb-6">
-            <h2 className="text-xl font-bold text-cyan-300 mb-4">Selecciona 6 Carreras para la Polla</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {carreras.filter(c => c.estado === "abierta" && !c.ganador).map(c => (
-                <div key={c.id}
-                  onClick={() => toggleCarrera(c.id)}
-                  className={`cursor-pointer p-3 rounded-xl border transition-all ${seleccionadas.includes(c.id) ? "bg-cyan-900/40 border-cyan-400/70 shadow-[0_0_12px_rgba(0,255,255,0.3)]" : "bg-gray-800/40 border-gray-600/50 hover:border-cyan-400/30"}`}>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" checked={seleccionadas.includes(c.id)} readOnly className="accent-cyan-400" />
-                    <div>
-                      <p className="font-bold text-white text-sm">{c.hipodromo}</p>
-                      <p className="text-gray-400 text-xs">Carrera #{c.numero_carrera} — {c.hora_cierre}</p>
-                    </div>
-                  </div>
-                </div>
+          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6 max-w-xl">
+            <h2 className="text-xl font-bold text-cyan-300 mb-4">Crear Nueva Polla</h2>
+
+            <label className="block mb-4">
+              <span className="text-sm font-semibold">Nombre del Hipódromo</span>
+              <input type="text" value={hipodromo} onChange={e => setHipodromo(e.target.value)}
+                className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-cyan-300/40 text-white text-sm"
+                placeholder="Ej: La Rinconada" />
+            </label>
+
+            <p className="text-sm font-semibold text-gray-300 mb-3">Caballos por Carrera (6 carreras)</p>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {carreras.map((c, i) => (
+                <label key={i} className="block">
+                  <span className="text-xs text-gray-400">Carrera #{i + 1}</span>
+                  <input type="number" min={2} max={20} value={c.cantidad_caballos || ""}
+                    onChange={e => actualizarCarrera(i, Number(e.target.value))}
+                    className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
+                    placeholder="Ej: 8" />
+                </label>
               ))}
             </div>
-            {seleccionadas.length > 0 && (
-              <div className="mt-4 flex items-center gap-3">
-                <span className="text-sm text-gray-300">{seleccionadas.length}/6 carreras seleccionadas</span>
-                {seleccionadas.length === 6 && (
-                  <button onClick={crearPolla}
-                    className="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-500 border border-yellow-400/70 text-white font-bold shadow-[0_0_18px_rgba(255,200,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
-                    🏆 Crear Polla (Bs. 700)
-                  </button>
-                )}
-              </div>
-            )}
+
+            <button onClick={crearPolla}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-500 border border-yellow-400/70 text-white font-bold shadow-[0_0_18px_rgba(255,200,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
+              🏆 Crear Polla (Bs. 700)
+            </button>
           </div>
         </div>
       )}

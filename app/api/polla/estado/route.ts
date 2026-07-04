@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const polla = await pool.query(
-      `SELECT id, activa, costo, premio_1, premio_2, premio_3, creada_en, cerrada_en
+      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en
        FROM polla_config ORDER BY id DESC LIMIT 1`
     );
 
@@ -26,7 +26,7 @@ export async function GET() {
       [p.id]
     );
 
-    const miResultadosCompletos = Number(totalCarrerasConResultado.rows[0].count) >= 6;
+    const resultadosCompletos = Number(totalCarrerasConResultado.rows[0].count) >= 6;
 
     return NextResponse.json({
       ok: true,
@@ -34,14 +34,14 @@ export async function GET() {
       polla: {
         id: p.id,
         activa: p.activa,
+        hipodromo: p.hipodromo,
         costo: Number(p.costo),
         premio_1: Number(p.premio_1),
         premio_2: Number(p.premio_2),
-        premio_3: Number(p.premio_3),
         creada_en: p.creada_en,
         cerrada_en: p.cerrada_en,
         total_participantes: Number(totalParticipantes.rows[0].count),
-        resultados_completos: miResultadosCompletos,
+        resultados_completos: resultadosCompletos,
       }
     });
   } catch (error) {

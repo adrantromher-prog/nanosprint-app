@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const usuarioId = decoded.id;
 
     const { polla_id, selecciones } = await req.json();
-    // selecciones: { [carrera_remate_id]: caballo_id }
+    // selecciones: { "1": 3, "2": 5, ... } -> { carrera_orden: caballo_numero }
 
     if (!polla_id || !selecciones || Object.keys(selecciones).length !== 6) {
       client.release();
@@ -47,6 +47,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Ya participas en esta polla" }, { status: 400 });
     }
 
+    const carreras = await client.query(
+      `SELECT orden, cantidad_caballos FROM polla_carreras WHERE polla_id = $1`,
+      [polla_id]
+    );
+    for (const c of carreras.rows) {
+      const caballoNum = selecciones[c.orden];
+      if (!caballoNum || caballoNum < 1 || caballoNum > c.cantidad_caballos) {
+        await client.query("ROLLBACK");
+        client.release();
+        return NextResponse.json({ ok: false, error: `Selección inválida para la carrera ${c.orden}` }, { status: 400 });
+      }
+    }
+
     const usuario = await client.query(
       `SELECT saldo FROM usuarios WHERE id = $1 FOR UPDATE`,
       [usuarioId]
@@ -69,18 +82,17 @@ export async function POST(req: Request) {
       `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
       [costo, usuarioId]
     );
-
     await client.query(
       `INSERT INTO historial (usuario_id, tipo, monto, asunto)
        VALUES ($1, 'polla_apuesta', $2, $3)`,
       [usuarioId, costo, 'Apuesta Polla Hípica']
     );
 
-    for (const [carreraId, caballoId] of Object.entries(selecciones)) {
+    for (const [carreraOrden, caballoNumero] of Object.entries(selecciones)) {
       await client.query(
-        `INSERT INTO polla_apuestas (polla_id, usuario_id, carrera_remate_id, caballo_id)
+        `INSERT INTO polla_apuestas (polla_id, usuario_id, carrera_orden, caballo_numero)
          VALUES ($1, $2, $3, $4)`,
-        [polla_id, usuarioId, parseInt(carreraId), caballoId]
+        [polla_id, usuarioId, parseInt(carreraOrden), caballoNumero]
       );
     }
 

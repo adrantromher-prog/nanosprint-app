@@ -24,11 +24,9 @@ export async function GET() {
     }
 
     const apuesta = await pool.query(
-      `SELECT pa.carrera_remate_id, pa.caballo_id, pa.puntos, cc.numero as caballo_numero, cc.nombre as caballo_nombre
-       FROM polla_apuestas pa
-       JOIN carreras_caballos cc ON cc.id = pa.caballo_id
-       WHERE pa.polla_id = $1 AND pa.usuario_id = $2
-       ORDER BY pa.id ASC`,
+      `SELECT carrera_orden, caballo_numero, puntos
+       FROM polla_apuestas WHERE polla_id = $1 AND usuario_id = $2
+       ORDER BY carrera_orden ASC`,
       [polla.rows[0].id, usuarioId]
     );
 
@@ -42,10 +40,8 @@ export async function GET() {
       ok: true,
       apuesta: {
         selecciones: apuesta.rows.map(r => ({
-          carrera_remate_id: r.carrera_remate_id,
-          caballo_id: r.caballo_id,
+          carrera_orden: r.carrera_orden,
           caballo_numero: r.caballo_numero,
-          caballo_nombre: r.caballo_nombre,
           puntos: Number(r.puntos),
         })),
         total_puntos: totalPuntos,

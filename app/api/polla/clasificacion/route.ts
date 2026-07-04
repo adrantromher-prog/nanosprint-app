@@ -22,21 +22,16 @@ export async function GET(req: Request) {
         COALESCE(
           json_agg(
             json_build_object(
-              'carrera_remate_id', pa.carrera_remate_id,
-              'caballo_id', pa.caballo_id,
-              'caballo_numero', cc.numero,
-              'caballo_nombre', cc.nombre,
-              'puntos', pa.puntos,
-              'orden', pc.orden
-            ) ORDER BY pc.orden
+              'carrera_orden', pa.carrera_orden,
+              'caballo_numero', pa.caballo_numero,
+              'puntos', pa.puntos
+            ) ORDER BY pa.carrera_orden
           ) FILTER (WHERE pa.id IS NOT NULL),
           '[]'::json
         ) as selecciones
       FROM polla_puntos pp
       JOIN usuarios u ON u.id = pp.usuario_id
       LEFT JOIN polla_apuestas pa ON pa.polla_id = pp.polla_id AND pa.usuario_id = pp.usuario_id
-      LEFT JOIN carreras_caballos cc ON cc.id = pa.caballo_id
-      LEFT JOIN polla_carreras pc ON pc.polla_id = pp.polla_id AND pc.carrera_remate_id = pa.carrera_remate_id
       WHERE pp.polla_id = $1
       GROUP BY pp.usuario_id, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
       ORDER BY pp.puntos DESC, pp.premio DESC`,

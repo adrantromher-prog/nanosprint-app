@@ -3,19 +3,16 @@ import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { broadcast } from "@/lib/ws";
 
-async function ensurePool() {
-  return pool;
-}
-
 export async function POST(req: Request) {
   const error = await requireAdmin();
   if (error) return error;
-  const client = await ensurePool();
+  const client = await pool.connect();
   try {
     const { polla_id } = await req.json();
 
     const polla = await client.query(`SELECT id, activa FROM polla_config WHERE id = $1`, [polla_id]);
     if (polla.rows.length === 0) {
+      client.release();
       return NextResponse.json({ ok: false, error: "Polla no encontrada" }, { status: 404 });
     }
 
@@ -24,6 +21,7 @@ export async function POST(req: Request) {
       [polla_id]
     );
     if (Number(resultados.rows[0].count) < 6) {
+      client.release();
       return NextResponse.json({ ok: false, error: "Debes registrar resultados de las 6 carreras primero" }, { status: 400 });
     }
 
@@ -37,13 +35,13 @@ export async function POST(req: Request) {
     );
 
     if (puntajes.rows.length === 0) {
+      client.release();
       return NextResponse.json({ ok: false, error: "No hay participantes en esta polla" }, { status: 400 });
     }
 
     const totalRecaudado = puntajes.rows.length * 700;
-    const premio1 = Math.round(totalRecaudado * 0.5);
-    const premio2 = Math.round(totalRecaudado * 0.3);
-    const premio3 = Math.round(totalRecaudado * 0.2);
+    const premio1 = Math.round(totalRecaudado * 0.65);
+    const premio2 = Math.round(totalRecaudado * 0.20);
 
     const ordenados = puntajes.rows.map(r => ({ ...r, puntos: Number(r.puntos) }));
     const puntosSet = [...new Set(ordenados.map(p => p.puntos))].sort((a, b) => b - a);
@@ -56,14 +54,13 @@ export async function POST(req: Request) {
 
     await client.query("BEGIN");
 
-    for (let i = 0; i < Math.min(3, puntosSet.length); i++) {
+    for (let i = 0; i < Math.min(2, puntosSet.length); i++) {
       const pts = puntosSet[i];
       const grupo = grupos[pts];
       const cant = grupo.length;
       let premioTotal = 0;
       if (i === 0) premioTotal = premio1;
-      else if (i === 1) premioTotal = premio2;
-      else premioTotal = premio3;
+      else premioTotal = premio2;
 
       const premioIndividual = Math.floor(premioTotal / cant);
 
@@ -81,7 +78,7 @@ export async function POST(req: Request) {
           await client.query(
             `INSERT INTO historial (usuario_id, tipo, monto, asunto)
              VALUES ($1, 'premio_polla', $2, $3)`,
-            [p.usuario_id, premioIndividual, `Premio Polla Hípica - ${p.sobrenombre}`]
+            [p.usuario_id, premioIndividual, `Premio Polla Hípica - ${polla_id}`]
           );
         }
 
@@ -93,19 +90,19 @@ export async function POST(req: Request) {
     }
 
     await client.query(
-      `UPDATE polla_config SET activa = false, cerrada_en = NOW(),
-       premio_1 = $1, premio_2 = $2, premio_3 = $3
-       WHERE id = $4`,
-      [premio1, premio2, premio3, polla_id]
+      `UPDATE polla_config SET activa = false, cerrada_en = NOW(), premio_1 = $1, premio_2 = $2 WHERE id = $3`,
+      [premio1, premio2, polla_id]
     );
 
     await client.query("COMMIT");
+    client.release();
 
     broadcast({ type: "polla_cerrada", polla_id });
 
-    return NextResponse.json({ ok: true, premio1, premio2, premio3, totalParticipantes: ordenados.length });
+    return NextResponse.json({ ok: true, premio1, premio2, totalParticipantes: ordenados.length });
   } catch (error) {
     await client.query("ROLLBACK");
+    client.release();
     console.error("Error cerrando polla:", error);
     return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }

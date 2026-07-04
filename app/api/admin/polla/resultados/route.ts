@@ -6,49 +6,56 @@ import { broadcast } from "@/lib/ws";
 export async function POST(req: Request) {
   const error = await requireAdmin();
   if (error) return error;
+  const client = await pool.connect();
   try {
-    const { polla_id, carrera_remate_id, primer_lugar, segundo_lugar, tercer_lugar } = await req.json();
+    const { polla_id, resultados } = await req.json();
+    // resultados: [{ carrera_orden, primer_lugar, segundo_lugar, tercer_lugar }]
 
-    const polla = await pool.query(`SELECT id, activa FROM polla_config WHERE id = $1`, [polla_id]);
+    const polla = await client.query(`SELECT id, activa FROM polla_config WHERE id = $1`, [polla_id]);
     if (polla.rows.length === 0) {
+      client.release();
       return NextResponse.json({ ok: false, error: "Polla no encontrada" }, { status: 404 });
     }
 
-    await pool.query("BEGIN");
+    await client.query("BEGIN");
 
-    await pool.query(
-      `INSERT INTO polla_resultados (polla_id, carrera_remate_id, primer_lugar, segundo_lugar, tercer_lugar)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (polla_id, carrera_remate_id)
-       DO UPDATE SET primer_lugar = EXCLUDED.primer_lugar, segundo_lugar = EXCLUDED.segundo_lugar, tercer_lugar = EXCLUDED.tercer_lugar`,
-      [polla_id, carrera_remate_id, primer_lugar, segundo_lugar, tercer_lugar]
-    );
+    for (const r of resultados) {
+      const { carrera_orden, primer_lugar, segundo_lugar, tercer_lugar } = r;
 
-    await pool.query(
-      `UPDATE polla_apuestas SET puntos = 0 WHERE polla_id = $1 AND carrera_remate_id = $2`,
-      [polla_id, carrera_remate_id]
-    );
+      await client.query(
+        `INSERT INTO polla_resultados (polla_id, carrera_orden, primer_lugar, segundo_lugar, tercer_lugar)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (polla_id, carrera_orden)
+         DO UPDATE SET primer_lugar = EXCLUDED.primer_lugar, segundo_lugar = EXCLUDED.segundo_lugar, tercer_lugar = EXCLUDED.tercer_lugar`,
+        [polla_id, carrera_orden, primer_lugar, segundo_lugar, tercer_lugar]
+      );
 
-    const apuestas = await pool.query(
-      `SELECT id, usuario_id, caballo_id FROM polla_apuestas WHERE polla_id = $1 AND carrera_remate_id = $2`,
-      [polla_id, carrera_remate_id]
-    );
+      await client.query(
+        `UPDATE polla_apuestas SET puntos = 0 WHERE polla_id = $1 AND carrera_orden = $2`,
+        [polla_id, carrera_orden]
+      );
 
-    for (const apuesta of apuestas.rows) {
-      let puntos = 0;
-      if (apuesta.caballo_id === primer_lugar) puntos = 5;
-      else if (apuesta.caballo_id === segundo_lugar) puntos = 3;
-      else if (apuesta.caballo_id === tercer_lugar) puntos = 1;
+      const apuestas = await client.query(
+        `SELECT id, usuario_id, caballo_numero FROM polla_apuestas WHERE polla_id = $1 AND carrera_orden = $2`,
+        [polla_id, carrera_orden]
+      );
 
-      if (puntos > 0) {
-        await pool.query(
-          `UPDATE polla_apuestas SET puntos = $1 WHERE id = $2`,
-          [puntos, apuesta.id]
-        );
+      for (const apuesta of apuestas.rows) {
+        let puntos = 0;
+        if (apuesta.caballo_numero === primer_lugar) puntos = 5;
+        else if (apuesta.caballo_numero === segundo_lugar) puntos = 3;
+        else if (apuesta.caballo_numero === tercer_lugar) puntos = 1;
+
+        if (puntos > 0) {
+          await client.query(
+            `UPDATE polla_apuestas SET puntos = $1 WHERE id = $2`,
+            [puntos, apuesta.id]
+          );
+        }
       }
     }
 
-    const totales = await pool.query(
+    const totales = await client.query(
       `SELECT usuario_id, SUM(puntos) as total_puntos
        FROM polla_apuestas WHERE polla_id = $1
        GROUP BY usuario_id`,
@@ -56,7 +63,7 @@ export async function POST(req: Request) {
     );
 
     for (const t of totales.rows) {
-      await pool.query(
+      await client.query(
         `INSERT INTO polla_puntos (polla_id, usuario_id, puntos, premio)
          VALUES ($1, $2, $3, 0)
          ON CONFLICT (polla_id, usuario_id)
@@ -65,13 +72,15 @@ export async function POST(req: Request) {
       );
     }
 
-    await pool.query("COMMIT");
+    await client.query("COMMIT");
+    client.release();
 
     broadcast({ type: "polla_resultados", polla_id });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    await pool.query("ROLLBACK");
+    await client.query("ROLLBACK");
+    client.release();
     console.error("Error registrando resultados polla:", error);
     return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }
