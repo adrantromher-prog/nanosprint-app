@@ -213,7 +213,7 @@ export default function DetalleCarrera() {
           ),
         };
       });
-      setUsuario((prev) => prev ? { ...prev, saldo: Number(prev.saldo) - popup.monto } : prev);
+      setUsuario((prev: any) => prev ? { ...prev, saldo: Number(prev.saldo) - popup.monto } : prev);
     } else {
       setErrorMsg(data.error || "Error al pujar.");
     }
