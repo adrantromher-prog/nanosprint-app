@@ -68,15 +68,12 @@ function Temporizador({ horaCierre, compact, estado }: TemporizadorProps) {
 
   if (compact) {
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide ${
-        abierto
-          ? "bg-green-500/15 text-green-300 border border-green-400/30 shadow-[0_0_8px_rgba(0,255,0,0.05)]"
-          : "bg-red-500/15 text-red-300 border border-red-400/30 shadow-[0_0_8px_rgba(255,0,0,0.05)]"
+      <span className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-bold font-mono ${
+        cerrado || !abierto
+          ? "bg-red-500/20 text-red-300 border border-red-400/40"
+          : "text-white"
       }`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${abierto ? "bg-green-400 shadow-[0_0_4px_rgba(0,255,0,0.4)]" : "bg-red-400 shadow-[0_0_4px_rgba(255,0,0,0.4)]"}`} />
-        <span>{abierto ? "ACTIVO" : "CERRADO"}</span>
-        {abierto && <span className="text-white/40">|</span>}
-        {abierto && <span className="text-white font-mono text-[10px]">{tiempoRestante}</span>}
+        {cerrado || !abierto ? "CERRADA" : tiempoRestante}
       </span>
     );
   }
