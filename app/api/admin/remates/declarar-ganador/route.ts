@@ -66,22 +66,34 @@ export async function POST(req: Request) {
     }
 
     // Credit referrers: 5% of each referred user's bid
+    // If no referrer, credit the admin as bonus
+    const admin = await client.query("SELECT id FROM usuarios WHERE rol = 'admin' LIMIT 1");
+    const adminId = admin.rows[0]?.id;
     for (const c of caballos.rows) {
       if (!c.id_usuario) continue;
       const ref = await client.query("SELECT referido_por FROM usuarios WHERE id = $1", [c.id_usuario]);
+      const comision = Math.round(Number(c.max_monto) * 0.05);
+      if (comision <= 0) continue;
       if (ref.rows.length > 0 && ref.rows[0].referido_por) {
-        const comision = Math.round(Number(c.max_monto) * 0.05);
-        if (comision > 0) {
-          await client.query(
-            `UPDATE usuarios SET referido_saldo = COALESCE(referido_saldo, 0) + $1 WHERE id = $2`,
-            [comision, ref.rows[0].referido_por]
-          );
-          await client.query(
-            `INSERT INTO historial (usuario_id, tipo, monto, asunto)
-             VALUES ($1, 'comision_referido', $2, $3)`,
-            [ref.rows[0].referido_por, comision, 'Comisión por referido']
-          );
-        }
+        await client.query(
+          `UPDATE usuarios SET referido_saldo = COALESCE(referido_saldo, 0) + $1 WHERE id = $2`,
+          [comision, ref.rows[0].referido_por]
+        );
+        await client.query(
+          `INSERT INTO historial (usuario_id, tipo, monto, asunto)
+           VALUES ($1, 'comision_referido', $2, $3)`,
+          [ref.rows[0].referido_por, comision, 'Comisión por referido']
+        );
+      } else if (adminId) {
+        await client.query(
+          `UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2`,
+          [comision, adminId]
+        );
+        await client.query(
+          `INSERT INTO historial (usuario_id, tipo, monto, asunto)
+           VALUES ($1, 'comision_referido', $2, $3)`,
+          [adminId, comision, 'Comisión de puja sin referido']
+        );
       }
     }
 
