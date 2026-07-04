@@ -68,10 +68,10 @@ function Temporizador({ horaCierre, compact, estado }: TemporizadorProps) {
 
   if (compact) {
     return (
-      <span className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-bold font-mono ${
+      <span className={`inline-flex items-center px-2 py-1 rounded font-bold font-mono ${
         cerrado || !abierto
-          ? "bg-red-500/20 text-red-300 border border-red-400/40"
-          : "text-white"
+          ? "bg-red-500/20 text-red-300 border border-red-400/40 text-xs"
+          : "text-green-300 text-sm drop-shadow-[0_0_6px_rgba(0,255,0,0.4)]"
       }`}>
         {cerrado || !abierto ? "CERRADA" : tiempoRestante}
       </span>
