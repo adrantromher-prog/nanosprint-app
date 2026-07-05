@@ -431,14 +431,14 @@ export default function PollaPage() {
                                 <button key={num}
                                   onClick={() => !esRetirado && seleccionarCaballo(carrera.orden, num)}
                                   disabled={esRetirado}
-                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center font-bold text-xs transition-all duration-150
+                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm transition-all duration-150
                                     ${esRetirado
-                                      ? "border-red-400/20 bg-red-500/8 text-red-400/50 line-through cursor-default"
+                                      ? "border-red-500/30 bg-red-500/10 text-red-400/50 line-through cursor-default"
                                       : selected
-                                        ? "border-amber-400/60 bg-amber-400/15 text-white scale-110 shadow-[0_0_12px_rgba(255,180,0,0.15)]"
-                                        : "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/60"
+                                        ? "border-cyan-400 bg-cyan-500/20 text-white scale-110 shadow-[0_0_16px_rgba(0,255,255,0.35)] shadow-cyan-500/20"
+                                        : "border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-white/50 hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white hover:shadow-[0_0_12px_rgba(0,255,255,0.15)]"
                                     }
-                                    ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
+                                    ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-90"}`}>
                                   {num}
                                 </button>
                               );
