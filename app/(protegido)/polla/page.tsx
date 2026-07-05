@@ -94,39 +94,30 @@ export default function PollaPage() {
   }, [pollasDisponibles]);
 
   useEffect(() => {
-    if (intervaloRef.current) clearInterval(intervaloRef.current);
-    if (!polla?.activa || !polla?.hora_cierre) {
-      setTiempoRestante(!polla?.activa ? "00:00:00" : "");
-      setAbierto(!!polla?.activa);
-      return;
-    }
+    if (!polla?.hora_cierre) return;
     const calcular = () => {
       const ahora = new Date();
       const [horas, minutos] = polla.hora_cierre.split(":").map(Number);
       const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
-      const minutosCierre = horas * 60 + minutos;
-
-      if (minutosCierre <= minutosAhora) {
+      if (horas * 60 + minutos <= minutosAhora) {
         setAbierto(false);
         setTiempoRestante("00:00:00");
         fetchClasificacion(polla.id);
         if (intervaloRef.current) clearInterval(intervaloRef.current);
-        return;
+      } else {
+        setAbierto(true);
+        const cierre = new Date();
+        cierre.setUTCHours(horas + 4, minutos, 0, 0);
+        const diff = cierre.getTime() - ahora.getTime();
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        setTiempoRestante(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
       }
-      setAbierto(true);
-      const cierre = new Date();
-      cierre.setUTCHours(horas + 4, minutos, 0, 0);
-      const diff = cierre.getTime() - ahora.getTime();
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setTiempoRestante(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
     };
     calcular();
-    if (abierto) {
-      intervaloRef.current = setInterval(calcular, 1000);
-    }
-    return () => { if (intervaloRef.current) clearInterval(intervaloRef.current); };
+    intervaloRef.current = setInterval(calcular, 1000);
+    return () => { clearInterval(intervaloRef.current); };
   }, [polla?.id, polla?.hora_cierre, fetchClasificacion]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
