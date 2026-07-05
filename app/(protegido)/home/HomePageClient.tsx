@@ -84,18 +84,6 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
   return (
     <main className="relative h-dvh w-full overflow-hidden select-none">
       <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 10px rgba(255,200,0,0.12); }
-          50% { box-shadow: 0 0 22px rgba(255,200,0,0.45), 0 0 40px rgba(255,200,0,0.15); }
-        }
-        @keyframes textShine {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 0.9; }
-        }
         @keyframes jackpotPulse {
           0%, 100% { filter: drop-shadow(0 0 6px rgba(255,200,0,0.25)); }
           50% { filter: drop-shadow(0 0 14px rgba(255,200,0,0.6)) drop-shadow(0 0 28px rgba(255,200,0,0.2)); }
@@ -104,18 +92,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
           0%, 100% { box-shadow: 0 0 18px rgba(0,200,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1); }
           50% { box-shadow: 0 0 30px rgba(0,200,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
         }
-        .jackpot-shimmer::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
-          animation: shimmer 2.5s infinite;
-          pointer-events: none;
-        }
-        .jackpot-glow { animation: pulseGlow 2s ease-in-out infinite; }
-        .jackpot-text-shine { animation: textShine 2s ease-in-out infinite; }
         .jackpot-amount { animation: jackpotPulse 2s ease-in-out infinite; }
-        .card-glow { animation: cardGlow 3s ease-in-out infinite; }
         .btn-remates { animation: cardGlow 3s ease-in-out infinite; }
       `}</style>
       <video src="/fondos/fondohome.mp4" autoPlay loop muted playsInline
@@ -179,6 +156,12 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
               <span className="text-white/40 font-medium tracking-wide text-center leading-tight max-w-[120px] md:max-w-[160px] hidden md:block text-[10px]">
                 Subastas de caballos
               </span>
+              <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-400/50 backdrop-blur-md shadow-[0_0_12px_rgba(255,200,0,0.3)]">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_6px_rgba(255,200,0,0.8)]" />
+                <span className="jackpot-amount text-yellow-100 font-black text-[10px] leading-tight">
+                  Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 0 })}
+                </span>
+              </div>
             </div>
           </button>
 
@@ -202,27 +185,6 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
                 POLLA
               </span>
               <span className="text-red-300/50 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[8px]">HÍPICA</span>
-            </div>
-          </button>
-
-          <button onClick={() => router.push("/remates/clasificacion")}
-            className="jackpot-glow group relative flex-1 max-w-[200px] h-[130px] md:h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-yellow-900/60 via-amber-800/40 to-yellow-900/60 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:shadow-[0_0_36px_rgba(255,200,0,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
-            <div className="jackpot-shimmer absolute inset-0" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
-            <div className="relative h-full flex flex-col items-center justify-center gap-1 md:gap-2 px-2 md:px-4">
-              <div className="text-yellow-200/80 group-hover:scale-110 group-hover:text-yellow-200 transition-all duration-300 drop-shadow-[0_0_8px_rgba(255,200,0,0.15)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-10 md:h-10">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M16 21v-2a4 4 0 00-8 0v2" />
-                  <path d="M12 12v3" />
-                  <path d="M10 15h4" />
-                </svg>
-              </div>
-              <span className="jackpot-text-shine text-yellow-200 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase drop-shadow-[0_0_4px_rgba(255,200,0,0.2)] hidden md:block text-[10px]">CLASIFICACIÓN</span>
-              <span className="jackpot-amount text-yellow-100 font-black text-sm md:text-lg tracking-wide text-center drop-shadow-[0_0_8px_rgba(255,200,0,0.2)]">
-                Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 0 })}
-              </span>
-              <span className="text-yellow-300/50 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[8px]">ACUMULADO</span>
             </div>
           </button>
         </div>
