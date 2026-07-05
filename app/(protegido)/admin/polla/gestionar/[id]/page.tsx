@@ -10,6 +10,7 @@ export default function AdminPollaGestionarId() {
   const [polla, setPolla] = useState<any>(null);
   const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
   const [guardando, setGuardando] = useState<number | null>(null);
+  const [retirando, setRetirando] = useState<string | null>(null);
 
   const fetchPolla = async () => {
     const res = await fetch(`/api/admin/polla/detalle?id=${id}`);
@@ -64,6 +65,23 @@ export default function AdminPollaGestionarId() {
       fetchPolla();
     } else {
       alert(data.error || "Error al guardar resultados");
+    }
+  };
+
+  const retirarCaballo = async (carreraOrden: number, caballoNum: number) => {
+    const key = `${carreraOrden}-${caballoNum}`;
+    setRetirando(key);
+    const res = await fetch("/api/admin/polla/retirar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ polla_id: id, carrera_orden: carreraOrden, caballo_numero: caballoNum }),
+    });
+    const data = await res.json();
+    setRetirando(null);
+    if (data.ok) {
+      fetchPolla();
+    } else {
+      alert(data.error || "Error al retirar caballo");
     }
   };
 
@@ -157,6 +175,7 @@ export default function AdminPollaGestionarId() {
                 {["primer_lugar", "segundo_lugar", "tercer_lugar"].map((puesto, idx) => {
                   const labels = ["1er Lugar (5 pts)", "2do Lugar (3 pts)", "3er Lugar (1 pt)"];
                   const nums = Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1);
+                  const retirados: number[] = c.retirados || [];
                   return (
                     <div key={puesto}>
                       <label className="text-[10px] text-gray-400 block mb-1">{labels[idx]}</label>
@@ -166,7 +185,7 @@ export default function AdminPollaGestionarId() {
                         className="w-full px-2 py-1.5 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
                       >
                         <option value="">—</option>
-                        {nums.map(n => (
+                        {nums.filter(n => !retirados.includes(n)).map(n => (
                           <option key={n} value={n}>#{n}</option>
                         ))}
                       </select>
@@ -174,6 +193,34 @@ export default function AdminPollaGestionarId() {
                   );
                 })}
               </div>
+
+              {polla.activa && !polla.cerrada_en && (
+                <div className="mb-3 pt-2 border-t border-white/5">
+                  <p className="text-[10px] text-gray-500 font-semibold mb-1.5">Caballos retirados</p>
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1).map(n => {
+                      const retirados: number[] = c.retirados || [];
+                      const esRetirado = retirados.includes(n);
+                      const key = `${c.orden}-${n}`;
+                      return (
+                        <button key={n}
+                          onClick={() => retirarCaballo(c.orden, n)}
+                          disabled={retirando === key}
+                          className={`w-7 h-7 rounded-md border flex items-center justify-center text-[10px] font-bold transition-all
+                            ${esRetirado
+                              ? "border-red-400/40 bg-red-500/15 text-red-300 line-through"
+                              : "border-white/10 bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white/60"
+                            }
+                            ${retirando === key ? "opacity-40" : "cursor-pointer active:scale-90"}
+                            `}>
+                          {n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <button onClick={() => guardarResultadosCarrera(c)}
                 disabled={guardando === c.orden}
                 className="w-full py-2 rounded-xl bg-emerald-600/60 border border-emerald-400/50 text-white font-semibold text-xs

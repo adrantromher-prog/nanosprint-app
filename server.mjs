@@ -93,6 +93,7 @@ app.prepare().then(async () => {
     await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS cantidad_caballos INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS nombre VARCHAR(100) NOT NULL DEFAULT ''`);
     await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS numero INTEGER DEFAULT NULL`);
+    await pool.query(`ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS retirados INTEGER[] DEFAULT '{}'`);
     await pool.query(`ALTER TABLE polla_carreras DROP COLUMN IF EXISTS carrera_remate_id`);
     console.log("✅ Tabla polla_carreras lista");
     await pool.query(`

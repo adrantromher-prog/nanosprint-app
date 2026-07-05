@@ -26,7 +26,7 @@ export default function PollaPage() {
   }, []);
 
   useWebSocket(useCallback((event) => {
-    if (["polla_creada", "polla_resultados", "polla_apuesta"].includes(event.type)) {
+    if (["polla_creada", "polla_resultados", "polla_apuesta", "polla_retiros"].includes(event.type)) {
       fetchData();
     }
   }, [fetchData]));
@@ -166,6 +166,7 @@ export default function PollaPage() {
           {polla.carreras?.map((carrera: any) => {
             const resultado = polla.resultados?.find((r: any) => r.carrera_orden === carrera.orden);
             const seleccionLocal = selecciones[carrera.orden];
+            const retirados: number[] = carrera.retirados || [];
             const caballos = Array.from({ length: carrera.cantidad_caballos }, (_, i) => i + 1);
 
             return (
@@ -178,17 +179,20 @@ export default function PollaPage() {
                   <div className="flex flex-wrap gap-1">
                     {caballos.map((num) => {
                       const selected = seleccionLocal === num;
+                      const esRetirado = retirados.includes(num);
 
                       return (
                         <button key={num}
-                          onClick={() => !todasConResultado && seleccionarCaballo(carrera.orden, num)}
-                          disabled={todasConResultado}
+                          onClick={() => !todasConResultado && !esRetirado && seleccionarCaballo(carrera.orden, num)}
+                          disabled={todasConResultado || esRetirado}
                           className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center font-bold text-xs transition-all duration-150
-                            ${selected
-                              ? "border-amber-400/60 bg-amber-400/15 text-white scale-110 shadow-[0_0_12px_rgba(255,180,0,0.15)]"
-                              : "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/60"
+                            ${esRetirado
+                              ? "border-red-400/20 bg-red-500/8 text-red-400/50 line-through cursor-default"
+                              : selected
+                                ? "border-amber-400/60 bg-amber-400/15 text-white scale-110 shadow-[0_0_12px_rgba(255,180,0,0.15)]"
+                                : "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/60"
                             }
-                            ${todasConResultado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
+                            ${todasConResultado || esRetirado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
                           {num}
                         </button>
                       );

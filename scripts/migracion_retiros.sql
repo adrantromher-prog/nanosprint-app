@@ -1,0 +1,1 @@
+ALTER TABLE polla_carreras ADD COLUMN IF NOT EXISTS retirados INTEGER[] DEFAULT '{}';

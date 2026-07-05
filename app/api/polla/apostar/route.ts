@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const ticketNum = Number(ticket.rows[0].next_ticket);
 
     const carreras = await client.query(
-      `SELECT orden, cantidad_caballos FROM polla_carreras WHERE polla_id = $1`,
+      `SELECT orden, cantidad_caballos, retirados FROM polla_carreras WHERE polla_id = $1`,
       [polla_id]
     );
     for (const c of carreras.rows) {
@@ -53,6 +53,12 @@ export async function POST(req: Request) {
         await client.query("ROLLBACK");
         client.release();
         return NextResponse.json({ ok: false, error: `Selección inválida para la carrera ${c.orden}` }, { status: 400 });
+      }
+      const retirados: number[] = c.retirados || [];
+      if (retirados.includes(caballoNum)) {
+        await client.query("ROLLBACK");
+        client.release();
+        return NextResponse.json({ ok: false, error: `El caballo #${caballoNum} fue retirado de la carrera ${c.orden}` }, { status: 400 });
       }
     }
 

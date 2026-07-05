@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     const p = polla.rows[0];
 
     const carreras = await pool.query(
-      `SELECT id, orden, nombre, cantidad_caballos, numero
+      `SELECT id, orden, nombre, cantidad_caballos, numero, retirados
        FROM polla_carreras WHERE polla_id = $1
        ORDER BY orden ASC`,
       [p.id]
