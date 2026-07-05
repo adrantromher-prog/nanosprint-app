@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
@@ -12,6 +12,12 @@ export default function PollaPage() {
   const [misTickets, setMisTickets] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
   const [showTickets, setShowTickets] = useState(false);
+  const [tiempoRestante, setTiempoRestante] = useState<number | null>(null);
+  const [clasificacion, setClasificacion] = useState<any[]>([]);
+  const [mostrarClasificacion, setMostrarClasificacion] = useState(false);
+  const intervaloRef = useRef<any>(null);
+
+  const tiempoTerminado = tiempoRestante !== null && tiempoRestante <= 0;
 
   const fetchData = useCallback(async () => {
     const [resPolla, resUser, resApuesta] = await Promise.all([
@@ -25,13 +31,48 @@ export default function PollaPage() {
     setSelecciones({});
   }, []);
 
+  const fetchClasificacion = useCallback(async (pollaId: number) => {
+    const res = await fetch(`/api/polla/clasificacion?polla_id=${pollaId}`);
+    const data = await res.json();
+    if (data.ok) setClasificacion(data.clasificacion);
+  }, []);
+
   useWebSocket(useCallback((event) => {
     if (["polla_creada", "polla_resultados", "polla_apuesta", "polla_retiros"].includes(event.type)) {
       fetchData();
     }
-  }, [fetchData]));
+    if (event.type === "polla_resultados" && polla) {
+      fetchClasificacion(polla.id);
+    }
+  }, [fetchData, fetchClasificacion, polla]));
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    if (intervaloRef.current) clearInterval(intervaloRef.current);
+    if (!polla?.cierre_en) {
+      setTiempoRestante(null);
+      setMostrarClasificacion(false);
+      return;
+    }
+    const actualizar = () => {
+      const diff = new Date(polla.cierre_en).getTime() - Date.now();
+      setTiempoRestante(diff);
+      if (diff <= 0) {
+        setMostrarClasificacion(true);
+        fetchClasificacion(polla.id);
+        if (intervaloRef.current) clearInterval(intervaloRef.current);
+      }
+    };
+    actualizar();
+    if (new Date(polla.cierre_en).getTime() > Date.now()) {
+      intervaloRef.current = setInterval(actualizar, 1000);
+    } else {
+      setMostrarClasificacion(true);
+      fetchClasificacion(polla.id);
+    }
+    return () => { if (intervaloRef.current) clearInterval(intervaloRef.current); };
+  }, [polla?.id, polla?.cierre_en, fetchClasificacion]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum
@@ -65,6 +106,21 @@ export default function PollaPage() {
     }
   };
 
+  const formatearTiempo = (ms: number) => {
+    if (ms <= 0) return "00:00:00";
+    const segs = Math.floor(ms / 1000);
+    const h = Math.floor(segs / 3600);
+    const m = Math.floor((segs % 3600) / 60);
+    const s = segs % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const getPuestoColor = (index: number) => {
+    if (index === 0) return "text-amber-300";
+    if (index === 1) return "text-gray-300";
+    return "text-white/60";
+  };
+
   if (!usuario) {
     return (
       <main className="min-h-screen flex items-center justify-center text-white bg-[#0a0b0e]">
@@ -93,6 +149,7 @@ export default function PollaPage() {
   const todasConResultado = polla.resultados?.length >= 6;
   const costo = Number(polla.costo);
   const totalSel = Object.keys(selecciones).length;
+  const mostrarSeleccion = !tiempoTerminado && !todasConResultado;
 
   return (
     <main className="relative min-h-screen w-full text-white bg-[#0a0b0e]">
@@ -110,10 +167,12 @@ export default function PollaPage() {
             <p className="text-amber-300/60 text-xs font-medium">{polla.hipodromo}</p>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={() => router.push(`/polla/clasificacion?polla_id=${polla.id}`)}
-              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
-              Clasificación
-            </button>
+            {!mostrarClasificacion && (
+              <button onClick={() => { setMostrarClasificacion(true); fetchClasificacion(polla.id); }}
+                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
+                Clasificación
+              </button>
+            )}
             <button onClick={() => router.push("/home")}
               className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
               Salir
@@ -156,80 +215,155 @@ export default function PollaPage() {
           </div>
         </div>
 
-        {todasConResultado && (
-          <div className="bg-emerald-500/5 border border-emerald-400/10 rounded-lg px-3 py-2 mb-3">
-            <p className="text-emerald-300/60 text-[11px] font-medium text-center">Todas las carreras tienen resultado — espera el cierre</p>
+        {polla.cierre_en && (
+          <div className={`rounded-xl px-4 py-2 mb-3 text-center border ${
+            tiempoTerminado
+              ? "bg-red-900/20 border-red-400/20"
+              : "bg-amber-500/8 border-amber-400/15"
+          }`}>
+            {tiempoRestante !== null && (
+              <p className={`font-bold text-lg tabular-nums tracking-wider ${
+                tiempoTerminado ? "text-red-400" : "text-amber-300"
+              }`}>
+                {tiempoTerminado ? "CIERRE" : formatearTiempo(tiempoRestante)}
+              </p>
+            )}
+            <p className="text-white/30 text-[10px] font-medium">
+              {tiempoTerminado ? "Tiempo de apuestas terminado" : "Tiempo restante para apostar"}
+            </p>
           </div>
         )}
 
-        <div className="space-y-2">
-          {polla.carreras?.map((carrera: any) => {
-            const resultado = polla.resultados?.find((r: any) => r.carrera_orden === carrera.orden);
-            const seleccionLocal = selecciones[carrera.orden];
-            const retirados: number[] = carrera.retirados || [];
-            const caballos = Array.from({ length: carrera.cantidad_caballos }, (_, i) => i + 1);
-
-            return (
-              <div key={carrera.orden}
-                className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
-                <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-400/15 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[10px] font-bold text-amber-400/70">{carrera.numero || carrera.orden}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {caballos.map((num) => {
-                      const selected = seleccionLocal === num;
-                      const esRetirado = retirados.includes(num);
-
-                      return (
-                        <button key={num}
-                          onClick={() => !todasConResultado && !esRetirado && seleccionarCaballo(carrera.orden, num)}
-                          disabled={todasConResultado || esRetirado}
-                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center font-bold text-xs transition-all duration-150
-                            ${esRetirado
-                              ? "border-red-400/20 bg-red-500/8 text-red-400/50 line-through cursor-default"
-                              : selected
-                                ? "border-amber-400/60 bg-amber-400/15 text-white scale-110 shadow-[0_0_12px_rgba(255,180,0,0.15)]"
-                                : "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/60"
-                            }
-                            ${todasConResultado || esRetirado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
-                          {num}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {resultado && (
-                    <div className="flex gap-1 shrink-0 mt-1">
-                      {resultado.primer_lugar && <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70 border border-amber-400/15 text-[9px] font-medium">1° #{resultado.primer_lugar}</span>}
-                      {resultado.segundo_lugar && <span className="px-1.5 py-0.5 rounded bg-gray-400/10 text-gray-300/70 border border-gray-400/15 text-[9px] font-medium">2° #{resultado.segundo_lugar}</span>}
-                      {resultado.tercer_lugar && <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300/70 border border-orange-400/15 text-[9px] font-medium">3° #{resultado.tercer_lugar}</span>}
+        {mostrarClasificacion ? (
+          <div className="space-y-1.5">
+            <h2 className="text-sm font-bold text-white/60 mb-2">Clasificación</h2>
+            {clasificacion.length === 0 ? (
+              <p className="text-center py-8 text-white/20 text-sm">Aún no hay participantes</p>
+            ) : (
+              clasificacion.map((p: any, index: number) => {
+                const numsArr: number[] = (p.selecciones || [])
+                  .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden)
+                  .map((s: any) => s.caballo_numero);
+                return (
+                  <div key={`${p.usuario_id}-${p.ticket}`}
+                    className={`rounded-xl border transition-all ${
+                      index === 0
+                        ? "bg-gradient-to-r from-amber-500/8 to-amber-600/5 border-amber-400/20"
+                        : "bg-white/[0.02] border-white/[0.06]"
+                    }`}>
+                    <div className="px-3 py-1.5">
+                      <div className="flex items-center">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                            index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
+                            index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
+                            "bg-white/5 text-white/40 border border-white/10"
+                          }`}>
+                            {index === 0 ? "1" : index === 1 ? "2" : `${index + 1}`}
+                          </div>
+                          <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
+                          <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 mx-3">
+                          {numsArr.map((n: number, i: number) => (
+                            <span key={i} className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded border ${getPuestoColor(index)} ${
+                              index === 0 ? "border-amber-400/25 bg-amber-400/8" :
+                              index === 1 ? "border-gray-400/25 bg-gray-400/8" :
+                              "border-white/10 bg-white/[0.03]"
+                            }`}>{n}</span>
+                          ))}
+                        </div>
+                        <div className="text-right flex-1">
+                          <p className={`text-xs font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
+                          {Number(p.premio) > 0 && (
+                            <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {!todasConResultado && (
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-              <div className="h-full rounded-full bg-amber-400/50 transition-all duration-300"
-                style={{ width: `${(totalSel / 6) * 100}%` }} />
-            </div>
-            <span className="text-white/30 text-xs font-medium tabular-nums">{totalSel}/6</span>
+                  </div>
+                );
+              })
+            )}
           </div>
-        )}
+        ) : (
+          <>
+            {todasConResultado && (
+              <div className="bg-emerald-500/5 border border-emerald-400/10 rounded-lg px-3 py-2 mb-3">
+                <p className="text-emerald-300/60 text-[11px] font-medium text-center">Todas las carreras tienen resultado — espera el cierre</p>
+              </div>
+            )}
 
-        {!todasConResultado && (
-          <button onClick={enviarApuesta} disabled={cargando || totalSel !== 6}
-            className="mt-3 w-full py-3 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 font-semibold text-sm
-              hover:bg-amber-500/30 active:scale-[0.98] transition-all duration-150
-              disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-amber-500/20 disabled:active:scale-100">
-            {cargando ? "Procesando..." : totalSel === 6
-              ? `Confirmar — Bs. ${costo.toLocaleString()}`
-              : `Selecciona ${6 - totalSel} más`}
-          </button>
+            {mostrarSeleccion && (
+              <>
+                <div className="space-y-2">
+                  {polla.carreras?.map((carrera: any) => {
+                    const resultado = polla.resultados?.find((r: any) => r.carrera_orden === carrera.orden);
+                    const seleccionLocal = selecciones[carrera.orden];
+                    const retirados: number[] = carrera.retirados || [];
+                    const caballos = Array.from({ length: carrera.cantidad_caballos }, (_, i) => i + 1);
+
+                    return (
+                      <div key={carrera.orden}
+                        className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
+                        <div className="flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-400/15 flex items-center justify-center shrink-0 mt-0.5">
+                            <span className="text-[10px] font-bold text-amber-400/70">{carrera.numero || carrera.orden}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {caballos.map((num) => {
+                              const selected = seleccionLocal === num;
+                              const esRetirado = retirados.includes(num);
+
+                              return (
+                                <button key={num}
+                                  onClick={() => !esRetirado && seleccionarCaballo(carrera.orden, num)}
+                                  disabled={esRetirado}
+                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center font-bold text-xs transition-all duration-150
+                                    ${esRetirado
+                                      ? "border-red-400/20 bg-red-500/8 text-red-400/50 line-through cursor-default"
+                                      : selected
+                                        ? "border-amber-400/60 bg-amber-400/15 text-white scale-110 shadow-[0_0_12px_rgba(255,180,0,0.15)]"
+                                        : "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/60"
+                                    }
+                                    ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-95"}`}>
+                                  {num}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {resultado && (
+                            <div className="flex gap-1 shrink-0 mt-1">
+                              {resultado.primer_lugar && <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70 border border-amber-400/15 text-[9px] font-medium">1° #{resultado.primer_lugar}</span>}
+                              {resultado.segundo_lugar && <span className="px-1.5 py-0.5 rounded bg-gray-400/10 text-gray-300/70 border border-gray-400/15 text-[9px] font-medium">2° #{resultado.segundo_lugar}</span>}
+                              {resultado.tercer_lugar && <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300/70 border border-orange-400/15 text-[9px] font-medium">3° #{resultado.tercer_lugar}</span>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-full rounded-full bg-amber-400/50 transition-all duration-300"
+                      style={{ width: `${(totalSel / 6) * 100}%` }} />
+                  </div>
+                  <span className="text-white/30 text-xs font-medium tabular-nums">{totalSel}/6</span>
+                </div>
+
+                <button onClick={enviarApuesta} disabled={cargando || totalSel !== 6}
+                  className="mt-3 w-full py-3 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 font-semibold text-sm
+                    hover:bg-amber-500/30 active:scale-[0.98] transition-all duration-150
+                    disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-amber-500/20 disabled:active:scale-100">
+                  {cargando ? "Procesando..." : totalSel === 6
+                    ? `Confirmar — Bs. ${costo.toLocaleString()}`
+                    : `Selecciona ${6 - totalSel} más`}
+                </button>
+              </>
+            )}
+          </>
         )}
 
         {misTickets.length > 0 && (

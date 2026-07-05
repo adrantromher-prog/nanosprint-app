@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function AdminPollaCrear() {
   const router = useRouter();
   const [hipodromo, setHipodromo] = useState("");
+  const [cierreEn, setCierreEn] = useState("");
   const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number; numero: string }[]>(
     Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0, numero: "" }))
   );
@@ -18,6 +19,8 @@ export default function AdminPollaCrear() {
 
   const crearPolla = async () => {
     if (!hipodromo.trim()) { alert("Escribe el nombre del hipódromo"); return; }
+    if (!cierreEn) { alert("Selecciona la fecha y hora de cierre"); return; }
+    if (new Date(cierreEn).getTime() <= Date.now()) { alert("La fecha de cierre debe ser en el futuro"); return; }
     for (let i = 0; i < carreras.length; i++) {
       if (!carreras[i].nombre.trim()) {
         alert(`Escribe el nombre de la carrera ${i + 1}`);
@@ -31,7 +34,7 @@ export default function AdminPollaCrear() {
     const res = await fetch("/api/admin/polla/crear", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras }),
+      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras, cierre_en: cierreEn }),
     });
     const data = await res.json();
     if (data.ok) {
@@ -58,6 +61,13 @@ export default function AdminPollaCrear() {
           <input type="text" value={hipodromo} onChange={e => setHipodromo(e.target.value)}
             className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-cyan-300/40 text-white text-sm"
             placeholder="Ej: La Rinconada" />
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-sm font-semibold">Fecha y hora de cierre</span>
+          <input type="datetime-local" value={cierreEn} onChange={e => setCierreEn(e.target.value)}
+            className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-red-300/40 text-white text-sm" />
+          <p className="text-[10px] text-gray-500 mt-1">Cuando llegue esta fecha, los usuarios no podrán apostar más</p>
         </label>
 
         <p className="text-sm font-semibold text-gray-300 mb-3">Carreras (6)</p>

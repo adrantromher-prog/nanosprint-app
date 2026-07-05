@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     }
 
     const polla = await pool.query(
-      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en
+      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, cierre_en
        FROM polla_config WHERE id = $1`,
       [id]
     );
@@ -57,6 +57,7 @@ export async function GET(req: Request) {
         premio_2: Number(p.premio_2),
         creada_en: p.creada_en,
         cerrada_en: p.cerrada_en,
+        cierre_en: p.cierre_en,
         carreras: carreras.rows,
         resultados: resultados.rows,
         total_tickets: Number(totalTickets.rows[0].count),
