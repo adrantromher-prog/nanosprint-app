@@ -62,7 +62,7 @@ export default function PollaPage() {
     if (event.type === "polla_resultados" && polla) {
       fetchClasificacion(polla.id);
     }
-    if (event.type === "polla_retiros" && polla && event.polla_id === polla.id) {
+    if ((event.type === "polla_cerrada" || event.type === "polla_retiros") && polla && event.polla_id === polla.id) {
       seleccionarPolla(polla.id);
     }
   }, [fetchDisponibles, fetchClasificacion, polla, seleccionarPolla]));
@@ -99,6 +99,13 @@ export default function PollaPage() {
   useEffect(() => {
     if (!polla?.hora_cierre) return;
     const calcular = () => {
+      if (!polla.activa) {
+        setAbierto(false);
+        setTiempoRestante("00:00:00");
+        fetchClasificacion(polla.id);
+        if (intervaloRef.current) clearInterval(intervaloRef.current);
+        return;
+      }
       const ahora = new Date();
       const [horas, minutos] = polla.hora_cierre.split(":").map(Number);
       const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
@@ -121,7 +128,7 @@ export default function PollaPage() {
     calcular();
     intervaloRef.current = setInterval(calcular, 1000);
     return () => { clearInterval(intervaloRef.current); };
-  }, [polla?.id, polla?.hora_cierre, fetchClasificacion]);
+  }, [polla?.id, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum
