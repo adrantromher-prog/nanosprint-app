@@ -7,6 +7,7 @@ export default function AdminPollaGestionar() {
   const router = useRouter();
   const [pollas, setPollas] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [eliminando, setEliminando] = useState<number | null>(null);
 
   const fetchPollas = async () => {
     setCargando(true);
@@ -17,6 +18,24 @@ export default function AdminPollaGestionar() {
   };
 
   useEffect(() => { fetchPollas(); }, []);
+
+  const eliminarPolla = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (!confirm("¿Estás seguro? Se eliminarán todas las apuestas y resultados asociados.")) return;
+    setEliminando(id);
+    const res = await fetch("/api/admin/polla/eliminar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ polla_id: id }),
+    });
+    const data = await res.json();
+    setEliminando(null);
+    if (data.ok) {
+      fetchPollas();
+    } else {
+      alert(data.error || "Error al eliminar polla");
+    }
+  };
 
   return (
     <main className="min-h-screen p-4 text-white bg-[#0a0f1e]">
@@ -48,15 +67,22 @@ export default function AdminPollaGestionar() {
                 <h3 className="font-bold text-white">
                   Polla #{p.id} — {p.hipodromo}
                 </h3>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  p.activa
-                    ? "bg-green-500/10 text-green-400 border border-green-400/20"
-                    : p.cerrada_en
-                    ? "bg-red-500/10 text-red-400 border border-red-400/20"
-                    : "bg-gray-500/10 text-gray-400 border border-gray-400/20"
-                }`}>
-                  {p.activa ? "Activa" : p.cerrada_en ? "Cerrada" : "Inactiva"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button onClick={(e) => eliminarPolla(e, p.id)} disabled={eliminando === p.id}
+                    className="px-2 py-1 rounded-lg bg-red-500/10 border border-red-400/20 text-red-400 text-[10px] font-semibold
+                      hover:bg-red-500/20 active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    {eliminando === p.id ? "..." : "Eliminar"}
+                  </button>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    p.activa
+                      ? "bg-green-500/10 text-green-400 border border-green-400/20"
+                      : p.cerrada_en
+                      ? "bg-red-500/10 text-red-400 border border-red-400/20"
+                      : "bg-gray-500/10 text-gray-400 border border-gray-400/20"
+                  }`}>
+                    {p.activa ? "Activa" : p.cerrada_en ? "Cerrada" : "Inactiva"}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-4 text-xs text-gray-400">
                 <span>{p.total_tickets} ticket{p.total_tickets !== 1 ? "s" : ""}</span>
