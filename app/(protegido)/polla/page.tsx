@@ -170,11 +170,8 @@ export default function PollaPage() {
               <div key={carrera.orden}
                 className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
                 <div className="flex items-start gap-2">
-                  <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-400/15 flex items-center justify-center">
-                      <span className="text-[10px] font-bold text-amber-400/70">{carrera.numero || carrera.orden}</span>
-                    </div>
-                    <h3 className="text-[13px] font-semibold text-white/80 leading-tight whitespace-nowrap">{carrera.nombre}</h3>
+                  <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-400/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-[10px] font-bold text-amber-400/70">{carrera.numero || carrera.orden}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {caballos.map((num) => {
