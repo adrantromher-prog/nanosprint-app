@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 export default function AdminPolla() {
   const router = useRouter();
   const [hipodromo, setHipodromo] = useState("");
-  const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number }[]>(
-    Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0 }))
+  const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number; numero: string }[]>(
+    Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0, numero: "" }))
   );
   const [pollaActiva, setPollaActiva] = useState<any>(null);
   const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
@@ -33,7 +33,7 @@ export default function AdminPolla() {
 
   useEffect(() => { fetchPollaActiva(); }, []);
 
-  const actualizarCarrera = (index: number, field: "nombre" | "cantidad_caballos", val: string | number) => {
+  const actualizarCarrera = (index: number, field: "nombre" | "cantidad_caballos" | "numero", val: string | number) => {
     const copia = [...carreras];
     copia[index] = { ...copia[index], [field]: val };
     setCarreras(copia);
@@ -214,12 +214,19 @@ export default function AdminPolla() {
                       className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-cyan-300/30 text-white text-sm"
                       placeholder="Ej: Carrera 1, C4, 8va..." />
                   </label>
-                  <label className="block">
+                  <label className="block mb-2">
                     <span className="text-[10px] text-gray-500">Caballos</span>
                     <input type="number" min={2} max={20} value={c.cantidad_caballos || ""}
                       onChange={e => actualizarCarrera(i, "cantidad_caballos", Number(e.target.value))}
                       className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-purple-300/30 text-white text-sm"
                       placeholder="Ej: 8" />
+                  </label>
+                  <label className="block">
+                    <span className="text-[10px] text-gray-500">Número (opcional)</span>
+                    <input type="number" min={1} value={c.numero}
+                      onChange={e => actualizarCarrera(i, "numero", e.target.value)}
+                      className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-amber-300/30 text-white text-sm"
+                      placeholder="Ej: 1" />
                   </label>
                 </div>
               ))}

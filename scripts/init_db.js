@@ -123,6 +123,7 @@ async function init() {
         orden INTEGER NOT NULL,
         nombre VARCHAR(100) NOT NULL DEFAULT '',
         cantidad_caballos INTEGER NOT NULL,
+        numero INTEGER DEFAULT NULL,
         UNIQUE(polla_id, orden)
       )
     `);

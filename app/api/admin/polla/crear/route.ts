@@ -38,9 +38,10 @@ export async function POST(req: Request) {
     const pollaId = result.rows[0].id;
 
     for (let i = 0; i < carreras.length; i++) {
+      const n = carreras[i].numero ? parseInt(carreras[i].numero) : null;
       await client.query(
-        `INSERT INTO polla_carreras (polla_id, orden, nombre, cantidad_caballos) VALUES ($1, $2, $3, $4)`,
-        [pollaId, i + 1, carreras[i].nombre.trim(), carreras[i].cantidad_caballos]
+        `INSERT INTO polla_carreras (polla_id, orden, nombre, cantidad_caballos, numero) VALUES ($1, $2, $3, $4, $5)`,
+        [pollaId, i + 1, carreras[i].nombre.trim(), carreras[i].cantidad_caballos, n]
       );
     }
 
