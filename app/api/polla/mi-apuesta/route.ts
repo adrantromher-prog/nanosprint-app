@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -16,10 +16,10 @@ export async function GET() {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
     const usuarioId = decoded.id;
 
-    const polla = await pool.query(
-      `SELECT id FROM polla_config WHERE activa = true ORDER BY id DESC LIMIT 1`
-    );
-    if (polla.rows.length === 0) {
+    const { searchParams } = new URL(req.url);
+    const pollaId = searchParams.get("polla_id");
+
+    if (!pollaId) {
       return NextResponse.json({ ok: true, apuesta: null });
     }
 
@@ -27,7 +27,7 @@ export async function GET() {
       `SELECT ticket, carrera_orden, caballo_numero, puntos
        FROM polla_apuestas WHERE polla_id = $1 AND usuario_id = $2
        ORDER BY ticket ASC, carrera_orden ASC`,
-      [polla.rows[0].id, usuarioId]
+       [pollaId, usuarioId]
     );
 
     if (apuestas.rows.length === 0) {

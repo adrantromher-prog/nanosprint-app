@@ -34,7 +34,7 @@ export default function PollaPage() {
     setCargandoLista(true);
     const [resDetalle, resApuesta] = await Promise.all([
       fetch(`/api/polla/detalle?id=${pollaId}`).then(r => r.json()),
-      fetch("/api/polla/mi-apuesta").then(r => r.json()),
+      fetch(`/api/polla/mi-apuesta?polla_id=${pollaId}`).then(r => r.json()),
     ]);
     if (resDetalle.ok) setPolla(resDetalle.polla);
     if (resApuesta.ok) setMisTickets(resApuesta.apuesta || []);
@@ -95,9 +95,9 @@ export default function PollaPage() {
 
   useEffect(() => {
     if (intervaloRef.current) clearInterval(intervaloRef.current);
-    if (!polla?.hora_cierre) {
-      setTiempoRestante("");
-      setAbierto(true);
+    if (!polla?.activa || !polla?.hora_cierre) {
+      setTiempoRestante(!polla?.activa ? "00:00:00" : "");
+      setAbierto(!!polla?.activa);
       return;
     }
     const calcular = () => {
@@ -223,7 +223,7 @@ export default function PollaPage() {
                 const [horas, minutos] = (p.hora_cierre || "").split(":").map(Number);
                 const ahora = new Date();
                 const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
-                const abierta = !p.hora_cierre || horas * 60 + minutos > minutosAhora;
+                const abierta = p.activa && (!p.hora_cierre || horas * 60 + minutos > minutosAhora);
                 return (
                   <button key={p.id}
                     onClick={() => seleccionarPolla(p.id)}

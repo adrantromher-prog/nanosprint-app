@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const pollas = await pool.query(
-      `SELECT id, hipodromo, costo, premio_1, premio_2, hora_cierre, creada_en
-       FROM polla_config WHERE activa = true ORDER BY id DESC`
+      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, hora_cierre, creada_en
+       FROM polla_config ORDER BY id DESC`
     );
 
     const resultados = await Promise.all(
@@ -18,6 +18,7 @@ export async function GET() {
         );
         return {
           id: p.id,
+          activa: p.activa,
           hipodromo: p.hipodromo,
           costo: Number(p.costo),
           premio_1: Number(p.premio_1),
