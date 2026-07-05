@@ -475,7 +475,7 @@ export default function PollaPage() {
           </>
         )}
 
-        {misTickets.length > 0 && (
+        {abierto && misTickets.length > 0 && (
           <div className="mt-4 bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
             <p className="text-white/30 text-[11px] text-center font-medium">
               Tienes {misTickets.length} ticket{misTickets.length !== 1 ? "s" : ""} activo{misTickets.length !== 1 ? "s" : ""}. Puedes comprar más.
