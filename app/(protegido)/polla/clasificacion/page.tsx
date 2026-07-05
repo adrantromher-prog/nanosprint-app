@@ -132,17 +132,17 @@ export default function PollaClasificacion() {
                         {getPuestoIcon(index)}
                       </div>
                       <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
-                      <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
-                      <div className="flex items-center gap-0.5 shrink-0">
+                      <span className="font-semibold text-white/80 text-[12px] truncate flex-1">{p.sobrenombre}</span>
+                      <div className="flex items-center gap-0.5 mx-auto">
                         {numsArr.map((n, i) => (
-                          <span key={i} className={`w-4 h-4 flex items-center justify-center text-[9px] font-bold rounded border ${getPuestoColor(index)} ${
+                          <span key={i} className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded border ${getPuestoColor(index)} ${
                             index === 0 ? "border-amber-400/25 bg-amber-400/8" :
                             index === 1 ? "border-gray-400/25 bg-gray-400/8" :
                             "border-white/10 bg-white/[0.03]"
                           }`}>{n}</span>
                         ))}
                       </div>
-                      <div className="ml-auto text-right shrink-0">
+                      <div className="text-right shrink-0">
                         <p className={`text-xs font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
                         {Number(p.premio) > 0 && (
                           <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
