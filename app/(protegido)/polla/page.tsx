@@ -169,10 +169,18 @@ export default function PollaPage() {
 
   if (!usuario || cargandoLista) {
     return (
-      <main className="min-h-screen flex items-center justify-center text-white bg-[#0a0b0e]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
-          <span className="text-gray-500 text-sm">Cargando...</span>
+      <main className="min-h-screen flex items-center justify-center text-white">
+        <div className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
+        <div className="fixed inset-0 opacity-20"
+          style={{
+            background: `radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,255,255,0.15), transparent),
+                        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(200,0,255,0.1), transparent),
+                        radial-gradient(ellipse 50% 40% at 20% 70%, rgba(255,200,0,0.08), transparent)`
+          }}
+        />
+        <div className="relative flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+          <span className="text-gray-400 text-sm">Cargando...</span>
         </div>
       </main>
     );
@@ -180,18 +188,20 @@ export default function PollaPage() {
 
   if (!polla) {
     return (
-      <main className="relative min-h-screen w-full text-white bg-[#0a0b0e]">
-        <div className="absolute inset-0 pointer-events-none"
+      <main className="relative min-h-screen w-full text-white overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
+        <div className="absolute inset-0 opacity-20"
           style={{
-            background: `radial-gradient(ellipse 90% 50% at 50% -10%, rgba(180,120,20,0.06), transparent),
-                        radial-gradient(ellipse 60% 40% at 80% 90%, rgba(255,150,0,0.03), transparent)`
+            background: `radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,255,255,0.15), transparent),
+                        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(200,0,255,0.1), transparent),
+                        radial-gradient(ellipse 50% 40% at 20% 70%, rgba(255,200,0,0.08), transparent)`
           }}
         />
         <div className="relative z-10 px-3 md:px-4 py-3 max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-amber-400/90">Pollas Hípicas</h1>
-              <p className="text-amber-300/60 text-xs font-medium">Selecciona una polla</p>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-cyan-300">Pollas Hípicas</h1>
+              <p className="text-cyan-300/60 text-xs font-medium">Selecciona una polla</p>
             </div>
             <div className="flex gap-1.5">
               <button onClick={() => router.push("/home")}
@@ -265,11 +275,13 @@ export default function PollaPage() {
   const mostrarSeleccion = abierto && !todasConResultado;
 
   return (
-    <main className="relative min-h-screen w-full text-white bg-[#0a0b0e]">
-      <div className="absolute inset-0 pointer-events-none"
+    <main className="relative min-h-screen w-full text-white overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
+      <div className="absolute inset-0 opacity-20"
         style={{
-          background: `radial-gradient(ellipse 90% 50% at 50% -10%, rgba(180,120,20,0.06), transparent),
-                      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(255,150,0,0.03), transparent)`
+          background: `radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,255,255,0.15), transparent),
+                      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(200,0,255,0.1), transparent),
+                      radial-gradient(ellipse 50% 40% at 20% 70%, rgba(255,200,0,0.08), transparent)`
         }}
       />
 
