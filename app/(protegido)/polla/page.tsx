@@ -154,26 +154,9 @@ export default function PollaPage() {
           </div>
         </div>
 
-        {!todasConResultado && totalSel < 6 && (
-          <div className="bg-amber-500/5 border border-amber-400/10 rounded-lg px-3 py-2 mb-3">
-            <p className="text-amber-300/60 text-[11px] font-medium text-center">Selecciona 1 caballo por cada carrera</p>
-          </div>
-        )}
-
         {todasConResultado && (
           <div className="bg-emerald-500/5 border border-emerald-400/10 rounded-lg px-3 py-2 mb-3">
             <p className="text-emerald-300/60 text-[11px] font-medium text-center">Todas las carreras tienen resultado — espera el cierre</p>
-          </div>
-        )}
-
-        {misTickets.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {misTickets.map((t: any) => (
-              <div key={t.ticket}
-                className="px-2.5 py-1 rounded-full bg-emerald-500/8 border border-emerald-400/15 text-emerald-400/70 text-[10px] font-semibold">
-                Ticket #{t.ticket} · {t.total_puntos} pts
-              </div>
-            ))}
           </div>
         )}
 
@@ -185,28 +168,15 @@ export default function PollaPage() {
 
             return (
               <div key={carrera.orden}
-                className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/[0.04]">
-                  <div className="flex items-center gap-2.5">
+                className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
                     <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-400/15 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-amber-400/70">{carrera.orden}</span>
                     </div>
-                    <div>
-                      <h3 className="text-[13px] font-semibold text-white/80 leading-tight">{carrera.nombre}</h3>
-                      <p className="text-[9px] text-white/30">{carrera.cantidad_caballos} caballos</p>
-                    </div>
+                    <h3 className="text-[13px] font-semibold text-white/80 leading-tight whitespace-nowrap">{carrera.nombre}</h3>
                   </div>
-                  {resultado && (
-                    <div className="flex gap-1">
-                      {resultado.primer_lugar && <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70 border border-amber-400/15 text-[9px] font-medium">1° #{resultado.primer_lugar}</span>}
-                      {resultado.segundo_lugar && <span className="px-1.5 py-0.5 rounded bg-gray-400/10 text-gray-300/70 border border-gray-400/15 text-[9px] font-medium">2° #{resultado.segundo_lugar}</span>}
-                      {resultado.tercer_lugar && <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300/70 border border-orange-400/15 text-[9px] font-medium">3° #{resultado.tercer_lugar}</span>}
-                    </div>
-                  )}
-                </div>
-
-                <div className="px-3 py-2.5">
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1">
                     {caballos.map((num) => {
                       const selected = seleccionLocal === num;
 
@@ -225,6 +195,13 @@ export default function PollaPage() {
                       );
                     })}
                   </div>
+                  {resultado && (
+                    <div className="flex gap-1 shrink-0 mt-1">
+                      {resultado.primer_lugar && <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70 border border-amber-400/15 text-[9px] font-medium">1° #{resultado.primer_lugar}</span>}
+                      {resultado.segundo_lugar && <span className="px-1.5 py-0.5 rounded bg-gray-400/10 text-gray-300/70 border border-gray-400/15 text-[9px] font-medium">2° #{resultado.segundo_lugar}</span>}
+                      {resultado.tercer_lugar && <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300/70 border border-orange-400/15 text-[9px] font-medium">3° #{resultado.tercer_lugar}</span>}
+                    </div>
+                  )}
                 </div>
               </div>
             );
