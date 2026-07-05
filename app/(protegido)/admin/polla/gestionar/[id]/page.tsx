@@ -162,6 +162,12 @@ export default function AdminPollaGestionarId() {
         <div className="bg-green-900/40 border border-green-400/50 rounded-2xl p-4 mb-6">
           <p className="text-green-300 font-bold text-lg">✅ Polla activa</p>
           <p className="text-green-200/70 text-sm">{polla.total_tickets} ticket{polla.total_tickets !== 1 ? "s" : ""} recibidos</p>
+          {polla.total_tickets > 0 && (
+            <div className="flex gap-6 mt-2 pt-2 border-t border-green-400/20">
+              <p className="text-amber-300 font-bold text-sm">1ro: Bs. {Math.floor(polla.total_tickets * Number(polla.costo) * 0.65).toLocaleString()}</p>
+              <p className="text-gray-300 font-bold text-sm">2do: Bs. {Math.floor(polla.total_tickets * Number(polla.costo) * 0.20).toLocaleString()}</p>
+            </div>
+          )}
         </div>
       )}
 
