@@ -11,6 +11,7 @@ export default function PollaPage() {
   const [selecciones, setSelecciones] = useState<{ [carreraOrden: number]: number }>({});
   const [misTickets, setMisTickets] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
+  const [showTickets, setShowTickets] = useState(false);
 
   const fetchData = useCallback(async () => {
     const [resPolla, resUser, resApuesta] = await Promise.all([
@@ -129,9 +130,10 @@ export default function PollaPage() {
             <p className="text-emerald-400/80 font-bold text-xs">Bs. {Number(usuario.saldo).toLocaleString()}</p>
           </div>
           {misTickets.length > 0 && (
-            <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-400/80 text-[10px] font-semibold">
+            <button onClick={() => setShowTickets(true)}
+              className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-400/80 text-[10px] font-semibold hover:bg-emerald-500/20 active:scale-95 transition-all">
               {misTickets.length} ticket{misTickets.length !== 1 ? "s" : ""}
-            </div>
+            </button>
           )}
         </div>
 
@@ -231,6 +233,44 @@ export default function PollaPage() {
             <p className="text-white/30 text-[11px] text-center font-medium">
               Tienes {misTickets.length} ticket{misTickets.length !== 1 ? "s" : ""} activo{misTickets.length !== 1 ? "s" : ""}. Puedes comprar más.
             </p>
+          </div>
+        )}
+
+        {showTickets && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => setShowTickets(false)}>
+            <div className="bg-[#0a0b0e] border border-white/[0.08] rounded-2xl w-full max-w-sm max-h-[80vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
+                <h3 className="text-sm font-bold text-white/80">Mis Tickets</h3>
+                <button onClick={() => setShowTickets(false)}
+                  className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 text-xs hover:bg-white/10 active:scale-95 transition-all">
+                  ✕
+                </button>
+              </div>
+              <div className="p-3 space-y-2">
+                {misTickets.map((t: any) => (
+                  <div key={t.ticket}
+                    className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white/60 text-[11px] font-semibold">Ticket #{t.ticket}</span>
+                      <span className="text-emerald-400/80 text-[10px] font-semibold">{t.total_puntos} pts</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {(t.selecciones || []).map((s: any, i: number) => (
+                        <span key={i}
+                          className="w-6 h-6 rounded-md border border-white/[0.08] bg-white/[0.02] flex items-center justify-center text-[10px] font-bold text-white/60">
+                          {s.caballo_numero}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-white/15 text-[9px] mt-1.5">
+                      {(t.selecciones || []).map((s: any) => s.carrera_orden).join("-")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
