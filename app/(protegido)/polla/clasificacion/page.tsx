@@ -112,10 +112,9 @@ export default function PollaClasificacion() {
         ) : (
           <div className="space-y-1.5">
             {clasificacion.map((p, index) => {
-              const nums = (p.selecciones || [])
+              const numsArr: number[] = (p.selecciones || [])
                 .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden)
-                .map((s: any) => s.caballo_numero)
-                .join("-");
+                .map((s: any) => s.caballo_numero);
               return (
                 <div key={`${p.usuario_id}-${p.ticket}`}
                   className={`rounded-xl border transition-all ${
@@ -123,24 +122,30 @@ export default function PollaClasificacion() {
                       ? "bg-gradient-to-r from-amber-500/8 to-amber-600/5 border-amber-400/20"
                       : "bg-white/[0.02] border-white/[0.06]"
                   }`}>
-                  <div className="px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 ${
+                  <div className="px-3 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
                         index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
                         index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
                         "bg-white/5 text-white/40 border border-white/10"
                       }`}>
                         {getPuestoIcon(index)}
                       </div>
-                      <span className="text-white/30 text-[10px] font-mono shrink-0">#{p.ticket}</span>
-                      <span className="font-semibold text-white/80 text-[13px] truncate">{p.sobrenombre}</span>
-                      {nums && (
-                        <span className={`font-mono font-bold text-[13px] ${getPuestoColor(index)} shrink-0`}>{nums}</span>
-                      )}
+                      <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
+                      <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {numsArr.map((n, i) => (
+                          <span key={i} className={`w-4 h-4 flex items-center justify-center text-[9px] font-bold rounded border ${getPuestoColor(index)} ${
+                            index === 0 ? "border-amber-400/25 bg-amber-400/8" :
+                            index === 1 ? "border-gray-400/25 bg-gray-400/8" :
+                            "border-white/10 bg-white/[0.03]"
+                          }`}>{n}</span>
+                        ))}
+                      </div>
                       <div className="ml-auto text-right shrink-0">
-                        <p className={`text-sm font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[10px] text-white/30">pts</span></p>
+                        <p className={`text-xs font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
                         {Number(p.premio) > 0 && (
-                          <p className="text-emerald-400/80 font-semibold text-[10px]">+Bs. {Number(p.premio).toLocaleString()}</p>
+                          <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
                         )}
                       </div>
                     </div>
