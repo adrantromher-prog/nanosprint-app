@@ -11,6 +11,7 @@ export default function AdminPolla() {
   );
   const [pollaActiva, setPollaActiva] = useState<any>(null);
   const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
+  const [guardando, setGuardando] = useState<number | null>(null);
 
   const fetchPollaActiva = async () => {
     const res = await fetch("/api/polla/activa");
@@ -72,35 +73,30 @@ export default function AdminPolla() {
     }));
   };
 
-  const guardarResultados = async () => {
-    if (!pollaActiva) return;
-
-    const resultadosArray = pollaActiva.carreras.map((c: any) => {
-      const r = resultados[c.orden];
-      if (!r?.primer_lugar || !r?.segundo_lugar || !r?.tercer_lugar) {
-        return null;
-      }
-      return {
-        carrera_orden: c.orden,
-        primer_lugar: r.primer_lugar,
-        segundo_lugar: r.segundo_lugar,
-        tercer_lugar: r.tercer_lugar,
-      };
-    });
-
-    if (resultadosArray.some((r: any) => r === null)) {
-      alert("Completa los 3 puestos (1ro, 2do, 3ro) para todas las carreras");
+  const guardarResultadosCarrera = async (carrera: any) => {
+    const r = resultados[carrera.orden];
+    if (!r?.primer_lugar || !r?.segundo_lugar || !r?.tercer_lugar) {
+      alert("Completa los 3 puestos (1ro, 2do, 3ro)");
       return;
     }
-
+    setGuardando(carrera.orden);
     const res = await fetch("/api/admin/polla/resultados", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ polla_id: pollaActiva.id, resultados: resultadosArray }),
+      body: JSON.stringify({
+        polla_id: pollaActiva.id,
+        resultados: [{
+          carrera_orden: carrera.orden,
+          primer_lugar: r.primer_lugar,
+          segundo_lugar: r.segundo_lugar,
+          tercer_lugar: r.tercer_lugar,
+        }],
+      }),
     });
     const data = await res.json();
+    setGuardando(null);
     if (data.ok) {
-      alert("Resultados guardados y puntajes calculados");
+      alert(`Resultados guardados — ${carrera.nombre}`);
       fetchPollaActiva();
     } else {
       alert(data.error || "Error al guardar resultados");
@@ -145,41 +141,62 @@ export default function AdminPolla() {
             <p className="text-green-200/70">Costo: Bs. {Number(pollaActiva.costo).toLocaleString()}</p>
           </div>
 
-          <div className="space-y-4 mb-6">
+          <div className="space-y-3 mb-6">
             <h2 className="text-xl font-bold text-cyan-300">Resultados por Carrera</h2>
-            {pollaActiva.carreras?.map((c: any) => (
-              <div key={c.orden} className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4">
-                <h3 className="font-bold text-white mb-2">{c.nombre} ({c.cantidad_caballos} caballos)</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {["primer_lugar", "segundo_lugar", "tercer_lugar"].map((puesto, idx) => {
-                    const labels = ["1er Lugar (5 pts)", "2do Lugar (3 pts)", "3er Lugar (1 pt)"];
-                    const nums = Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1);
-                    return (
-                      <div key={puesto}>
-                        <label className="text-xs text-gray-400 block mb-1">{labels[idx]}</label>
-                        <select
-                          value={(resultados[c.orden] as any)?.[puesto] || ""}
-                          onChange={(e) => setResultado(c.orden, puesto as any, Number(e.target.value))}
-                          className="w-full px-2 py-1.5 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
-                        >
-                          <option value="">Seleccionar</option>
-                          {nums.map(n => (
-                            <option key={n} value={n}>Caballo #{n}</option>
-                          ))}
-                        </select>
-                      </div>
-                    );
-                  })}
+            <p className="text-gray-400 text-xs">Ingresa los resultados de cada carrera y presiona "Guardar" para calcular puntos.</p>
+            {pollaActiva.carreras?.map((c: any) => {
+              const tieneResultado = resultados[c.orden]?.primer_lugar != null;
+              return (
+                <div key={c.orden} className={`rounded-2xl p-4 border ${
+                  tieneResultado
+                    ? "bg-green-900/20 border-green-500/30"
+                    : "bg-gray-900/70 border-gray-700"
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-white text-sm">
+                      {c.numero || c.orden} — {c.nombre}
+                      <span className="text-gray-500 font-normal ml-1">({c.cantidad_caballos} caballos)</span>
+                    </h3>
+                    {tieneResultado && (
+                      <span className="text-[10px] text-green-400/70 font-semibold bg-green-500/10 px-2 py-0.5 rounded-full border border-green-400/20">
+                        ✓ Guardado
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {["primer_lugar", "segundo_lugar", "tercer_lugar"].map((puesto, idx) => {
+                      const labels = ["1er Lugar (5 pts)", "2do Lugar (3 pts)", "3er Lugar (1 pt)"];
+                      const nums = Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1);
+                      return (
+                        <div key={puesto}>
+                          <label className="text-[10px] text-gray-400 block mb-1">{labels[idx]}</label>
+                          <select
+                            value={(resultados[c.orden] as any)?.[puesto] || ""}
+                            onChange={(e) => setResultado(c.orden, puesto as any, Number(e.target.value))}
+                            className="w-full px-2 py-1.5 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
+                          >
+                            <option value="">—</option>
+                            {nums.map(n => (
+                              <option key={n} value={n}>#{n}</option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button onClick={() => guardarResultadosCarrera(c)}
+                    disabled={guardando === c.orden}
+                    className="w-full py-2 rounded-xl bg-emerald-600/60 border border-emerald-400/50 text-white font-semibold text-xs
+                      hover:brightness-110 active:scale-95 transition-all
+                      disabled:opacity-40 disabled:cursor-not-allowed">
+                    {guardando === c.orden ? "Guardando..." : tieneResultado ? "Actualizar Resultados" : "Guardar Resultados"}
+                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            <button onClick={guardarResultados}
-              className="px-6 py-3 rounded-xl bg-green-700/70 border border-green-400/70 text-white font-bold shadow-[0_0_18px_rgba(0,255,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
-              💾 Guardar Resultados
-            </button>
             <button onClick={cerrarPolla}
               className="px-6 py-3 rounded-xl bg-red-700/70 border border-red-400/70 text-white font-bold shadow-[0_0_18px_rgba(255,0,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
               🔒 Cerrar Polla & Entregar Premios
