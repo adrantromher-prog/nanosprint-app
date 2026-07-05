@@ -6,6 +6,8 @@ import useWebSocket from "@/hooks/useWebSocket";
 
 export default function PollaPage() {
   const router = useRouter();
+  const [pollasDisponibles, setPollasDisponibles] = useState<any[]>([]);
+  const [cargandoLista, setCargandoLista] = useState(true);
   const [polla, setPolla] = useState<any>(null);
   const [usuario, setUsuario] = useState<any>(null);
   const [selecciones, setSelecciones] = useState<{ [carreraOrden: number]: number }>({});
@@ -17,16 +19,33 @@ export default function PollaPage() {
   const [clasificacion, setClasificacion] = useState<any[]>([]);
   const intervaloRef = useRef<any>(null);
 
-  const fetchData = useCallback(async () => {
-    const [resPolla, resUser, resApuesta] = await Promise.all([
-      fetch("/api/polla/activa").then(r => r.json()),
+  const fetchDisponibles = useCallback(async () => {
+    const [resDisponibles, resUser] = await Promise.all([
+      fetch("/api/polla/disponibles").then(r => r.json()),
       fetch(`/api/me?_t=${Date.now()}`).then(r => r.json()),
+    ]);
+    if (resDisponibles.ok) setPollasDisponibles(resDisponibles.pollas);
+    if (resUser.nombre) setUsuario(resUser);
+    setCargandoLista(false);
+  }, []);
+
+  const seleccionarPolla = useCallback(async (pollaId: number) => {
+    setCargandoLista(true);
+    const [resDetalle, resApuesta] = await Promise.all([
+      fetch(`/api/polla/detalle?id=${pollaId}`).then(r => r.json()),
       fetch("/api/polla/mi-apuesta").then(r => r.json()),
     ]);
-    if (resPolla.ok) setPolla(resPolla.polla);
-    if (resUser.nombre) setUsuario(resUser);
+    if (resDetalle.ok) setPolla(resDetalle.polla);
     if (resApuesta.ok) setMisTickets(resApuesta.apuesta || []);
     setSelecciones({});
+    setCargandoLista(false);
+  }, []);
+
+  const volverLista = useCallback(() => {
+    setPolla(null);
+    setMisTickets([]);
+    setClasificacion([]);
+    if (intervaloRef.current) clearInterval(intervaloRef.current);
   }, []);
 
   const fetchClasificacion = useCallback(async (pollaId: number) => {
@@ -36,15 +55,15 @@ export default function PollaPage() {
   }, []);
 
   useWebSocket(useCallback((event) => {
-    if (["polla_creada", "polla_resultados", "polla_apuesta", "polla_retiros"].includes(event.type)) {
-      fetchData();
+    if (["polla_creada", "polla_resultados", "polla_retiros"].includes(event.type)) {
+      fetchDisponibles();
     }
     if (event.type === "polla_resultados" && polla) {
       fetchClasificacion(polla.id);
     }
-  }, [fetchData, fetchClasificacion, polla]));
+  }, [fetchDisponibles, fetchClasificacion, polla]));
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchDisponibles(); }, [fetchDisponibles]);
 
   useEffect(() => {
     if (intervaloRef.current) clearInterval(intervaloRef.current);
@@ -106,7 +125,7 @@ export default function PollaPage() {
     if (data.ok) {
       setSelecciones({});
       alert(`¡Apuesta registrada! Ticket #${data.ticket}`);
-      fetchData();
+      seleccionarPolla(polla.id);
     } else {
       alert(data.error || "Error al registrar apuesta");
     }
@@ -118,7 +137,7 @@ export default function PollaPage() {
     return "text-white/60";
   };
 
-  if (!usuario) {
+  if (!usuario || cargandoLista) {
     return (
       <main className="min-h-screen flex items-center justify-center text-white bg-[#0a0b0e]">
         <div className="flex flex-col items-center gap-3">
@@ -131,14 +150,79 @@ export default function PollaPage() {
 
   if (!polla) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-white bg-[#0a0b0e] gap-4 px-4">
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-400/20 flex items-center justify-center text-2xl">🏇</div>
-        <h1 className="text-xl font-bold text-gray-300">No hay Polla activa</h1>
-        <p className="text-gray-500 text-sm text-center">El administrador aún no ha creado una Polla Hípica</p>
-        <button onClick={() => router.push("/home")}
-          className="mt-2 px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 font-medium text-sm hover:bg-white/10 active:scale-95 transition-all">
-          Volver al inicio
-        </button>
+      <main className="relative min-h-screen w-full text-white bg-[#0a0b0e]">
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse 90% 50% at 50% -10%, rgba(180,120,20,0.06), transparent),
+                        radial-gradient(ellipse 60% 40% at 80% 90%, rgba(255,150,0,0.03), transparent)`
+          }}
+        />
+        <div className="relative z-10 px-3 md:px-4 py-3 max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-amber-400/90">Pollas Hípicas</h1>
+              <p className="text-amber-300/60 text-xs font-medium">Selecciona una polla</p>
+            </div>
+            <div className="flex gap-1.5">
+              <button onClick={() => router.push("/home")}
+                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
+                Salir
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl px-3.5 py-2.5 mb-4">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400/30 to-amber-600/30 border border-amber-400/20 flex items-center justify-center text-white font-bold text-xs">
+              {usuario.nombre.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/80 text-xs font-semibold truncate">{usuario.nombre}</p>
+              <p className="text-emerald-400/80 font-bold text-xs">Bs. {Number(usuario.saldo).toLocaleString()}</p>
+            </div>
+          </div>
+
+          {pollasDisponibles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-400/20 flex items-center justify-center text-2xl">🏇</div>
+              <h1 className="text-xl font-bold text-gray-300">No hay Pollas activas</h1>
+              <p className="text-gray-500 text-sm text-center">El administrador aún no ha creado una Polla Hípica</p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {pollasDisponibles.map((p: any) => {
+                const [horas, minutos] = (p.hora_cierre || "").split(":").map(Number);
+                const cierre = new Date();
+                cierre.setHours(horas, minutos, 0, 0);
+                const abierta = cierre.getTime() > Date.now();
+                return (
+                  <button key={p.id}
+                    onClick={() => seleccionarPolla(p.id)}
+                    className="w-full text-left rounded-xl bg-white/[0.02] border border-white/[0.06] p-3.5 hover:bg-white/[0.04] hover:border-white/20 active:scale-[0.98] transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-semibold text-white/80 text-sm">{p.hipodromo}</span>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        abierta
+                          ? "bg-emerald-500/10 text-emerald-400/80 border border-emerald-400/20"
+                          : "bg-red-500/10 text-red-400/80 border border-red-400/20"
+                      }`}>
+                        {abierta ? "Abierta" : "Cerrada"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-white/30 text-[10px]">
+                      <span>Cierre {p.hora_cierre || "—"}</span>
+                      <span>Bs. {Number(p.costo).toLocaleString()}</span>
+                      <span>{p.total_tickets || 0} tickets</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1.5 text-[10px]">
+                      <span className="text-amber-400/50">1° Bs. {Math.floor(Number(p.costo) * Math.max(p.total_tickets || 1, 1) * 0.65).toLocaleString()}</span>
+                      <span className="text-gray-400/40">2° Bs. {Math.floor(Number(p.costo) * Math.max(p.total_tickets || 1, 1) * 0.20).toLocaleString()}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </main>
     );
   }
@@ -164,6 +248,10 @@ export default function PollaPage() {
             <p className="text-amber-300/60 text-xs font-medium">{polla.hipodromo}</p>
           </div>
           <div className="flex gap-1.5">
+            <button onClick={volverLista}
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
+              Atrás
+            </button>
             <button onClick={() => router.push("/home")}
               className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
               Salir
