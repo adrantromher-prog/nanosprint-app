@@ -442,12 +442,7 @@ export default function PollaPage() {
                                         : "border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-white/50 hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white hover:shadow-[0_0_12px_rgba(0,255,255,0.15)]"
                                     }
                                     ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-90"}`}>
-                                  {esRetirado ? (
-                                    <span className="relative flex items-center justify-center w-full h-full">
-                                      <span className="opacity-20">{num}</span>
-                                      <span className="absolute inset-0 flex items-center justify-center text-[16px] font-bold text-red-400">✕</span>
-                                    </span>
-                                  ) : num}
+                                  {esRetirado ? <span className="text-white font-black text-sm bg-red-500/40 w-full h-full flex items-center justify-center rounded-lg">X</span> : num}
                                 </button>
                               );
                             })}
