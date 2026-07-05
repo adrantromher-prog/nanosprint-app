@@ -17,6 +17,7 @@ export default function PollaPage() {
   const [tiempoRestante, setTiempoRestante] = useState("");
   const [abierto, setAbierto] = useState(true);
   const [clasificacion, setClasificacion] = useState<any[]>([]);
+  const [conteos, setConteos] = useState<{ [id: number]: string }>({});
   const intervaloRef = useRef<any>(null);
 
   const fetchDisponibles = useCallback(async () => {
@@ -64,6 +65,33 @@ export default function PollaPage() {
   }, [fetchDisponibles, fetchClasificacion, polla]));
 
   useEffect(() => { fetchDisponibles(); }, [fetchDisponibles]);
+
+  useEffect(() => {
+    const actualizarConteos = () => {
+      const nuevos: { [id: number]: string } = {};
+      for (const p of pollasDisponibles) {
+        if (!p.hora_cierre) continue;
+        const [horas, minutos] = p.hora_cierre.split(":").map(Number);
+        const ahora = new Date();
+        const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
+        if (horas * 60 + minutos <= minutosAhora) {
+          nuevos[p.id] = "00:00:00";
+        } else {
+          const cierre = new Date();
+          cierre.setUTCHours(horas + 4, minutos, 0, 0);
+          const diff = cierre.getTime() - ahora.getTime();
+          const h = Math.floor(diff / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          nuevos[p.id] = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        }
+      }
+      setConteos(nuevos);
+    };
+    actualizarConteos();
+    const intervalo = setInterval(actualizarConteos, 1000);
+    return () => clearInterval(intervalo);
+  }, [pollasDisponibles]);
 
   useEffect(() => {
     if (intervaloRef.current) clearInterval(intervaloRef.current);
@@ -211,7 +239,9 @@ export default function PollaPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-white/30 text-[10px]">
-                      <span>Cierre {p.hora_cierre || "—"}</span>
+                      <span className={`font-mono font-bold tabular-nums ${abierta ? "text-amber-300/80" : "text-red-400/60"}`}>
+                        {abierta ? conteos[p.id] || "--:--:--" : "00:00:00"}
+                      </span>
                       <span>Bs. {Number(p.costo).toLocaleString()}</span>
                       <span>{p.total_tickets || 0} tickets</span>
                     </div>
