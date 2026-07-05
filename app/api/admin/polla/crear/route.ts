@@ -8,15 +8,11 @@ export async function POST(req: Request) {
   if (error) return error;
   const client = await pool.connect();
   try {
-    const { hipodromo, carreras, cierre_en } = await req.json();
+    const { hipodromo, carreras, hora_cierre } = await req.json();
 
-    if (!cierre_en) {
+    if (!hora_cierre || !/^\d{2}:\d{2}$/.test(hora_cierre)) {
       client.release();
-      return NextResponse.json({ ok: false, error: "Debes especificar la fecha y hora de cierre" }, { status: 400 });
-    }
-    if (new Date(cierre_en).getTime() <= Date.now()) {
-      client.release();
-      return NextResponse.json({ ok: false, error: "La fecha de cierre debe ser en el futuro" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Debes especificar la hora de cierre (HH:MM)" }, { status: 400 });
     }
 
     if (!hipodromo || hipodromo.trim() === "") {
@@ -41,8 +37,8 @@ export async function POST(req: Request) {
     await client.query("BEGIN");
 
     const result = await client.query(
-      `INSERT INTO polla_config (activa, hipodromo, costo, cierre_en) VALUES (true, $1, 700.00, $2) RETURNING id`,
-      [hipodromo.trim(), cierre_en]
+      `INSERT INTO polla_config (activa, hipodromo, costo, hora_cierre) VALUES (true, $1, 700.00, $2) RETURNING id`,
+      [hipodromo.trim(), hora_cierre]
     );
     const pollaId = result.rows[0].id;
 

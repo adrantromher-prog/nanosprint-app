@@ -78,7 +78,7 @@ app.prepare().then(async () => {
       )
     `);
     await pool.query(`ALTER TABLE polla_config ADD COLUMN IF NOT EXISTS hipodromo VARCHAR(200) NOT NULL DEFAULT ''`);
-    await pool.query(`ALTER TABLE polla_config ADD COLUMN IF NOT EXISTS cierre_en TIMESTAMP`);
+    await pool.query(`ALTER TABLE polla_config ADD COLUMN IF NOT EXISTS hora_cierre VARCHAR(5) NOT NULL DEFAULT ''`);
     await pool.query(`ALTER TABLE polla_config DROP COLUMN IF EXISTS premio_3`);
     console.log("✅ Tabla polla_config lista");
     await pool.query(`

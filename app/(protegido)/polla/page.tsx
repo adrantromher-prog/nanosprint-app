@@ -12,12 +12,11 @@ export default function PollaPage() {
   const [misTickets, setMisTickets] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
   const [showTickets, setShowTickets] = useState(false);
-  const [tiempoRestante, setTiempoRestante] = useState<number | null>(null);
+  const [tiempoRestante, setTiempoRestante] = useState("");
+  const [abierto, setAbierto] = useState(true);
   const [clasificacion, setClasificacion] = useState<any[]>([]);
   const [mostrarClasificacion, setMostrarClasificacion] = useState(false);
   const intervaloRef = useRef<any>(null);
-
-  const tiempoTerminado = tiempoRestante !== null && tiempoRestante <= 0;
 
   const fetchData = useCallback(async () => {
     const [resPolla, resUser, resApuesta] = await Promise.all([
@@ -50,29 +49,39 @@ export default function PollaPage() {
 
   useEffect(() => {
     if (intervaloRef.current) clearInterval(intervaloRef.current);
-    if (!polla?.cierre_en) {
-      setTiempoRestante(null);
+    if (!polla?.hora_cierre) {
+      setTiempoRestante("");
+      setAbierto(true);
       setMostrarClasificacion(false);
       return;
     }
-    const actualizar = () => {
-      const diff = new Date(polla.cierre_en).getTime() - Date.now();
-      setTiempoRestante(diff);
+    const calcular = () => {
+      const ahora = new Date();
+      const [horas, minutos] = polla.hora_cierre.split(":").map(Number);
+      const cierre = new Date();
+      cierre.setHours(horas, minutos, 0, 0);
+      const diff = cierre.getTime() - ahora.getTime();
+
       if (diff <= 0) {
+        setAbierto(false);
+        setTiempoRestante("00:00:00");
         setMostrarClasificacion(true);
         fetchClasificacion(polla.id);
         if (intervaloRef.current) clearInterval(intervaloRef.current);
+        return;
       }
+      setAbierto(true);
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTiempoRestante(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
     };
-    actualizar();
-    if (new Date(polla.cierre_en).getTime() > Date.now()) {
-      intervaloRef.current = setInterval(actualizar, 1000);
-    } else {
-      setMostrarClasificacion(true);
-      fetchClasificacion(polla.id);
+    calcular();
+    if (abierto) {
+      intervaloRef.current = setInterval(calcular, 1000);
     }
     return () => { if (intervaloRef.current) clearInterval(intervaloRef.current); };
-  }, [polla?.id, polla?.cierre_en, fetchClasificacion]);
+  }, [polla?.id, polla?.hora_cierre, fetchClasificacion]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum
@@ -104,15 +113,6 @@ export default function PollaPage() {
     } else {
       alert(data.error || "Error al registrar apuesta");
     }
-  };
-
-  const formatearTiempo = (ms: number) => {
-    if (ms <= 0) return "00:00:00";
-    const segs = Math.floor(ms / 1000);
-    const h = Math.floor(segs / 3600);
-    const m = Math.floor((segs % 3600) / 60);
-    const s = segs % 60;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
   const getPuestoColor = (index: number) => {
@@ -149,7 +149,7 @@ export default function PollaPage() {
   const todasConResultado = polla.resultados?.length >= 6;
   const costo = Number(polla.costo);
   const totalSel = Object.keys(selecciones).length;
-  const mostrarSeleccion = !tiempoTerminado && !todasConResultado;
+  const mostrarSeleccion = abierto && !todasConResultado;
 
   return (
     <main className="relative min-h-screen w-full text-white bg-[#0a0b0e]">
@@ -215,21 +215,19 @@ export default function PollaPage() {
           </div>
         </div>
 
-        {polla.cierre_en && (
+        {polla.hora_cierre && (
           <div className={`rounded-xl px-4 py-2 mb-3 text-center border ${
-            tiempoTerminado
+            !abierto
               ? "bg-red-900/20 border-red-400/20"
               : "bg-amber-500/8 border-amber-400/15"
           }`}>
-            {tiempoRestante !== null && (
-              <p className={`font-bold text-lg tabular-nums tracking-wider ${
-                tiempoTerminado ? "text-red-400" : "text-amber-300"
-              }`}>
-                {tiempoTerminado ? "CIERRE" : formatearTiempo(tiempoRestante)}
-              </p>
-            )}
+            <p className={`font-bold text-lg tabular-nums tracking-wider ${
+              !abierto ? "text-red-400" : "text-amber-300"
+            }`}>
+              {!abierto ? "CERRADO" : tiempoRestante}
+            </p>
             <p className="text-white/30 text-[10px] font-medium">
-              {tiempoTerminado ? "Tiempo de apuestas terminado" : "Tiempo restante para apostar"}
+              {!abierto ? "Tiempo de apuestas terminado" : "Tiempo restante para apostar"}
             </p>
           </div>
         )}

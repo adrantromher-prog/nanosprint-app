@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     await client.query("BEGIN");
 
     const polla = await client.query(
-      `SELECT id, activa, costo, cierre_en FROM polla_config WHERE id = $1 AND activa = true FOR UPDATE`,
+      `SELECT id, activa, costo, hora_cierre FROM polla_config WHERE id = $1 AND activa = true FOR UPDATE`,
       [polla_id]
     );
     if (polla.rows.length === 0) {
@@ -37,10 +37,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Polla no disponible o ya cerró" }, { status: 400 });
     }
 
-    if (polla.rows[0].cierre_en && new Date(polla.rows[0].cierre_en).getTime() <= Date.now()) {
-      await client.query("ROLLBACK");
-      client.release();
-      return NextResponse.json({ ok: false, error: "El tiempo para apostar en esta polla ya terminó" }, { status: 400 });
+    if (polla.rows[0].hora_cierre) {
+      const [horas, minutos] = polla.rows[0].hora_cierre.split(":").map(Number);
+      const cierre = new Date();
+      cierre.setHours(horas, minutos, 0, 0);
+      if (cierre.getTime() <= Date.now()) {
+        await client.query("ROLLBACK");
+        client.release();
+        return NextResponse.json({ ok: false, error: "El tiempo para apostar en esta polla ya terminó" }, { status: 400 });
+      }
     }
 
     const ticket = await client.query(
