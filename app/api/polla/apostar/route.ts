@@ -49,8 +49,8 @@ export async function POST(req: Request) {
     }
 
     const ticket = await client.query(
-      `SELECT COALESCE(MAX(ticket), 0) + 1 as next_ticket FROM polla_apuestas WHERE polla_id = $1 AND usuario_id = $2`,
-      [polla_id, usuarioId]
+      `SELECT COALESCE(MAX(ticket), 0) + 1 as next_ticket FROM polla_apuestas WHERE polla_id = $1`,
+      [polla_id]
     );
     const ticketNum = Number(ticket.rows[0].next_ticket);
 
