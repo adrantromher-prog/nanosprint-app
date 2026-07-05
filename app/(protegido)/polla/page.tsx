@@ -434,15 +434,15 @@ export default function PollaPage() {
                                 <button key={num}
                                   onClick={() => !esRetirado && seleccionarCaballo(carrera.orden, num)}
                                   disabled={esRetirado}
-                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm transition-all duration-150 relative
+                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center font-bold text-sm transition-all duration-150
                                     ${esRetirado
-                                      ? "border-red-500/30 bg-red-500/10 text-red-400/50 cursor-default"
+                                      ? "border-red-500/60 bg-red-500/25 text-red-300 cursor-default line-through decoration-red-400 decoration-2"
                                       : selected
                                         ? "border-cyan-400 bg-cyan-500/20 text-white scale-110 shadow-[0_0_16px_rgba(0,255,255,0.35)] shadow-cyan-500/20"
                                         : "border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-white/50 hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white hover:shadow-[0_0_12px_rgba(0,255,255,0.15)]"
                                     }
                                     ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-90"}`}>
-                                  {esRetirado ? <span className="text-white font-black text-sm bg-red-500/40 w-full h-full flex items-center justify-center rounded-lg">X</span> : num}
+                                  {esRetirado ? `${num}X` : num}
                                 </button>
                               );
                             })}
