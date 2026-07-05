@@ -149,6 +149,9 @@ export default function PollaPage() {
     if (data.ok) {
       setSelecciones({});
       alert(`¡Apuesta registrada! Ticket #${data.ticket}`);
+      const resMe = await fetch(`/api/me?_t=${Date.now()}`);
+      const meData = await resMe.json();
+      if (meData.nombre) setUsuario(meData);
       seleccionarPolla(polla.id);
     } else {
       alert(data.error || "Error al registrar apuesta");
