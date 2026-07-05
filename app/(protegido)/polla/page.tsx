@@ -434,15 +434,24 @@ export default function PollaPage() {
                                 <button key={num}
                                   onClick={() => !esRetirado && seleccionarCaballo(carrera.orden, num)}
                                   disabled={esRetirado}
-                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm transition-all duration-150
+                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm transition-all duration-150 relative
                                     ${esRetirado
-                                      ? "border-red-500/30 bg-red-500/10 text-red-400/50 line-through cursor-default"
+                                      ? "border-red-500/30 bg-red-500/10 text-red-400/50 cursor-default"
                                       : selected
                                         ? "border-cyan-400 bg-cyan-500/20 text-white scale-110 shadow-[0_0_16px_rgba(0,255,255,0.35)] shadow-cyan-500/20"
                                         : "border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-white/50 hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white hover:shadow-[0_0_12px_rgba(0,255,255,0.15)]"
                                     }
                                     ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-90"}`}>
-                                  {num}
+                                  {esRetirado ? (
+                                    <span className="relative flex items-center justify-center w-full h-full">
+                                      <span className="opacity-30">{num}</span>
+                                      <span className="absolute inset-0 flex items-center justify-center">
+                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-red-400">
+                                          <path d="M5 5l10 10M15 5l-10 10" />
+                                        </svg>
+                                      </span>
+                                    </span>
+                                  ) : num}
                                 </button>
                               );
                             })}
