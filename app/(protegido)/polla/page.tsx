@@ -434,15 +434,15 @@ export default function PollaPage() {
                                 <button key={num}
                                   onClick={() => !esRetirado && seleccionarCaballo(carrera.orden, num)}
                                   disabled={esRetirado}
-                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center font-bold text-sm transition-all duration-150
+                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center text-xs transition-all duration-150 disabled:opacity-100
                                     ${esRetirado
-                                      ? "border-red-500/60 bg-red-500/25 text-red-300 cursor-default line-through decoration-red-400 decoration-2"
+                                      ? "border-white/30 bg-gradient-to-br from-red-600 to-red-800 text-white font-black cursor-default"
                                       : selected
-                                        ? "border-cyan-400 bg-cyan-500/20 text-white scale-110 shadow-[0_0_16px_rgba(0,255,255,0.35)] shadow-cyan-500/20"
-                                        : "border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-white/50 hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white hover:shadow-[0_0_12px_rgba(0,255,255,0.15)]"
+                                        ? "border-cyan-400 bg-cyan-500/20 text-white font-black scale-110 shadow-[0_0_16px_rgba(0,255,255,0.35)] shadow-cyan-500/20"
+                                        : "border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-white/50 font-bold hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white hover:shadow-[0_0_12px_rgba(0,255,255,0.15)]"
                                     }
                                     ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-90"}`}>
-                                  {esRetirado ? `${num}X` : num}
+                                  {esRetirado ? <span className="flex flex-col items-center leading-none"><span className="text-[9px] opacity-70">{num}</span><span className="text-sm -mt-0.5">✕</span></span> : num}
                                 </button>
                               );
                             })}
