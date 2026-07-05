@@ -7,11 +7,11 @@ export default function AdminPollaCrear() {
   const router = useRouter();
   const [hipodromo, setHipodromo] = useState("");
   const [horaCierre, setHoraCierre] = useState("");
-  const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number; numero: string }[]>(
-    Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0, numero: "" }))
+  const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number }[]>(
+    Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0 }))
   );
 
-  const actualizarCarrera = (index: number, field: "nombre" | "cantidad_caballos" | "numero", val: string | number) => {
+  const actualizarCarrera = (index: number, field: "nombre" | "cantidad_caballos", val: string | number) => {
     const copia = [...carreras];
     copia[index] = { ...copia[index], [field]: val };
     setCarreras(copia);
@@ -75,25 +75,18 @@ export default function AdminPollaCrear() {
             <div key={i} className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-3">
               <p className="text-xs text-gray-400 font-bold mb-2">Carrera #{i + 1}</p>
               <label className="block mb-2">
-                <span className="text-[10px] text-gray-500">Nombre</span>
+                <span className="text-[10px] text-gray-500">Nombre / Número</span>
                 <input type="text" value={c.nombre}
                   onChange={e => actualizarCarrera(i, "nombre", e.target.value)}
                   className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-cyan-300/30 text-white text-sm"
-                  placeholder="Ej: Carrera 1, C4, 8va..." />
+                  placeholder="Ej: 1, 2, C4, 8va..." />
               </label>
-              <label className="block mb-2">
+              <label className="block">
                 <span className="text-[10px] text-gray-500">Caballos</span>
                 <input type="number" min={2} max={20} value={c.cantidad_caballos || ""}
                   onChange={e => actualizarCarrera(i, "cantidad_caballos", Number(e.target.value))}
                   className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-purple-300/30 text-white text-sm"
                   placeholder="Ej: 8" />
-              </label>
-              <label className="block">
-                <span className="text-[10px] text-gray-500">Número (opcional)</span>
-                <input type="number" min={1} value={c.numero}
-                  onChange={e => actualizarCarrera(i, "numero", e.target.value)}
-                  className="w-full mt-0.5 px-2 py-1.5 rounded-lg bg-black/40 border border-amber-300/30 text-white text-sm"
-                  placeholder="Ej: 1" />
               </label>
             </div>
           ))}

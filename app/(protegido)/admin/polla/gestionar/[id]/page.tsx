@@ -162,7 +162,7 @@ export default function AdminPollaGestionarId() {
             }`}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-white text-sm">
-                  {c.numero || c.orden} — {c.nombre}
+                  {c.nombre}
                   <span className="text-gray-500 font-normal ml-1">({c.cantidad_caballos} caballos)</span>
                 </h3>
                 {tieneResultado && (

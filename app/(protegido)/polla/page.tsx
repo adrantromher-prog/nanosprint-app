@@ -417,7 +417,7 @@ export default function PollaPage() {
                         className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
                         <div className="flex items-start gap-2">
                           <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-400/15 flex items-center justify-center shrink-0 mt-0.5">
-                            <span className="text-[10px] font-bold text-amber-400/70">{carrera.numero || carrera.orden}</span>
+                            <span className="text-[10px] font-bold text-amber-400/70">{carrera.nombre}</span>
                           </div>
                           <div className="flex flex-wrap gap-1">
                             {caballos.map((num) => {
