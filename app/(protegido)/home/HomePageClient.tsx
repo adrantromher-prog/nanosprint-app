@@ -157,16 +157,8 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
               className="jackpot-glow group relative w-full h-[50px] md:h-[60px] rounded-xl overflow-hidden bg-gradient-to-b from-yellow-900/60 via-amber-800/40 to-yellow-900/60 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:shadow-[0_0_36px_rgba(255,200,0,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
               <div className="relative h-full flex items-center justify-center gap-2 px-3">
-                <div className="text-yellow-200/80 group-hover:scale-110 group-hover:text-yellow-200 transition-all duration-300 drop-shadow-[0_0_8px_rgba(255,200,0,0.15)]">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 md:w-5 md:h-5">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M16 21v-2a4 4 0 00-8 0v2" />
-                    <path d="M12 12v3" />
-                    <path d="M10 15h4" />
-                  </svg>
-                </div>
                 <span className="jackpot-text-shine text-yellow-200 font-bold text-[10px] md:text-xs tracking-[0.15em] uppercase drop-shadow-[0_0_4px_rgba(255,200,0,0.2)]">
-                  CLASIFICACIÓN
+                  ACUMULADO
                 </span>
                 <span className="jackpot-amount text-yellow-100 font-black text-xs md:text-sm drop-shadow-[0_0_8px_rgba(255,200,0,0.2)]">
                   Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 0 })}
