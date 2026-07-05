@@ -123,17 +123,19 @@ export default function PollaClasificacion() {
                       : "bg-white/[0.02] border-white/[0.06]"
                   }`}>
                   <div className="px-3 py-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
-                        index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
-                        index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
-                        "bg-white/5 text-white/40 border border-white/10"
-                      }`}>
-                        {getPuestoIcon(index)}
+                    <div className="flex items-center">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                          index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
+                          index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
+                          "bg-white/5 text-white/40 border border-white/10"
+                        }`}>
+                          {getPuestoIcon(index)}
+                        </div>
+                        <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
+                        <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
                       </div>
-                      <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
-                      <span className="font-semibold text-white/80 text-[12px] truncate flex-1">{p.sobrenombre}</span>
-                      <div className="flex items-center gap-0.5 mx-auto">
+                      <div className="flex items-center gap-0.5 mx-3">
                         {numsArr.map((n, i) => (
                           <span key={i} className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded border ${getPuestoColor(index)} ${
                             index === 0 ? "border-amber-400/25 bg-amber-400/8" :
@@ -142,7 +144,7 @@ export default function PollaClasificacion() {
                           }`}>{n}</span>
                         ))}
                       </div>
-                      <div className="text-right shrink-0">
+                      <div className="text-right flex-1">
                         <p className={`text-xs font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
                         {Number(p.premio) > 0 && (
                           <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
