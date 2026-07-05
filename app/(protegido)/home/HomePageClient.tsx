@@ -10,29 +10,16 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
   const [razon, setRazon] = useState(razon_bloqueo);
   const [saldo, setSaldo] = useState(saldoInicial);
   const [mantenimiento, setMantenimiento] = useState(mantenimientoInicial);
-  const [jackpotRemates, setJackpotRemates] = useState(0);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/remates/jackpot", { cache: "no-store" });
-        const data = await res.json();
-        if (data.ok) setJackpotRemates(data.monto);
-      } catch {}
-    })();
-  }, []);
 
   const recargarDatos = useCallback(async () => {
     try {
-      const [resME, resMant, r1] = await Promise.all([
+      const [resME, resMant] = await Promise.all([
         fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" }).then(r => r.json()),
         fetch("/api/admin/mantenimiento", { cache: "no-store" }).then(r => r.json()),
-        fetch("/api/remates/jackpot", { cache: "no-store" }).then(r => r.json()),
       ]);
       if (resME.bloqueado) { setIsBlocked(true); setRazon(resME.razon_bloqueo); }
       setSaldo(resME.saldo);
       setMantenimiento(resMant.mantenimiento);
-      if (r1.ok) setJackpotRemates(r1.monto);
     } catch {}
   }, []);
 
@@ -84,29 +71,10 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
   return (
     <main className="relative h-dvh w-full overflow-hidden select-none">
       <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-        @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 10px rgba(255,200,0,0.12); }
-          50% { box-shadow: 0 0 22px rgba(255,200,0,0.45), 0 0 40px rgba(255,200,0,0.15); }
-        }
-        @keyframes textShine {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 0.9; }
-        }
-        @keyframes jackpotPulse {
-          0%, 100% { filter: drop-shadow(0 0 6px rgba(255,200,0,0.25)); }
-          50% { filter: drop-shadow(0 0 14px rgba(255,200,0,0.6)) drop-shadow(0 0 28px rgba(255,200,0,0.2)); }
-        }
         @keyframes cardGlow {
           0%, 100% { box-shadow: 0 0 18px rgba(0,200,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1); }
           50% { box-shadow: 0 0 30px rgba(0,200,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
         }
-        .jackpot-glow { animation: pulseGlow 2s ease-in-out infinite; }
-        .jackpot-text-shine { animation: textShine 2s ease-in-out infinite; }
-        .jackpot-amount { animation: jackpotPulse 2s ease-in-out infinite; }
         .btn-remates { animation: cardGlow 3s ease-in-out infinite; }
       `}</style>
       <video src="/fondos/fondohome.mp4" autoPlay loop muted playsInline
@@ -157,14 +125,6 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/[0.06] transition-opacity duration-300" />
             <div className="relative h-full flex flex-col items-center justify-center gap-1 md:gap-2 px-2 md:px-4">
-              <div className="jackpot-glow flex items-center gap-2 px-2.5 py-1 rounded-full bg-yellow-500/15 border border-yellow-400/30 shadow-[0_0_12px_rgba(255,200,0,0.15)]">
-                <span className="jackpot-text-shine text-yellow-200 font-bold text-[9px] md:text-[10px] tracking-[0.15em] uppercase drop-shadow-[0_0_4px_rgba(255,200,0,0.2)]">
-                  ACUMULADO
-                </span>
-                <span className="jackpot-amount text-yellow-100 font-black text-[10px] md:text-xs drop-shadow-[0_0_8px_rgba(255,200,0,0.2)]">
-                  Bs. {Number(jackpotRemates).toLocaleString("en-US", { minimumFractionDigits: 0 })}
-                </span>
-              </div>
               <div className="text-white/90 group-hover:scale-110 group-hover:text-white transition-all duration-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.2)]">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-8 h-8 md:w-11 md:h-11">
                   <path d="M5 20h14M5 20V8l7-5 7 5v12M5 20h14" />
