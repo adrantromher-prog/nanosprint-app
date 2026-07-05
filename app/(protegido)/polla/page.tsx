@@ -444,12 +444,8 @@ export default function PollaPage() {
                                     ${esRetirado ? "cursor-default" : "cursor-pointer active:scale-90"}`}>
                                   {esRetirado ? (
                                     <span className="relative flex items-center justify-center w-full h-full">
-                                      <span className="opacity-30">{num}</span>
-                                      <span className="absolute inset-0 flex items-center justify-center">
-                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-red-400">
-                                          <path d="M5 5l10 10M15 5l-10 10" />
-                                        </svg>
-                                      </span>
+                                      <span className="opacity-20">{num}</span>
+                                      <span className="absolute inset-0 flex items-center justify-center text-[16px] font-bold text-red-400">✕</span>
                                     </span>
                                   ) : num}
                                 </button>
