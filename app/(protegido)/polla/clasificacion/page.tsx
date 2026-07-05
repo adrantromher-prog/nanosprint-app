@@ -80,8 +80,8 @@ export default function PollaClasificacion() {
             <div className="flex items-center justify-center gap-8">
               <div className="text-center">
                 <p className="text-amber-300 font-black text-xl md:text-3xl tabular-nums">
-                  Bs. {!pollaInfo.activa && pollaInfo.cerrada_en
-                    ? Number(pollaInfo.premio_1 || 0).toLocaleString()
+                  Bs. {(!pollaInfo.activa && pollaInfo.cerrada_en && Number(pollaInfo.premio_1) > 0)
+                    ? Number(pollaInfo.premio_1).toLocaleString()
                     : Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.65).toLocaleString()
                   }
                 </p>
@@ -90,8 +90,8 @@ export default function PollaClasificacion() {
               <div className="w-px h-8 bg-amber-400/10" />
               <div className="text-center">
                 <p className="text-gray-300 font-black text-xl md:text-3xl tabular-nums">
-                  Bs. {!pollaInfo.activa && pollaInfo.cerrada_en
-                    ? Number(pollaInfo.premio_2 || 0).toLocaleString()
+                  Bs. {(!pollaInfo.activa && pollaInfo.cerrada_en && Number(pollaInfo.premio_2) > 0)
+                    ? Number(pollaInfo.premio_2).toLocaleString()
                     : Math.floor((pollaInfo.total_participantes || 0) * (pollaInfo.costo || 700) * 0.20).toLocaleString()
                   }
                 </p>
