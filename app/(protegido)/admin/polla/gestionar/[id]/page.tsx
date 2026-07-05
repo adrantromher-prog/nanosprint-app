@@ -154,10 +154,10 @@ export default function AdminPollaGestionarId() {
               <p className="text-red-300 font-bold text-lg">🔒 Polla cerrada</p>
               <p className="text-red-200/70 text-sm mt-1">Cerrada el {new Date(polla.cerrada_en).toLocaleString()}</p>
             </div>
-            {polla.premio_1 > 0 && (
+            {polla.total_tickets > 0 && (
               <div className="text-right">
-                <p className="text-amber-300 font-bold">1ro: Bs. {Number(polla.premio_1).toLocaleString()}</p>
-                <p className="text-gray-300 font-bold">2do: Bs. {Number(polla.premio_2).toLocaleString()}</p>
+                <p className="text-amber-300 font-bold">1ro: Bs. {Math.floor(polla.total_tickets * Number(polla.costo) * 0.65).toLocaleString()}</p>
+                <p className="text-gray-300 font-bold">2do: Bs. {Math.floor(polla.total_tickets * Number(polla.costo) * 0.20).toLocaleString()}</p>
               </div>
             )}
           </div>
