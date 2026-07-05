@@ -196,7 +196,6 @@ export default function AdminPollaGestionarId() {
 
       <div className="space-y-3 mb-6">
         <h2 className="text-xl font-bold text-cyan-300">Resultados</h2>
-        <p className="text-gray-400 text-xs">Ingresa los resultados de cada carrera y presiona "Guardar" para calcular puntos.</p>
         {polla.carreras?.map((c: any) => {
           const tieneResultado = resultados[c.orden]?.primer_lugar != null;
           return (
