@@ -155,6 +155,9 @@ async function init() {
         UNIQUE(polla_id, carrera_orden)
       )
     `);
+    try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_primer_lugar_fkey`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_segundo_lugar_fkey`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_tercer_lugar_fkey`); } catch (e) {}
     console.log("Tabla polla_resultados lista");
 
     await pool.query(`

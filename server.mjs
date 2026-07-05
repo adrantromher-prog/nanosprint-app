@@ -130,6 +130,9 @@ app.prepare().then(async () => {
     await pool.query(`ALTER TABLE polla_resultados ADD COLUMN IF NOT EXISTS carrera_orden INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE polla_resultados DROP COLUMN IF EXISTS carrera_remate_id`);
     try { await pool.query(`ALTER TABLE polla_resultados ADD CONSTRAINT polla_resultados_unique UNIQUE (polla_id, carrera_orden)`); } catch (e) { if (!e.message?.includes('already exists')) throw e; }
+    try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_primer_lugar_fkey`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_segundo_lugar_fkey`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_tercer_lugar_fkey`); } catch (e) {}
     console.log("✅ Tabla polla_resultados lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_puntos (
