@@ -149,8 +149,18 @@ export default function AdminPollaGestionarId() {
 
       {polla.cerrada_en && (
         <div className="bg-red-900/30 border border-red-400/40 rounded-2xl p-4 mb-6">
-          <p className="text-red-300 font-bold text-lg">🔒 Polla cerrada</p>
-          <p className="text-red-200/70 text-sm mt-1">Cerrada el {new Date(polla.cerrada_en).toLocaleString()}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-300 font-bold text-lg">🔒 Polla cerrada</p>
+              <p className="text-red-200/70 text-sm mt-1">Cerrada el {new Date(polla.cerrada_en).toLocaleString()}</p>
+            </div>
+            {polla.premio_1 > 0 && (
+              <div className="text-right">
+                <p className="text-amber-300 font-bold">1ro: Bs. {Number(polla.premio_1).toLocaleString()}</p>
+                <p className="text-gray-300 font-bold">2do: Bs. {Number(polla.premio_2).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -161,7 +171,7 @@ export default function AdminPollaGestionarId() {
         </div>
       )}
 
-      {polla.total_tickets > 0 && (
+      {polla.total_tickets > 0 && !polla.cerrada_en && (
         <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3 mb-4">
           <div className="flex items-center justify-center gap-8">
             <div className="text-center">
