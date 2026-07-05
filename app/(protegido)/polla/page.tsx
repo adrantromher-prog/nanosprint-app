@@ -214,8 +214,8 @@ export default function PollaPage() {
                       <span>{p.total_tickets || 0} tickets</span>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5 text-[10px]">
-                      <span className="text-amber-400/50">1° Bs. {Math.floor(Number(p.costo) * Math.max(p.total_tickets || 1, 1) * 0.65).toLocaleString()}</span>
-                      <span className="text-gray-400/40">2° Bs. {Math.floor(Number(p.costo) * Math.max(p.total_tickets || 1, 1) * 0.20).toLocaleString()}</span>
+                      <span className="text-amber-400/50">1° Bs. {Math.floor(Number(p.costo) * (p.total_tickets || 0) * 0.65).toLocaleString()}</span>
+                      <span className="text-gray-400/40">2° Bs. {Math.floor(Number(p.costo) * (p.total_tickets || 0) * 0.20).toLocaleString()}</span>
                     </div>
                   </button>
                 );
@@ -278,12 +278,12 @@ export default function PollaPage() {
         <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3 mb-3">
           <div className="flex items-center justify-center gap-8">
             <div className="text-center">
-              <p className="text-amber-300 font-bold text-lg md:text-xl tabular-nums">Bs. {Math.floor(costo * (polla.total_tickets || 1) * 0.65).toLocaleString()}</p>
+              <p className="text-amber-300 font-bold text-lg md:text-xl tabular-nums">Bs. {Math.floor(costo * (polla.total_tickets || 0) * 0.65).toLocaleString()}</p>
               <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
             </div>
             <div className="w-px h-8 bg-amber-400/10" />
             <div className="text-center">
-              <p className="text-gray-300 font-bold text-lg md:text-xl tabular-nums">Bs. {Math.floor(costo * (polla.total_tickets || 1) * 0.20).toLocaleString()}</p>
+              <p className="text-gray-300 font-bold text-lg md:text-xl tabular-nums">Bs. {Math.floor(costo * (polla.total_tickets || 0) * 0.20).toLocaleString()}</p>
               <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
             </div>
           </div>
