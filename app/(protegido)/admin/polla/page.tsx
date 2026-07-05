@@ -120,7 +120,7 @@ export default function AdminPolla() {
   };
 
   const verClasificacion = () => {
-    if (pollaActiva) router.push(`/polla/clasificacion?polla_id=${pollaActiva.id}`);
+    if (pollaActiva) router.push(`/polla/clasificacion?polla_id=${pollaActiva.id}&admin=1`);
   };
 
   return (

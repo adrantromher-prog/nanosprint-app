@@ -61,7 +61,10 @@ export default function PollaClasificacion() {
             <p className="text-white/30 text-xs font-medium">Polla {pollaId ? `#${pollaId}` : ""}</p>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={() => router.push("/polla")}
+            <button onClick={() => {
+              const params = new URLSearchParams(window.location.search);
+              router.push(params.get("admin") ? "/admin/polla" : "/polla");
+            }}
               className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
               Volver
             </button>
