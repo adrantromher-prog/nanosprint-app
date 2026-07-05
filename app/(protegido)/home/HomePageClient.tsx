@@ -142,10 +142,10 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
           </button>
 
           <button onClick={() => router.push("/polla")}
-            className="group relative flex-1 max-w-[200px] h-[130px] md:h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-red-900/60 via-amber-800/40 to-red-900/60 border border-red-400/40 shadow-[0_0_20px_rgba(255,0,0,0.15)] hover:shadow-[0_0_36px_rgba(255,0,0,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
+            className="group relative flex-1 max-w-[200px] h-[130px] md:h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-cyan-500 to-blue-800 border border-cyan-400/40 shadow-[0_0_24px_rgba(0,200,255,0.25)] hover:shadow-[0_0_40px_rgba(0,200,255,0.6)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
             <div className="relative h-full flex flex-col items-center justify-center gap-1 md:gap-2 px-2 md:px-4">
-              <div className="text-red-200/80 group-hover:scale-110 group-hover:text-red-200 transition-all duration-300 drop-shadow-[0_0_8px_rgba(255,0,0,0.15)]">
+              <div className="text-white/90 group-hover:scale-110 group-hover:text-white transition-all duration-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.2)]">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-10 md:h-10">
                   <path d="M6 9H4.5a2.5 2.5 0 010-5C7 4 9 6 9 6s2-2 4.5-2.5a2.5 2.5 0 010 5H18" />
                   <path d="M18 9v11" />
@@ -156,11 +156,11 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
                   <path d="M18 14h3" />
                 </svg>
               </div>
-              <span className="text-red-200 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase drop-shadow-[0_0_4px_rgba(255,0,0,0.2)] hidden md:block text-[10px]">JUEGA YA</span>
-              <span className="text-red-100 font-black text-lg md:text-2xl tracking-wide text-center drop-shadow-[0_0_8px_rgba(255,0,0,0.2)]">
+              <span className="text-white/60 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase drop-shadow-[0_0_4px_rgba(0,255,255,0.2)] hidden md:block text-[10px]">JUEGA YA</span>
+              <span className="text-white font-black text-lg md:text-2xl tracking-wide text-center drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]">
                 POLLA
               </span>
-              <span className="text-red-300/50 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[8px]">HÍPICA</span>
+              <span className="text-white/40 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[8px]">HÍPICA</span>
             </div>
           </button>
         </div>
