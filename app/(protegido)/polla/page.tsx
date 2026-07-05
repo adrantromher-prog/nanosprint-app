@@ -62,7 +62,10 @@ export default function PollaPage() {
     if (event.type === "polla_resultados" && polla) {
       fetchClasificacion(polla.id);
     }
-  }, [fetchDisponibles, fetchClasificacion, polla]));
+    if (event.type === "polla_retiros" && polla && event.polla_id === polla.id) {
+      seleccionarPolla(polla.id);
+    }
+  }, [fetchDisponibles, fetchClasificacion, polla, seleccionarPolla]));
 
   useEffect(() => { fetchDisponibles(); }, [fetchDisponibles]);
 
