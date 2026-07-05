@@ -165,9 +165,14 @@ export default function PollaPage() {
     }
   };
 
-  const getPuestoColor = (index: number) => {
-    if (index === 0) return "text-amber-300";
-    if (index === 1) return "text-gray-300";
+  const getPuesto = (puntos: number) => {
+    const unicos = [...new Set(clasificacion.map(p => Number(p.puntos)))].sort((a, b) => b - a);
+    return unicos.indexOf(Number(puntos)) + 1;
+  };
+
+  const getPuestoColor = (puesto: number) => {
+    if (puesto === 1) return "text-amber-300";
+    if (puesto === 2) return "text-gray-300";
     return "text-white/60";
   };
 
@@ -365,14 +370,15 @@ export default function PollaPage() {
             {clasificacion.length === 0 ? (
               <p className="text-center py-8 text-white/20 text-sm">Aún no hay participantes</p>
             ) : (
-              clasificacion.map((p: any, index: number) => {
+              clasificacion.map((p: any) => {
+                const puesto = getPuesto(p.puntos);
                 const numsArr: number[] = (p.selecciones || [])
                   .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden)
                   .map((s: any) => s.caballo_numero);
                 return (
                   <div key={`${p.usuario_id}-${p.ticket}`}
                     className={`rounded-xl border transition-all ${
-                      index === 0
+                      puesto === 1
                         ? "bg-gradient-to-r from-amber-500/8 to-amber-600/5 border-amber-400/20"
                         : "bg-white/[0.02] border-white/[0.06]"
                     }`}>
@@ -380,26 +386,26 @@ export default function PollaPage() {
                       <div className="flex items-center">
                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
-                            index === 0 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
-                            index === 1 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
+                            puesto === 1 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
+                            puesto === 2 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
                             "bg-white/5 text-white/40 border border-white/10"
                           }`}>
-                            {index === 0 ? "1" : index === 1 ? "2" : `${index + 1}`}
+                            {puesto}
                           </div>
                           <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
                           <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
                         </div>
                         <div className="flex items-center gap-0.5 mx-3">
                           {numsArr.map((n: number, i: number) => (
-                            <span key={i} className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded border ${getPuestoColor(index)} ${
-                              index === 0 ? "border-amber-400/25 bg-amber-400/8" :
-                              index === 1 ? "border-gray-400/25 bg-gray-400/8" :
+                            <span key={i} className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded border ${getPuestoColor(puesto)} ${
+                              puesto === 1 ? "border-amber-400/25 bg-amber-400/8" :
+                              puesto === 2 ? "border-gray-400/25 bg-gray-400/8" :
                               "border-white/10 bg-white/[0.03]"
                             }`}>{n}</span>
                           ))}
                         </div>
                         <div className="text-right flex-1">
-                          <p className={`text-xs font-bold ${getPuestoColor(index)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
+                          <p className={`text-xs font-bold ${getPuestoColor(puesto)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
                           {Number(p.premio) > 0 && (
                             <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
                           )}
