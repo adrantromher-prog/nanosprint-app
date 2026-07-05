@@ -3,12 +3,24 @@ import pool from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const polla = await pool.query(
-      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre
-       FROM polla_config ORDER BY id DESC LIMIT 1`
-    );
+    const { searchParams } = new URL(req.url);
+    const pollaId = searchParams.get("polla_id");
+    let query;
+    if (pollaId) {
+      query = pool.query(
+        `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre
+         FROM polla_config WHERE id = $1`,
+        [pollaId]
+      );
+    } else {
+      query = pool.query(
+        `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre
+         FROM polla_config ORDER BY id DESC LIMIT 1`
+      );
+    }
+    const polla = await query;
 
     if (polla.rows.length === 0) {
       return NextResponse.json({ ok: true, hayPolla: false });

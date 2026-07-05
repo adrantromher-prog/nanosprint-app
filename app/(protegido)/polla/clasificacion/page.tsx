@@ -19,7 +19,7 @@ export default function PollaClasificacion() {
     if (!pollaId) return;
     const [resClasif, resEstado] = await Promise.all([
       fetch(`/api/polla/clasificacion?polla_id=${pollaId}`).then(r => r.json()),
-      fetch("/api/polla/estado").then(r => r.json()),
+      fetch(`/api/polla/estado?polla_id=${pollaId}`).then(r => r.json()),
     ]);
     if (resClasif.ok) setClasificacion(resClasif.clasificacion);
     if (resEstado.ok) setPollaInfo(resEstado.polla);

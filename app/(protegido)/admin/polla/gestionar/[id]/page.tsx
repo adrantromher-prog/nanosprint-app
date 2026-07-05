@@ -171,6 +171,29 @@ export default function AdminPollaGestionarId() {
         </div>
       )}
 
+      {polla.total_tickets > 0 && (
+        <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3 mb-4">
+          <div className="flex items-center justify-center gap-8">
+            <div className="text-center">
+              <p className="text-amber-300 font-black text-lg md:text-xl tabular-nums">
+                Bs. {Math.floor(polla.total_tickets * Number(polla.costo) * 0.65).toLocaleString()}
+              </p>
+              <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
+            </div>
+            <div className="w-px h-8 bg-amber-400/10" />
+            <div className="text-center">
+              <p className="text-gray-300 font-black text-lg md:text-xl tabular-nums">
+                Bs. {Math.floor(polla.total_tickets * Number(polla.costo) * 0.20).toLocaleString()}
+              </p>
+              <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
+            </div>
+          </div>
+          <div className="text-center mt-1">
+            <span className="text-white/20 text-[10px]">{polla.total_tickets} ticket{polla.total_tickets !== 1 ? "s" : ""}</span>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-3 mb-6">
         <h2 className="text-xl font-bold text-cyan-300">Resultados</h2>
         <p className="text-gray-400 text-xs">Ingresa los resultados de cada carrera y presiona "Guardar" para calcular puntos.</p>
