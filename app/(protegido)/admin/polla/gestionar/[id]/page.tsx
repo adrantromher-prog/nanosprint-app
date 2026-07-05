@@ -85,8 +85,24 @@ export default function AdminPollaGestionarId() {
     }
   };
 
-  const cerrarPolla = async () => {
-    if (!confirm("¿Estás seguro? 1er lugar recibe el 65% del pozo, 2do lugar el 20%.")) return;
+  const soloCerrar = async () => {
+    if (!confirm("¿Cerrar la polla? Los usuarios no podrán seguir apostando.")) return;
+    const res = await fetch("/api/admin/polla/cerrar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ polla_id: id, solo_cierre: true }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert("Polla cerrada. Los usuarios ya no pueden apostar.");
+      fetchPolla();
+    } else {
+      alert(data.error || "Error al cerrar polla");
+    }
+  };
+
+  const entregarPremios = async () => {
+    if (!confirm("¿Entregar premios? 1er lugar recibe el 65% del pozo, 2do lugar el 20%.")) return;
     const res = await fetch("/api/admin/polla/cerrar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -94,10 +110,10 @@ export default function AdminPollaGestionarId() {
     });
     const data = await res.json();
     if (data.ok) {
-      alert(`Polla cerrada. 1ro: Bs.${data.premio1}, 2do: Bs.${data.premio2}`);
+      alert(`Premios entregados. 1ro: Bs.${data.premio1}, 2do: Bs.${data.premio2}`);
       fetchPolla();
     } else {
-      alert(data.error || "Error al cerrar polla");
+      alert(data.error || "Error al entregar premios");
     }
   };
 
@@ -233,12 +249,20 @@ export default function AdminPollaGestionarId() {
         })}
       </div>
 
-      {!polla.cerrada_en && (
-        <button onClick={cerrarPolla}
-          className="px-6 py-3 rounded-xl bg-red-700/70 border border-red-400/70 text-white font-bold shadow-[0_0_18px_rgba(255,0,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
-          🔒 Cerrar Polla & Entregar Premios
-        </button>
-      )}
+      <div className="flex gap-3">
+        {!polla.cerrada_en && (
+          <button onClick={soloCerrar}
+            className="px-6 py-3 rounded-xl bg-yellow-700/70 border border-yellow-400/70 text-white font-bold shadow-[0_0_18px_rgba(255,200,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
+            🔒 Cerrar Polla
+          </button>
+        )}
+        {(!polla.cerrada_en || !polla.premio_1) && (
+          <button onClick={entregarPremios}
+            className="px-6 py-3 rounded-xl bg-red-700/70 border border-red-400/70 text-white font-bold shadow-[0_0_18px_rgba(255,0,0,0.5)] hover:brightness-110 active:scale-95 transition-all">
+            🏆 Entregar Premios
+          </button>
+        )}
+      </div>
     </main>
   );
 }

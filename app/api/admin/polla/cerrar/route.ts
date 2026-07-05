@@ -8,12 +8,19 @@ export async function POST(req: Request) {
   if (error) return error;
   const client = await pool.connect();
   try {
-    const { polla_id } = await req.json();
+    const { polla_id, solo_cierre } = await req.json();
 
-    const polla = await client.query(`SELECT id, activa FROM polla_config WHERE id = $1`, [polla_id]);
+    const polla = await client.query(`SELECT id, activa, cerrada_en FROM polla_config WHERE id = $1`, [polla_id]);
     if (polla.rows.length === 0) {
       client.release();
       return NextResponse.json({ ok: false, error: "Polla no encontrada" }, { status: 404 });
+    }
+
+    if (solo_cierre) {
+      await client.query(`UPDATE polla_config SET activa = false, cerrada_en = NOW() WHERE id = $1`, [polla_id]);
+      client.release();
+      try { broadcast({ type: "polla_cerrada", polla_id }); } catch {}
+      return NextResponse.json({ ok: true, solo_cierre: true });
     }
 
     const resultados = await client.query(
