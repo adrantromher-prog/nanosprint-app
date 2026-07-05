@@ -1,0 +1,74 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function AdminPollaGestionar() {
+  const router = useRouter();
+  const [pollas, setPollas] = useState<any[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  const fetchPollas = async () => {
+    setCargando(true);
+    const res = await fetch("/api/admin/polla/lista");
+    const data = await res.json();
+    if (data.ok) setPollas(data.pollas);
+    setCargando(false);
+  };
+
+  useEffect(() => { fetchPollas(); }, []);
+
+  return (
+    <main className="min-h-screen p-4 text-white bg-[#0a0f1e]">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-4xl font-bold">Gestionar Pollas</h1>
+        <button onClick={() => router.push("/admin/polla")}
+          className="px-4 py-2 rounded-xl bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 text-white font-bold shadow-[0_0_18px_rgba(0,255,255,0.5)] hover:shadow-[0_0_28px_rgba(0,255,255,0.9)] active:scale-95 transition-all">
+          ← Volver
+        </button>
+      </div>
+
+      {cargando ? (
+        <div className="text-center py-12 text-gray-400">Cargando...</div>
+      ) : pollas.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-400">No hay pollas creadas aún.</p>
+          <button onClick={() => router.push("/admin/polla/crear")}
+            className="mt-4 px-6 py-3 rounded-xl bg-emerald-600/60 border border-emerald-400/50 text-white font-bold hover:brightness-110 active:scale-95 transition-all">
+            Crear Polla
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3 max-w-2xl">
+          {pollas.map((p) => (
+            <div key={p.id}
+              onClick={() => router.push(`/admin/polla/gestionar/${p.id}`)}
+              className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 cursor-pointer hover:bg-gray-800/70 hover:border-amber-500/30 transition-all active:scale-[0.99]">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-white">
+                  Polla #{p.id} — {p.hipodromo}
+                </h3>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  p.activa
+                    ? "bg-green-500/10 text-green-400 border border-green-400/20"
+                    : p.cerrada_en
+                    ? "bg-red-500/10 text-red-400 border border-red-400/20"
+                    : "bg-gray-500/10 text-gray-400 border border-gray-400/20"
+                }`}>
+                  {p.activa ? "Activa" : p.cerrada_en ? "Cerrada" : "Inactiva"}
+                </span>
+              </div>
+              <div className="flex gap-4 text-xs text-gray-400">
+                <span>{p.total_tickets} ticket{p.total_tickets !== 1 ? "s" : ""}</span>
+                <span>{p.resultados_count}/{p.carreras_count} resultados</span>
+                {p.cerrada_en && (
+                  <span>Bs. {Number(p.premio_1 + p.premio_2).toLocaleString()} en premios</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}
