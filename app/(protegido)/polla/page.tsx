@@ -15,7 +15,6 @@ export default function PollaPage() {
   const [tiempoRestante, setTiempoRestante] = useState("");
   const [abierto, setAbierto] = useState(true);
   const [clasificacion, setClasificacion] = useState<any[]>([]);
-  const [mostrarClasificacion, setMostrarClasificacion] = useState(false);
   const intervaloRef = useRef<any>(null);
 
   const fetchData = useCallback(async () => {
@@ -52,7 +51,6 @@ export default function PollaPage() {
     if (!polla?.hora_cierre) {
       setTiempoRestante("");
       setAbierto(true);
-      setMostrarClasificacion(false);
       return;
     }
     const calcular = () => {
@@ -65,7 +63,6 @@ export default function PollaPage() {
       if (diff <= 0) {
         setAbierto(false);
         setTiempoRestante("00:00:00");
-        setMostrarClasificacion(true);
         fetchClasificacion(polla.id);
         if (intervaloRef.current) clearInterval(intervaloRef.current);
         return;
@@ -167,12 +164,6 @@ export default function PollaPage() {
             <p className="text-amber-300/60 text-xs font-medium">{polla.hipodromo}</p>
           </div>
           <div className="flex gap-1.5">
-            {!mostrarClasificacion && (
-              <button onClick={() => { setMostrarClasificacion(true); fetchClasificacion(polla.id); }}
-                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
-                Clasificación
-              </button>
-            )}
             <button onClick={() => router.push("/home")}
               className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
               Salir
@@ -232,7 +223,7 @@ export default function PollaPage() {
           </div>
         )}
 
-        {mostrarClasificacion ? (
+        {!abierto ? (
           <div className="space-y-1.5">
             <h2 className="text-sm font-bold text-white/60 mb-2">Clasificación</h2>
             {clasificacion.length === 0 ? (
