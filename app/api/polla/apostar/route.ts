@@ -39,9 +39,9 @@ export async function POST(req: Request) {
 
     if (polla.rows[0].hora_cierre) {
       const [horas, minutos] = polla.rows[0].hora_cierre.split(":").map(Number);
-      const cierre = new Date();
-      cierre.setHours(horas, minutos, 0, 0);
-      if (cierre.getTime() <= Date.now()) {
+      const ahora = new Date();
+      const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
+      if (horas * 60 + minutos <= minutosAhora) {
         await client.query("ROLLBACK");
         client.release();
         return NextResponse.json({ ok: false, error: "El tiempo para apostar en esta polla ya terminó" }, { status: 400 });

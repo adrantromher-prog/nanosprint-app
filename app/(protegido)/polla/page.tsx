@@ -75,11 +75,10 @@ export default function PollaPage() {
     const calcular = () => {
       const ahora = new Date();
       const [horas, minutos] = polla.hora_cierre.split(":").map(Number);
-      const cierre = new Date();
-      cierre.setHours(horas, minutos, 0, 0);
-      const diff = cierre.getTime() - ahora.getTime();
+      const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
+      const minutosCierre = horas * 60 + minutos;
 
-      if (diff <= 0) {
+      if (minutosCierre <= minutosAhora) {
         setAbierto(false);
         setTiempoRestante("00:00:00");
         fetchClasificacion(polla.id);
@@ -87,6 +86,9 @@ export default function PollaPage() {
         return;
       }
       setAbierto(true);
+      const cierre = new Date();
+      cierre.setUTCHours(horas + 4, minutos, 0, 0);
+      const diff = cierre.getTime() - ahora.getTime();
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
@@ -191,9 +193,9 @@ export default function PollaPage() {
             <div className="space-y-2.5">
               {pollasDisponibles.map((p: any) => {
                 const [horas, minutos] = (p.hora_cierre || "").split(":").map(Number);
-                const cierre = new Date();
-                cierre.setHours(horas, minutos, 0, 0);
-                const abierta = cierre.getTime() > Date.now();
+                const ahora = new Date();
+                const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
+                const abierta = !p.hora_cierre || horas * 60 + minutos > minutosAhora;
                 return (
                   <button key={p.id}
                     onClick={() => seleccionarPolla(p.id)}
