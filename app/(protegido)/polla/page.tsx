@@ -437,7 +437,7 @@ export default function PollaPage() {
                             })}
                           </div>
                           <div className="text-right shrink-0 w-14">
-                            <p className={`text-xs font-bold ${getPuestoColor(puesto)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
+                            <p className={`text-xs font-bold ${getPuestoColor()}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
                             {Number(p.premio) > 0 && (
                               <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
                             )}
