@@ -426,7 +426,7 @@ export default function PollaPage() {
                                 "border-white/10 bg-white/[0.03]";
                               return (
                                 <div key={i} className={`w-8 flex flex-col items-center justify-center text-[10px] font-bold rounded border py-0.5 transition-all duration-500 ${resClass} ${Number(s.puntos) > 0 ? "animate-pulse-once" : ""}`}>
-                                  <span className="leading-none">{res ? `${res}°` : s.caballo_numero}</span>
+                                  <span className="leading-none">{s.caballo_numero}</span>
                                   <span className={`leading-none text-[9px] font-medium mt-0.5 ${
                                     Number(s.puntos) > 0 ? "text-emerald-400/80" : "text-white/20"
                                   }`}>
