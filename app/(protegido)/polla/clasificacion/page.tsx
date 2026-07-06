@@ -115,16 +115,18 @@ export default function PollaClasificacion() {
         ) : (
           <div className="space-y-1.5">
             {carreras.length > 0 && (
-              <div className="flex items-center pl-2 pr-2 mb-1">
-                <div className="w-24 shrink-0" />
-                <div className="flex items-center gap-0.5 mx-auto">
+              <div className="flex items-center px-3 mb-1">
+                <div className="flex-1 min-w-0" />
+                <div className="flex items-center gap-0.5 mx-3">
                   {carreras.map((c) => (
                     <div key={c.orden} className="w-8 text-center">
                       <p className="text-[7px] text-white/20 font-medium leading-tight truncate">{c.nombre}</p>
                     </div>
                   ))}
                 </div>
-                <div className="w-16 shrink-0" />
+                <div className="shrink-0 w-14 text-right">
+                  <p className="text-[7px] text-white/10">pts</p>
+                </div>
               </div>
             )}
             {clasificacion.map((p) => {
