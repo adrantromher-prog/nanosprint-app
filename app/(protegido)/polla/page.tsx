@@ -161,11 +161,7 @@ export default function PollaPage() {
     return unicos.indexOf(Number(puntos)) + 1;
   };
 
-  const getPuestoColor = (puesto: number) => {
-    if (puesto === 1) return "text-amber-300";
-    if (puesto === 2) return "text-gray-300";
-    return "text-white/60";
-  };
+  const getPuestoColor = () => "text-white/60";
 
   const getResultadoBox = (carreraOrden: number, caballoNum: number) => {
     if (!polla?.resultados) return null;
@@ -411,21 +407,11 @@ export default function PollaPage() {
                     .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden);
                   return (
                     <div key={`${p.usuario_id}-${p.ticket}`}
-                      className={`rounded-xl border transition-all ${
-                        puesto === 1
-                          ? "bg-gradient-to-r from-amber-500/8 to-amber-600/5 border-amber-400/20"
-                          : puesto === 2
-                          ? "bg-gradient-to-r from-gray-400/8 to-gray-500/5 border-gray-400/20"
-                          : "bg-white/[0.02] border-white/[0.06]"
-                      }`}>
+                      className="rounded-xl border bg-white/[0.02] border-white/[0.06] transition-all">
                       <div className="px-3 py-1.5">
                         <div className="flex items-center">
                           <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
-                              puesto === 1 ? "bg-amber-400/15 text-amber-300 border border-amber-400/30" :
-                              puesto === 2 ? "bg-gray-400/15 text-gray-300 border border-gray-400/30" :
-                              "bg-white/5 text-white/40 border border-white/10"
-                            }`}>
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 bg-white/5 text-white/40 border border-white/10">
                               {puesto}
                             </div>
                             <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
@@ -437,8 +423,6 @@ export default function PollaPage() {
                               const resClass = res === "1" ? "border-yellow-400/60 bg-yellow-400/15 text-yellow-300 shadow-[0_0_10px_rgba(255,200,0,0.3)]" :
                                 res === "2" ? "border-gray-300/50 bg-gray-300/12 text-gray-200 shadow-[0_0_8px_rgba(200,200,200,0.2)]" :
                                 res === "3" ? "border-orange-400/50 bg-orange-400/12 text-orange-300 shadow-[0_0_8px_rgba(255,150,50,0.2)]" :
-                                puesto === 1 ? "border-amber-400/25 bg-amber-400/8" :
-                                puesto === 2 ? "border-gray-400/25 bg-gray-400/8" :
                                 "border-white/10 bg-white/[0.03]";
                               return (
                                 <div key={i} className={`w-8 flex flex-col items-center justify-center text-[10px] font-bold rounded border py-0.5 transition-all duration-500 ${resClass} ${Number(s.puntos) > 0 ? "animate-pulse-once" : ""}`}>
