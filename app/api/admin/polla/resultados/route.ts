@@ -40,11 +40,14 @@ export async function POST(req: Request) {
         [polla_id, carrera_orden]
       );
 
+      const p1 = Number(primer_lugar);
+      const p2 = Number(segundo_lugar);
+      const p3 = Number(tercer_lugar);
       for (const apuesta of apuestas.rows) {
         let puntos = 0;
-        if (apuesta.caballo_numero === primer_lugar) puntos = 5;
-        else if (apuesta.caballo_numero === segundo_lugar) puntos = 3;
-        else if (apuesta.caballo_numero === tercer_lugar) puntos = 1;
+        if (apuesta.caballo_numero === p1) puntos = 5;
+        else if (apuesta.caballo_numero === p2) puntos = 3;
+        else if (apuesta.caballo_numero === p3) puntos = 1;
 
         if (puntos > 0) {
           await client.query(
