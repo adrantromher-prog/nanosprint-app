@@ -283,6 +283,9 @@ export default function PollaPage() {
   const costo = Number(polla.costo);
   const totalSel = Object.keys(selecciones).length;
   const mostrarSeleccion = abierto && !todasConResultado;
+  const itemsClasif = soloMios && usuario
+    ? clasificacion.filter((p: any) => Number(p.usuario_id) === Number(usuario.id))
+    : clasificacion;
 
   return (
     <main className="relative min-h-screen w-full text-white overflow-hidden">
@@ -364,10 +367,6 @@ export default function PollaPage() {
             </p>
           </div>
         )}
-
-        const itemsClasif = soloMios && usuario
-          ? clasificacion.filter((p: any) => Number(p.usuario_id) === Number(usuario.id))
-          : clasificacion;
 
         {!abierto ? (
           <div className="space-y-1.5">
