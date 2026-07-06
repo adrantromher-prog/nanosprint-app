@@ -85,7 +85,7 @@ export default function AdminPollaCrear() {
         </label>
 
         <label className="block mb-4">
-          <span className="text-sm font-semibold">Reglamento / PDF</span>
+          <span className="text-sm font-semibold">Revista / Reglamento</span>
           <input type="file" accept=".pdf" onChange={handlePdfUpload}
             className="w-full mt-1 text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500/20 file:text-amber-300 file:text-xs file:font-semibold hover:file:bg-amber-500/30" />
           {pdfNombre && <p className="text-[10px] text-emerald-400/70 mt-1">✓ {pdfNombre}</p>}

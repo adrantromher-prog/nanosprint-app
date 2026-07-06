@@ -196,11 +196,11 @@ export default function AdminPollaGestionarId() {
       )}
 
       <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 mb-6">
-        <h3 className="text-sm font-bold text-white/80 mb-2">Reglamento PDF</h3>
+        <h3 className="text-sm font-bold text-white/80 mb-2">Revista / Reglamento</h3>
         {polla.pdf_disponible && (
           <a href={`/api/polla/pdf?id=${polla.id}`} target="_blank" rel="noopener noreferrer"
             className="inline-block px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-400/20 text-red-400 text-xs font-semibold hover:bg-red-500/20 active:scale-95 transition-all mb-2">
-            Ver PDF actual
+            Ver Revista actual
           </a>
         )}
         <input type="file" accept=".pdf" onChange={async (e) => {
