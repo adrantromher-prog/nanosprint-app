@@ -324,6 +324,12 @@ export default function PollaPage() {
             <p className="text-white/80 text-xs font-semibold truncate">{usuario.nombre}</p>
             <p className="text-emerald-400/80 font-bold text-xs">Bs. {Number(usuario.saldo).toLocaleString()}</p>
           </div>
+          {polla.pdf_disponible && (
+            <a href={`/api/polla/pdf?id=${polla.id}`} target="_blank" rel="noopener noreferrer"
+              className="px-2.5 py-1 rounded-full bg-red-500/10 border border-red-400/20 text-red-400/80 text-[10px] font-semibold hover:bg-red-500/20 active:scale-95 transition-all">
+              PDF
+            </a>
+          )}
           {misTickets.length > 0 && (
             <button onClick={() => setShowTickets(true)}
               className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-400/80 text-[10px] font-semibold hover:bg-emerald-500/20 active:scale-95 transition-all">

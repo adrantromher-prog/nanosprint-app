@@ -10,13 +10,15 @@ export async function GET(req: Request) {
     let query;
     if (pollaId) {
       query = pool.query(
-        `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre
+        `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre,
+                CASE WHEN pdf_base64 IS NOT NULL THEN true ELSE false END as pdf_disponible
          FROM polla_config WHERE id = $1`,
         [pollaId]
       );
     } else {
       query = pool.query(
-        `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre
+        `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre,
+                CASE WHEN pdf_base64 IS NOT NULL THEN true ELSE false END as pdf_disponible
          FROM polla_config ORDER BY id DESC LIMIT 1`
       );
     }
@@ -53,6 +55,7 @@ export async function GET(req: Request) {
         creada_en: p.creada_en,
         cerrada_en: p.cerrada_en,
         hora_cierre: p.hora_cierre,
+        pdf_disponible: p.pdf_disponible,
         total_participantes: Number(totalParticipantes.rows[0].count),
         resultados_completos: resultadosCompletos,
       }

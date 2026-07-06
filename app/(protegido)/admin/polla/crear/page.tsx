@@ -10,6 +10,21 @@ export default function AdminPollaCrear() {
   const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number }[]>(
     Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0 }))
   );
+  const [pdfBase64, setPdfBase64] = useState<string | null>(null);
+  const [pdfNombre, setPdfNombre] = useState("");
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") { alert("Solo se permiten archivos PDF"); return; }
+    setPdfNombre(file.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(",")[1];
+      setPdfBase64(base64);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const actualizarCarrera = (index: number, field: "nombre" | "cantidad_caballos", val: string | number) => {
     const copia = [...carreras];
@@ -33,7 +48,7 @@ export default function AdminPollaCrear() {
     const res = await fetch("/api/admin/polla/crear", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras, hora_cierre: horaCierre }),
+      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras, hora_cierre: horaCierre, pdf_base64: pdfBase64 }),
     });
     const data = await res.json();
     if (data.ok) {
@@ -67,6 +82,13 @@ export default function AdminPollaCrear() {
           <input type="time" value={horaCierre} onChange={e => setHoraCierre(e.target.value)}
             className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-red-300/40 text-white text-sm" />
           <p className="text-[10px] text-gray-500 mt-1">A esta hora se cierran las apuestas</p>
+        </label>
+
+        <label className="block mb-4">
+          <span className="text-sm font-semibold">Reglamento / PDF</span>
+          <input type="file" accept=".pdf" onChange={handlePdfUpload}
+            className="w-full mt-1 text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500/20 file:text-amber-300 file:text-xs file:font-semibold hover:file:bg-amber-500/30" />
+          {pdfNombre && <p className="text-[10px] text-emerald-400/70 mt-1">✓ {pdfNombre}</p>}
         </label>
 
         <p className="text-sm font-semibold text-gray-300 mb-3">Carreras (6)</p>

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   if (error) return error;
   const client = await pool.connect();
   try {
-    const { hipodromo, carreras, hora_cierre } = await req.json();
+    const { hipodromo, carreras, hora_cierre, pdf_base64 } = await req.json();
 
     if (!hora_cierre || !/^\d{2}:\d{2}$/.test(hora_cierre)) {
       client.release();
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
     await client.query("BEGIN");
 
     const result = await client.query(
-      `INSERT INTO polla_config (activa, hipodromo, costo, hora_cierre) VALUES (true, $1, 700.00, $2) RETURNING id`,
-      [hipodromo.trim(), hora_cierre]
+      `INSERT INTO polla_config (activa, hipodromo, costo, hora_cierre, pdf_base64) VALUES (true, $1, 700.00, $2, $3) RETURNING id`,
+      [hipodromo.trim(), hora_cierre, pdf_base64 || null]
     );
     const pollaId = result.rows[0].id;
 

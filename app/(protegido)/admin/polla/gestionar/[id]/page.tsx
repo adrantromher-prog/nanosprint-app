@@ -11,6 +11,7 @@ export default function AdminPollaGestionarId() {
   const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
   const [guardando, setGuardando] = useState<number | null>(null);
   const [retirando, setRetirando] = useState<string | null>(null);
+  const [subiendoPdf, setSubiendoPdf] = useState(false);
 
   const fetchPolla = async () => {
     const res = await fetch(`/api/admin/polla/detalle?id=${id}`);
@@ -193,6 +194,37 @@ export default function AdminPollaGestionarId() {
           </div>
         </div>
       )}
+
+      <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 mb-6">
+        <h3 className="text-sm font-bold text-white/80 mb-2">Reglamento PDF</h3>
+        {polla.pdf_disponible && (
+          <a href={`/api/polla/pdf?id=${polla.id}`} target="_blank" rel="noopener noreferrer"
+            className="inline-block px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-400/20 text-red-400 text-xs font-semibold hover:bg-red-500/20 active:scale-95 transition-all mb-2">
+            Ver PDF actual
+          </a>
+        )}
+        <input type="file" accept=".pdf" onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (file.type !== "application/pdf") { alert("Solo PDF"); return; }
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const base64 = (reader.result as string).split(",")[1];
+            setSubiendoPdf(true);
+            const res = await fetch(`/api/admin/polla/pdf`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ polla_id: id, pdf_base64: base64 }),
+            });
+            const data = await res.json();
+            setSubiendoPdf(false);
+            if (data.ok) { alert("PDF subido"); fetchPolla(); }
+            else { alert(data.error || "Error"); }
+          };
+          reader.readAsDataURL(file);
+        }} className="w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500/20 file:text-amber-300 file:text-xs file:font-semibold hover:file:bg-amber-500/30" />
+        {subiendoPdf && <p className="text-[10px] text-cyan-400/70 mt-1">Subiendo...</p>}
+      </div>
 
       <div className="space-y-3 mb-6">
         <h2 className="text-xl font-bold text-cyan-300">Resultados</h2>
