@@ -76,6 +76,18 @@ export async function GET(req: Request) {
     `);
     countPartitions.push(`SELECT 'liberacion_referido' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'liberacion_referido'`);
 
+    partitions.push(`
+      SELECT 'polla_apuesta' as fuente, id, (-monto)::numeric, asunto, fecha, 'polla_apuesta'
+      FROM historial WHERE usuario_id = $1 AND tipo = 'polla_apuesta'
+    `);
+    countPartitions.push(`SELECT 'polla_apuesta' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'polla_apuesta'`);
+
+    partitions.push(`
+      SELECT 'premio_polla' as fuente, id, monto::numeric, asunto, fecha, 'premio_polla'
+      FROM historial WHERE usuario_id = $1 AND tipo = 'premio_polla'
+    `);
+    countPartitions.push(`SELECT 'premio_polla' as fuente FROM historial WHERE usuario_id = $1 AND tipo = 'premio_polla'`);
+
     const { rows: [tablaApuestas] } = await pool.query(
       "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'apuestas') as existe"
     );
@@ -101,6 +113,7 @@ export async function GET(req: Request) {
     else if (filtro === "retiros") conditions.push("fuente = 'retiro'");
     else if (filtro === "apuestas") conditions.push("fuente = 'apuesta'");
     else if (filtro === "pujas") conditions.push("fuente IN ('puja','reembolso','premio')");
+    else if (filtro === "pollas") conditions.push("fuente IN ('polla_apuesta','premio_polla')");
 
     const whereFilter = conditions.length ? `AND (${conditions.join(" OR ")})` : "";
 
