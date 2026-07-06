@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 export default function AdminPollaCrear() {
   const router = useRouter();
   const [hipodromo, setHipodromo] = useState("");
-  const [horaCierre, setHoraCierre] = useState("");
+  const [fechaCierre, setFechaCierre] = useState("");
   const [carreras, setCarreras] = useState<{ nombre: string; cantidad_caballos: number }[]>(
     Array(6).fill(null).map(() => ({ nombre: "", cantidad_caballos: 0 }))
   );
@@ -34,7 +34,7 @@ export default function AdminPollaCrear() {
 
   const crearPolla = async () => {
     if (!hipodromo.trim()) { alert("Escribe el nombre del hipódromo"); return; }
-    if (!horaCierre) { alert("Selecciona la hora de cierre"); return; }
+    if (!fechaCierre) { alert("Selecciona la fecha y hora de cierre"); return; }
     for (let i = 0; i < carreras.length; i++) {
       if (!carreras[i].nombre.trim()) {
         alert(`Escribe el nombre de la carrera ${i + 1}`);
@@ -48,7 +48,7 @@ export default function AdminPollaCrear() {
     const res = await fetch("/api/admin/polla/crear", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras, hora_cierre: horaCierre, pdf_base64: pdfBase64 }),
+      body: JSON.stringify({ hipodromo: hipodromo.trim(), carreras, fecha_cierre: new Date(fechaCierre).toISOString(), pdf_base64: pdfBase64 }),
     });
     const data = await res.json();
     if (data.ok) {
@@ -78,10 +78,10 @@ export default function AdminPollaCrear() {
         </label>
 
         <label className="block mb-4">
-          <span className="text-sm font-semibold">Hora de cierre</span>
-          <input type="time" value={horaCierre} onChange={e => setHoraCierre(e.target.value)}
+          <span className="text-sm font-semibold">Fecha y hora de cierre</span>
+          <input type="datetime-local" value={fechaCierre} onChange={e => setFechaCierre(e.target.value)}
             className="w-full mt-1 px-3 py-2 rounded-xl bg-black/40 border border-red-300/40 text-white text-sm" />
-          <p className="text-[10px] text-gray-500 mt-1">A esta hora se cierran las apuestas</p>
+          <p className="text-[10px] text-gray-500 mt-1">En esta fecha y hora se cierran las apuestas</p>
         </label>
 
         <label className="block mb-4">

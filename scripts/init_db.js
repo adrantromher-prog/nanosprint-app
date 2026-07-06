@@ -111,7 +111,8 @@ async function init() {
         premio_1 NUMERIC(12,2) NOT NULL DEFAULT 0,
         premio_2 NUMERIC(12,2) NOT NULL DEFAULT 0,
         creada_en TIMESTAMP DEFAULT NOW(),
-        cerrada_en TIMESTAMP
+        cerrada_en TIMESTAMP,
+        fecha_cierre TIMESTAMPTZ
       )
     `);
     console.log("Tabla polla_config lista");

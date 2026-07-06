@@ -71,25 +71,26 @@ export default function PollaPage() {
 
   useEffect(() => { fetchDisponibles(); }, [fetchDisponibles]);
 
+  const msA = (p: any) => {
+    if (p.fecha_cierre) return new Date(p.fecha_cierre).getTime();
+    if (p.hora_cierre) { const [h,m]=p.hora_cierre.split(":").map(Number);const c=new Date();c.setUTCHours(h+4,m,0,0);return c.getTime(); }
+    return 0;
+  };
+  const diffStr = (ms: number) => {
+    const d = ms - Date.now();
+    if (d <= 0) return "00:00:00";
+    const h = Math.floor(d / 3600000);
+    const m = Math.floor((d % 3600000) / 60000);
+    const s = Math.floor((d % 60000) / 1000);
+    return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  };
+
   useEffect(() => {
     const actualizarConteos = () => {
       const nuevos: { [id: number]: string } = {};
       for (const p of pollasDisponibles) {
-        if (!p.hora_cierre) continue;
-        const [horas, minutos] = p.hora_cierre.split(":").map(Number);
-        const ahora = new Date();
-        const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
-        if (horas * 60 + minutos <= minutosAhora) {
-          nuevos[p.id] = "00:00:00";
-        } else {
-          const cierre = new Date();
-          cierre.setUTCHours(horas + 4, minutos, 0, 0);
-          const diff = cierre.getTime() - ahora.getTime();
-          const h = Math.floor(diff / 3600000);
-          const m = Math.floor((diff % 3600000) / 60000);
-          const s = Math.floor((diff % 60000) / 1000);
-          nuevos[p.id] = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-        }
+        if (!p.fecha_cierre && !p.hora_cierre) continue;
+        nuevos[p.id] = diffStr(msA(p));
       }
       setConteos(nuevos);
     };
@@ -99,38 +100,25 @@ export default function PollaPage() {
   }, [pollasDisponibles]);
 
   useEffect(() => {
-    if (!polla?.hora_cierre) return;
+    if (!polla?.fecha_cierre && !polla?.hora_cierre) return;
+    if (!polla.activa) { setAbierto(false); setTiempoRestante("00:00:00"); return; }
     const calcular = () => {
-      if (!polla.activa) {
-        setAbierto(false);
-        setTiempoRestante("00:00:00");
-        fetchClasificacion(polla.id);
-        if (intervaloRef.current) clearInterval(intervaloRef.current);
-        return;
-      }
-      const ahora = new Date();
-      const [horas, minutos] = polla.hora_cierre.split(":").map(Number);
-      const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
-      if (horas * 60 + minutos <= minutosAhora) {
+      const ms = msA(polla);
+      const d = ms - Date.now();
+      if (d <= 0) {
         setAbierto(false);
         setTiempoRestante("00:00:00");
         fetchClasificacion(polla.id);
         if (intervaloRef.current) clearInterval(intervaloRef.current);
       } else {
         setAbierto(true);
-        const cierre = new Date();
-        cierre.setUTCHours(horas + 4, minutos, 0, 0);
-        const diff = cierre.getTime() - ahora.getTime();
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        setTiempoRestante(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+        setTiempoRestante(diffStr(ms));
       }
     };
     calcular();
     intervaloRef.current = setInterval(calcular, 1000);
     return () => { clearInterval(intervaloRef.current); };
-  }, [polla?.id, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
+  }, [polla?.id, polla?.fecha_cierre, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum
@@ -252,10 +240,7 @@ export default function PollaPage() {
           ) : (
             <div className="space-y-2.5">
               {pollasDisponibles.map((p: any) => {
-                const [horas, minutos] = (p.hora_cierre || "").split(":").map(Number);
-                const ahora = new Date();
-                const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
-                const abierta = p.activa && (!p.hora_cierre || horas * 60 + minutos > minutosAhora);
+                const abierta = p.activa && (!p.fecha_cierre && !p.hora_cierre || msA(p) > Date.now());
                 return (
                   <button key={p.id}
                     onClick={() => seleccionarPolla(p.id)}
@@ -369,7 +354,7 @@ export default function PollaPage() {
           </div>
         </div>
 
-        {polla.hora_cierre && (
+        {(polla.fecha_cierre || polla.hora_cierre) && (
           <div className={`rounded-xl px-4 py-2 mb-3 text-center border ${
             !abierto
               ? "bg-red-900/20 border-red-400/20"

@@ -24,21 +24,16 @@ export default function AdminPollaGestionar() {
     const actualizar = () => {
       const nuevos: { [id: number]: string } = {};
       for (const p of pollas) {
-        if (!p.hora_cierre) continue;
-        const [horas, minutos] = p.hora_cierre.split(":").map(Number);
-        const ahora = new Date();
-        const minutosAhora = (ahora.getUTCHours() * 60 + ahora.getUTCMinutes() - 240 + 1440) % 1440;
-        if (horas * 60 + minutos <= minutosAhora) {
-          nuevos[p.id] = "00:00:00";
-        } else {
-          const cierre = new Date();
-          cierre.setUTCHours(horas + 4, minutos, 0, 0);
-          const diff = cierre.getTime() - ahora.getTime();
-          const h = Math.floor(diff / 3600000);
-          const m = Math.floor((diff % 3600000) / 60000);
-          const s = Math.floor((diff % 60000) / 1000);
-          nuevos[p.id] = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-        }
+        const ms = p.fecha_cierre ? new Date(p.fecha_cierre).getTime()
+          : p.hora_cierre ? (() => { const [h,m]=p.hora_cierre.split(":").map(Number);const c=new Date();c.setUTCHours(h+4,m,0,0);return c.getTime(); })()
+          : 0;
+        if (!ms) continue;
+        const d = ms - Date.now();
+        if (d <= 0) { nuevos[p.id] = "00:00:00"; continue; }
+        const hh = Math.floor(d / 3600000);
+        const mm = Math.floor((d % 3600000) / 60000);
+        const ss = Math.floor((d % 60000) / 1000);
+        nuevos[p.id] = `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
       }
       setConteos(nuevos);
     };
@@ -113,9 +108,9 @@ export default function AdminPollaGestionar() {
                 </div>
               </div>
               <div className="flex gap-4 text-xs text-gray-400">
-                {p.activa && p.hora_cierre && conteos[p.id] && conteos[p.id] !== "00:00:00" ? (
+                {p.activa && conteos[p.id] && conteos[p.id] !== "00:00:00" ? (
                   <span className="font-mono font-bold text-amber-300/80">{conteos[p.id]}</span>
-                ) : p.activa && p.hora_cierre && conteos[p.id] === "00:00:00" ? (
+                ) : p.activa && conteos[p.id] === "00:00:00" ? (
                   <span className="text-red-400 font-semibold">Cerrada</span>
                 ) : null}
                 <span>{p.total_tickets} ticket{p.total_tickets !== 1 ? "s" : ""}</span>

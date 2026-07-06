@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const polla = await pool.query(
-      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre
+      `SELECT id, activa, hipodromo, costo, premio_1, premio_2, creada_en, cerrada_en, hora_cierre, fecha_cierre
        FROM polla_config WHERE activa = true ORDER BY id DESC LIMIT 1`
     );
 
@@ -47,6 +47,7 @@ export async function GET() {
         creada_en: p.creada_en,
         cerrada_en: p.cerrada_en,
         hora_cierre: p.hora_cierre,
+        fecha_cierre: p.fecha_cierre,
         carreras: carreras.rows,
         resultados: resultados.rows,
         total_tickets: Number(totalTickets.rows[0].count),
