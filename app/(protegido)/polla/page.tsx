@@ -19,6 +19,7 @@ export default function PollaPage() {
   const [clasificacion, setClasificacion] = useState<any[]>([]);
   const [conteos, setConteos] = useState<{ [id: number]: string }>({});
   const [soloMios, setSoloMios] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const intervaloRef = useRef<any>(null);
 
   const fetchDisponibles = useCallback(async () => {
@@ -154,6 +155,7 @@ export default function PollaPage() {
     });
     const data = await res.json();
     setCargando(false);
+    setShowConfirm(false);
     if (data.ok) {
       setSelecciones({});
       alert(`¡Apuesta registrada! Ticket #${data.ticket}`);
@@ -546,11 +548,11 @@ export default function PollaPage() {
                   <span className="text-white/30 text-xs font-medium tabular-nums">{totalSel}/6</span>
                 </div>
 
-                <button onClick={enviarApuesta} disabled={cargando || totalSel !== 6}
+                <button onClick={() => setShowConfirm(true)} disabled={totalSel !== 6}
                   className="mt-3 w-full py-3 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 font-semibold text-sm
                     hover:bg-amber-500/30 active:scale-[0.98] transition-all duration-150
                     disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-amber-500/20 disabled:active:scale-100">
-                  {cargando ? "Procesando..." : totalSel === 6
+                  {totalSel === 6
                     ? `Confirmar — Bs. ${costo.toLocaleString()}`
                     : `Selecciona ${6 - totalSel} más`}
                 </button>
@@ -564,6 +566,48 @@ export default function PollaPage() {
             <p className="text-white/30 text-[11px] text-center font-medium">
               Tienes {misTickets.length} ticket{misTickets.length !== 1 ? "s" : ""} activo{misTickets.length !== 1 ? "s" : ""}. Puedes comprar más.
             </p>
+          </div>
+        )}
+
+        {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => !cargando && setShowConfirm(false)}>
+            <div className="bg-[#0a0b0e] border border-white/[0.08] rounded-2xl w-full max-w-sm"
+              onClick={e => e.stopPropagation()}>
+              <div className="p-4 border-b border-white/[0.06]">
+                <h3 className="text-sm font-bold text-white/80 text-center">Confirmar Apuesta</h3>
+              </div>
+              <div className="p-4 space-y-2">
+                <p className="text-white/40 text-[11px] text-center mb-2">Ticket — {polla.hipodromo}</p>
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {(polla.carreras || []).map((c: any) => {
+                    const sel = selecciones[c.orden];
+                    return (
+                      <div key={c.orden} className="flex flex-col items-center gap-0.5">
+                        <span className="text-[9px] text-white/30 font-medium">{c.nombre}</span>
+                        <span className="w-8 h-8 flex items-center justify-center rounded-lg bg-cyan-500/20 border border-cyan-400/40 text-white font-bold text-sm">
+                          {sel || "?"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
+                  <span className="text-white/40 text-xs">Total:</span>
+                  <span className="text-amber-300 font-black text-lg">Bs. {costo.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="flex gap-2 p-4 pt-0">
+                <button onClick={() => setShowConfirm(false)} disabled={cargando}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/50 font-semibold text-xs hover:bg-white/10 active:scale-95 transition-all disabled:opacity-30">
+                  Cancelar
+                </button>
+                <button onClick={enviarApuesta} disabled={cargando}
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 font-semibold text-xs hover:bg-amber-500/30 active:scale-95 transition-all disabled:opacity-30">
+                  {cargando ? "Procesando..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
