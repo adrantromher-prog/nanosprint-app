@@ -21,7 +21,7 @@ export async function GET() {
     };
 
     const result = await pool.query(
-      `SELECT nombre, sobrenombre, saldo, bloqueado, razon_bloqueo, rol
+      `SELECT id, nombre, sobrenombre, saldo, bloqueado, razon_bloqueo, rol
        FROM usuarios 
        WHERE id = $1`,
       [decoded.id]
@@ -35,6 +35,7 @@ export async function GET() {
 
     return NextResponse.json(
       {
+        id: usuario.id,
         nombre: usuario.nombre,
         sobrenombre: usuario.sobrenombre,
         saldo: usuario.saldo,

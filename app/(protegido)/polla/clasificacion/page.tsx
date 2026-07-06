@@ -123,6 +123,19 @@ export default function PollaClasificacion() {
           </div>
         ) : (
           <div className="space-y-1.5">
+            <div className="flex items-center px-3 mb-1">
+              <div className="flex-1 min-w-0" />
+              {usuarioId && clasificacion.some(p => Number(p.usuario_id) === usuarioId) && (
+                <button onClick={() => setSoloMios(v => !v)}
+                  className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all active:scale-95 ${
+                    soloMios
+                      ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-400"
+                      : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                  }`}>
+                  {soloMios ? "Ver todos" : "Mis tickets"}
+                </button>
+              )}
+            </div>
             {carreras.length > 0 && (
               <div className="flex items-center px-3 mb-1">
                 <div className="flex-1 min-w-0" />
@@ -138,18 +151,6 @@ export default function PollaClasificacion() {
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-end mb-1 px-1">
-              {usuarioId && clasificacion.some(p => Number(p.usuario_id) === usuarioId) && (
-                <button onClick={() => setSoloMios(v => !v)}
-                  className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all active:scale-95 ${
-                    soloMios
-                      ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-400"
-                      : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
-                  }`}>
-                  {soloMios ? "Ver todos" : "Mis tickets"}
-                </button>
-              )}
-            </div>
             {itemsMostrar.map((p) => {
               const puesto = getPuesto(p.puntos);
               const selecs: any[] = (p.selecciones || [])
