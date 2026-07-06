@@ -18,6 +18,7 @@ export default function PollaPage() {
   const [abierto, setAbierto] = useState(true);
   const [clasificacion, setClasificacion] = useState<any[]>([]);
   const [conteos, setConteos] = useState<{ [id: number]: string }>({});
+  const [soloMios, setSoloMios] = useState(false);
   const intervaloRef = useRef<any>(null);
 
   const fetchDisponibles = useCallback(async () => {
@@ -364,17 +365,33 @@ export default function PollaPage() {
           </div>
         )}
 
+        const itemsClasif = soloMios && usuario
+          ? clasificacion.filter((p: any) => Number(p.usuario_id) === Number(usuario.id))
+          : clasificacion;
+
         {!abierto ? (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-bold text-white/60">Clasificación</h2>
-              <button onClick={() => router.push(`/polla/clasificacion?polla_id=${polla.id}`)}
-                className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/40 text-[10px] font-medium hover:bg-white/10 active:scale-95 transition-all">
-                Ver detalle →
-              </button>
+              <div className="flex items-center gap-1.5">
+                {usuario && clasificacion.some((p: any) => Number(p.usuario_id) === Number(usuario.id)) && (
+                  <button onClick={() => setSoloMios(v => !v)}
+                    className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all active:scale-95 ${
+                      soloMios
+                        ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-400"
+                        : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                    }`}>
+                    {soloMios ? "Ver todos" : "Mis tickets"}
+                  </button>
+                )}
+                <button onClick={() => router.push(`/polla/clasificacion?polla_id=${polla.id}`)}
+                  className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-white/40 text-[10px] font-medium hover:bg-white/10 active:scale-95 transition-all">
+                  Ver detalle →
+                </button>
+              </div>
             </div>
-            {clasificacion.length === 0 ? (
-              <p className="text-center py-8 text-white/20 text-sm">Aún no hay participantes</p>
+            {itemsClasif.length === 0 ? (
+              <p className="text-center py-8 text-white/20 text-sm">{soloMios ? "No tienes tickets en esta polla" : "Aún no hay participantes"}</p>
             ) : (
               <>
                 {polla.carreras && polla.carreras.length > 0 && (
@@ -392,7 +409,7 @@ export default function PollaPage() {
                     </div>
                   </div>
                 )}
-                {clasificacion.map((p: any) => {
+                {itemsClasif.map((p: any) => {
                   const puesto = getPuesto(p.puntos);
                   const selecs: any[] = (p.selecciones || [])
                     .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden);
