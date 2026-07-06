@@ -10,10 +10,15 @@ export default function PollaClasificacion() {
   const [pollaInfo, setPollaInfo] = useState<any>(null);
   const [pollaId, setPollaId] = useState<string | null>(null);
   const [carreras, setCarreras] = useState<any[]>([]);
+  const [usuarioId, setUsuarioId] = useState<number | null>(null);
+  const [soloMios, setSoloMios] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setPollaId(params.get("polla_id"));
+    fetch("/api/me").then(r => r.json()).then(data => {
+      if (data.id) setUsuarioId(data.id);
+    });
   }, []);
 
   const fetchClasificacion = useCallback(async () => {
@@ -33,6 +38,10 @@ export default function PollaClasificacion() {
   }, [fetchClasificacion]));
 
   useEffect(() => { if (pollaId) fetchClasificacion(); }, [pollaId, fetchClasificacion]);
+
+  const itemsMostrar = soloMios && usuarioId
+    ? clasificacion.filter(p => Number(p.usuario_id) === usuarioId)
+    : clasificacion;
 
   const getPuesto = (puntos: number) => {
     const unicos = [...new Set(clasificacion.map(p => Number(p.puntos)))].sort((a, b) => b - a);
@@ -108,9 +117,9 @@ export default function PollaClasificacion() {
           <div className="text-center py-12">
             <p className="text-white/20 text-sm">Cargando...</p>
           </div>
-        ) : clasificacion.length === 0 ? (
+        ) : itemsMostrar.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-white/20 text-sm">Aún no hay participantes</p>
+            <p className="text-white/20 text-sm">{soloMios ? "No tienes tickets en esta polla" : "Aún no hay participantes"}</p>
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -129,7 +138,19 @@ export default function PollaClasificacion() {
                 </div>
               </div>
             )}
-            {clasificacion.map((p) => {
+            <div className="flex items-center justify-end mb-1 px-1">
+              {usuarioId && clasificacion.some(p => Number(p.usuario_id) === usuarioId) && (
+                <button onClick={() => setSoloMios(v => !v)}
+                  className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all active:scale-95 ${
+                    soloMios
+                      ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-400"
+                      : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                  }`}>
+                  {soloMios ? "Ver todos" : "Mis tickets"}
+                </button>
+              )}
+            </div>
+            {itemsMostrar.map((p) => {
               const puesto = getPuesto(p.puntos);
               const selecs: any[] = (p.selecciones || [])
                 .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden);
