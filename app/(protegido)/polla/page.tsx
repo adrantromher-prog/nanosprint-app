@@ -326,7 +326,7 @@ export default function PollaPage() {
           </div>
           {polla.pdf_disponible && (
             <a href={`/api/polla/pdf?id=${polla.id}`} target="_blank" rel="noopener noreferrer"
-              className="px-2.5 py-1 rounded-full bg-red-500/10 border border-red-400/20 text-red-400/80 text-[10px] font-semibold hover:bg-red-500/20 active:scale-95 transition-all">
+              className="px-2.5 py-1 rounded-full bg-red-500/15 border border-red-400/30 text-red-300 text-[10px] font-semibold hover:bg-red-500/25 active:scale-95 transition-all shadow-[0_0_12px_rgba(255,50,50,0.3)] hover:shadow-[0_0_18px_rgba(255,50,50,0.5)]">
               Revista
             </a>
           )}
