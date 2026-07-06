@@ -20,9 +20,6 @@ export default function PollaPage() {
   const [conteos, setConteos] = useState<{ [id: number]: string }>({});
   const [soloMios, setSoloMios] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showExito, setShowExito] = useState(false);
-  const [ultimoTicket, setUltimoTicket] = useState<number | null>(null);
-  const ultimasSelecciones = useRef<{ [k: number]: number }>({});
   const intervaloRef = useRef<any>(null);
 
   const fetchDisponibles = useCallback(async () => {
@@ -160,10 +157,8 @@ export default function PollaPage() {
     setCargando(false);
     setShowConfirm(false);
     if (data.ok) {
-      ultimasSelecciones.current = { ...selecciones };
       setSelecciones({});
-      setUltimoTicket(data.ticket);
-      setShowExito(true);
+      alert(`¡Apuesta registrada! Ticket #${data.ticket}`);
       const resMe = await fetch(`/api/me?_t=${Date.now()}`);
       const meData = await resMe.json();
       if (meData.nombre) setUsuario(meData);
@@ -610,58 +605,6 @@ export default function PollaPage() {
                 <button onClick={enviarApuesta} disabled={cargando}
                   className="flex-1 py-2.5 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 font-semibold text-xs hover:bg-amber-500/30 active:scale-95 transition-all disabled:opacity-30">
                   {cargando ? "Procesando..." : "Confirmar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showExito && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-            onClick={() => !cargando && setShowExito(false)}>
-            <div className="bg-[#0a0b0e] border border-white/[0.08] rounded-2xl w-full max-w-sm"
-              onClick={e => e.stopPropagation()}>
-              <div className="p-4 border-b border-white/[0.06]">
-                <h3 className="text-sm font-bold text-emerald-400 text-center">¡Apuesta Registrada!</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="text-center">
-                  <p className="text-white/60 text-xs">Ticket</p>
-                  <p className="text-white font-black text-2xl">#{ultimoTicket}</p>
-                </div>
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {(polla.carreras || []).map((c: any) => {
-                    const sel = ultimasSelecciones.current[c.orden];
-                    return (
-                      <div key={c.orden} className="flex flex-col items-center gap-0.5">
-                        <span className="text-[9px] text-white/30 font-medium">{c.nombre}</span>
-                        <span className="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-500/20 border border-amber-400/30 text-white font-bold text-sm">
-                          {sel || "?"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <a href={`https://wa.me/?text=${encodeURIComponent(
-                  `🏇 *NanoSprint - Polla Hípica*\n\n` +
-                  `📋 *Ticket #${ultimoTicket}*\n` +
-                  `🏟️ ${polla.hipodromo}\n` +
-                  `💵 Bs. ${Number(polla.costo).toLocaleString()}\n\n` +
-                  `📊 *Selecciones:*\n` +
-                  ((polla.carreras || []).map((c: any) => {
-                    const sel = ultimasSelecciones.current[c.orden];
-                    return `  • ${c.nombre}: Caballo #${sel}`;
-                  }).join("\n")) +
-                  `\n\n¡Buena suerte! 🍀`
-                )}`} target="_blank" rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/25 text-emerald-400 font-semibold text-xs hover:bg-emerald-500/25 active:scale-95 transition-all">
-                  <span>📱</span> Enviar a WhatsApp
-                </a>
-              </div>
-              <div className="p-4 pt-0">
-                <button onClick={() => setShowExito(false)}
-                  className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/50 font-semibold text-xs hover:bg-white/10 active:scale-95 transition-all">
-                  Cerrar
                 </button>
               </div>
             </div>
