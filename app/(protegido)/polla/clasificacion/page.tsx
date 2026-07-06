@@ -9,6 +9,7 @@ export default function PollaClasificacion() {
   const [clasificacion, setClasificacion] = useState<any[]>([]);
   const [pollaInfo, setPollaInfo] = useState<any>(null);
   const [pollaId, setPollaId] = useState<string | null>(null);
+  const [carreras, setCarreras] = useState<any[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -21,7 +22,7 @@ export default function PollaClasificacion() {
       fetch(`/api/polla/clasificacion?polla_id=${pollaId}`).then(r => r.json()),
       fetch(`/api/polla/estado?polla_id=${pollaId}`).then(r => r.json()),
     ]);
-    if (resClasif.ok) setClasificacion(resClasif.clasificacion);
+    if (resClasif.ok) { setClasificacion(resClasif.clasificacion); setCarreras(resClasif.carreras || []); }
     if (resEstado.ok) setPollaInfo(resEstado.polla);
   }, [pollaId]);
 
@@ -113,11 +114,23 @@ export default function PollaClasificacion() {
           </div>
         ) : (
           <div className="space-y-1.5">
+            {carreras.length > 0 && (
+              <div className="flex items-center pl-2 pr-2 mb-1">
+                <div className="w-24 shrink-0" />
+                <div className="flex items-center gap-0.5 mx-auto">
+                  {carreras.map((c) => (
+                    <div key={c.orden} className="w-8 text-center">
+                      <p className="text-[7px] text-white/20 font-medium leading-tight truncate">{c.nombre}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="w-16 shrink-0" />
+              </div>
+            )}
             {clasificacion.map((p) => {
               const puesto = getPuesto(p.puntos);
-              const numsArr: number[] = (p.selecciones || [])
-                .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden)
-                .map((s: any) => s.caballo_numero);
+              const selecs: any[] = (p.selecciones || [])
+                .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden);
               return (
                 <div key={`${p.usuario_id}-${p.ticket}`}
                   className={`rounded-xl border transition-all ${
@@ -139,15 +152,22 @@ export default function PollaClasificacion() {
                         <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
                       </div>
                       <div className="flex items-center gap-0.5 mx-3">
-                        {numsArr.map((n, i) => (
-                          <span key={i} className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded border ${getPuestoColor(puesto)} ${
+                        {selecs.map((s, i) => (
+                          <div key={i} className={`w-8 flex flex-col items-center justify-center text-[10px] font-bold rounded border py-0.5 ${
                             puesto === 1 ? "border-amber-400/25 bg-amber-400/8" :
                             puesto === 2 ? "border-gray-400/25 bg-gray-400/8" :
                             "border-white/10 bg-white/[0.03]"
-                          }`}>{n}</span>
+                          }`}>
+                            <span className="leading-none">{s.caballo_numero}</span>
+                            <span className={`leading-none text-[7px] font-normal mt-0.5 ${
+                              Number(s.puntos) > 0 ? "text-emerald-400/70" : "text-white/20"
+                            }`}>
+                              {Number(s.puntos)}pts
+                            </span>
+                          </div>
                         ))}
                       </div>
-                      <div className="text-right flex-1">
+                      <div className="text-right shrink-0 w-14">
                         <p className={`text-xs font-bold ${getPuestoColor(puesto)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
                         {Number(p.premio) > 0 && (
                           <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
