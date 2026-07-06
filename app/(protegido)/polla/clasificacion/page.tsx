@@ -120,12 +120,12 @@ export default function PollaClasificacion() {
                 <div className="flex items-center gap-0.5 mx-3">
                   {carreras.map((c) => (
                     <div key={c.orden} className="w-8 text-center">
-                      <p className="text-[7px] text-white/20 font-medium leading-tight truncate">{c.nombre}</p>
+                      <p className="text-[10px] text-white/30 font-semibold leading-tight truncate">{c.nombre}</p>
                     </div>
                   ))}
                 </div>
                 <div className="shrink-0 w-14 text-right">
-                  <p className="text-[7px] text-white/10">pts</p>
+                  <p className="text-[10px] text-white/20 font-semibold">pts</p>
                 </div>
               </div>
             )}
@@ -138,6 +138,8 @@ export default function PollaClasificacion() {
                   className={`rounded-xl border transition-all ${
                     puesto === 1
                       ? "bg-gradient-to-r from-amber-500/8 to-amber-600/5 border-amber-400/20"
+                      : puesto === 2
+                      ? "bg-gradient-to-r from-gray-400/8 to-gray-500/5 border-gray-400/20"
                       : "bg-white/[0.02] border-white/[0.06]"
                   }`}>
                   <div className="px-3 py-1.5">
@@ -161,7 +163,7 @@ export default function PollaClasificacion() {
                             "border-white/10 bg-white/[0.03]"
                           }`}>
                             <span className="leading-none">{s.caballo_numero}</span>
-                            <span className={`leading-none text-[7px] font-normal mt-0.5 ${
+                            <span className={`leading-none text-[9px] font-medium mt-0.5 ${
                               Number(s.puntos) > 0 ? "text-emerald-400/70" : "text-white/20"
                             }`}>
                               {Number(s.puntos)}pts
