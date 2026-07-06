@@ -61,3 +61,13 @@ body {
 .animate-glowFade {
   animation: glowFade 0.45s ease-out forwards;
 }
+
+@keyframes pulseOnce {
+  0% { transform: scale(1); box-shadow: 0 0 0px currentColor; }
+  50% { transform: scale(1.1); box-shadow: 0 0 18px currentColor; }
+  100% { transform: scale(1); box-shadow: 0 0 8px currentColor; }
+}
+
+.animate-pulse-once {
+  animation: pulseOnce 0.6s ease-out;
+}

@@ -46,7 +46,14 @@ export async function GET(req: Request) {
       [pollaId]
     );
 
-    return NextResponse.json({ ok: true, clasificacion: participantes.rows, carreras: carreras.rows });
+    const resultados = await pool.query(
+      `SELECT carrera_orden, primer_lugar, segundo_lugar, tercer_lugar
+       FROM polla_resultados WHERE polla_id = $1
+       ORDER BY carrera_orden`,
+      [pollaId]
+    );
+
+    return NextResponse.json({ ok: true, clasificacion: participantes.rows, carreras: carreras.rows, resultados: resultados.rows });
   } catch (error) {
     console.error("Error obteniendo clasificacion polla:", error);
     return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });

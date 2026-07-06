@@ -177,6 +177,16 @@ export default function PollaPage() {
     return "text-white/60";
   };
 
+  const getResultadoBox = (carreraOrden: number, caballoNum: number) => {
+    if (!polla?.resultados) return null;
+    const r = polla.resultados.find((res: any) => Number(res.carrera_orden) === carreraOrden);
+    if (!r) return null;
+    if (Number(r.primer_lugar) === caballoNum) return "1";
+    if (Number(r.segundo_lugar) === caballoNum) return "2";
+    if (Number(r.tercer_lugar) === caballoNum) return "3";
+    return null;
+  };
+
   if (!usuario || cargandoLista) {
     return (
       <main className="min-h-screen flex items-center justify-center text-white">
@@ -435,20 +445,25 @@ export default function PollaPage() {
                             <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
                           </div>
                           <div className="flex items-center gap-0.5 mx-3">
-                            {selecs.map((s: any, i: number) => (
-                              <div key={i} className={`w-8 flex flex-col items-center justify-center text-[10px] font-bold rounded border py-0.5 ${
+                            {selecs.map((s: any, i: number) => {
+                              const res = getResultadoBox(s.carrera_orden, s.caballo_numero);
+                              const resClass = res === "1" ? "border-yellow-400/60 bg-yellow-400/15 text-yellow-300 shadow-[0_0_10px_rgba(255,200,0,0.3)]" :
+                                res === "2" ? "border-gray-300/50 bg-gray-300/12 text-gray-200 shadow-[0_0_8px_rgba(200,200,200,0.2)]" :
+                                res === "3" ? "border-orange-400/50 bg-orange-400/12 text-orange-300 shadow-[0_0_8px_rgba(255,150,50,0.2)]" :
                                 puesto === 1 ? "border-amber-400/25 bg-amber-400/8" :
                                 puesto === 2 ? "border-gray-400/25 bg-gray-400/8" :
-                                "border-white/10 bg-white/[0.03]"
-                              }`}>
-                                <span className="leading-none">{s.caballo_numero}</span>
-                                <span className={`leading-none text-[9px] font-medium mt-0.5 ${
-                                  Number(s.puntos) > 0 ? "text-emerald-400/70" : "text-white/20"
-                                }`}>
-                                  {Number(s.puntos)}pts
-                                </span>
-                              </div>
-                            ))}
+                                "border-white/10 bg-white/[0.03]";
+                              return (
+                                <div key={i} className={`w-8 flex flex-col items-center justify-center text-[10px] font-bold rounded border py-0.5 transition-all duration-500 ${resClass} ${Number(s.puntos) > 0 ? "animate-pulse-once" : ""}`}>
+                                  <span className="leading-none">{res ? `${res}°` : s.caballo_numero}</span>
+                                  <span className={`leading-none text-[9px] font-medium mt-0.5 ${
+                                    Number(s.puntos) > 0 ? "text-emerald-400/80" : "text-white/20"
+                                  }`}>
+                                    {Number(s.puntos)}pts
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                           <div className="text-right shrink-0 w-14">
                             <p className={`text-xs font-bold ${getPuestoColor(puesto)}`}>{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
