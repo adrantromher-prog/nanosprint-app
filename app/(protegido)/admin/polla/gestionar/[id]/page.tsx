@@ -137,13 +137,9 @@ export default function AdminPollaGestionarId() {
           <p className="text-gray-400 text-sm">{polla.hipodromo} — Bs. {Number(polla.costo).toLocaleString()}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => router.push(`/polla/clasificacion?polla_id=${polla.id}&admin=1`)}
-            className="px-4 py-2 rounded-xl bg-blue-700/70 border border-blue-400/70 text-white font-bold text-sm shadow-[0_0_18px_rgba(0,100,255,0.5)] hover:brightness-110 active:scale-95 transition-all">
-            📊 Clasificación
-          </button>
           <button onClick={() => router.push("/admin/polla/gestionar")}
-            className="px-4 py-2 rounded-xl bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 text-white font-bold shadow-[0_0_18px_rgba(0,255,255,0.5)] hover:shadow-[0_0_28px_rgba(0,255,255,0.9)] active:scale-95 transition-all">
-            ← Volver
+            className="px-4 py-2 rounded-xl bg-indigo-700/70 border border-indigo-400/70 text-white font-bold text-sm shadow-[0_0_18px_rgba(100,100,255,0.5)] hover:brightness-110 active:scale-95 transition-all">
+            📋 Pollas Realizadas
           </button>
         </div>
       </div>
