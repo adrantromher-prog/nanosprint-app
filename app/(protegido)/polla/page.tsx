@@ -20,6 +20,11 @@ export default function PollaPage() {
   const [conteos, setConteos] = useState<{ [id: number]: string }>({});
   const [soloMios, setSoloMios] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [animTickets, setAnimTickets] = useState(0);
+  const [animPulse, setAnimPulse] = useState(0);
+  const prevTicketsRef = useRef(0);
+  const prevPollaIdRef = useRef<number | null>(null);
+  const animFrameRef = useRef(0);
   const intervaloRef = useRef<any>(null);
 
   const fetchDisponibles = useCallback(async () => {
@@ -63,6 +68,18 @@ export default function PollaPage() {
     }
   }, []);
 
+  const fetchPollaTickets = useCallback(async (pollaId: number) => {
+    try {
+      const res = await fetch(`/api/polla/estado?polla_id=${pollaId}`);
+      const data = await res.json();
+      if (data.ok && data.polla && polla?.id === pollaId) {
+        setPolla({ ...polla, total_tickets: data.polla.total_participantes || 0 });
+      }
+    } catch (e) {
+      console.error("Error fetching tickets:", e);
+    }
+  }, [polla]);
+
   useWebSocket(useCallback((event) => {
     if (["polla_creada", "polla_resultados", "polla_retiros", "polla_apuesta"].includes(event.type)) {
       fetchDisponibles();
@@ -70,10 +87,13 @@ export default function PollaPage() {
     if (["polla_resultados", "polla_apuesta"].includes(event.type) && polla) {
       fetchClasificacion(polla.id);
     }
+    if (event.type === "polla_apuesta" && polla) {
+      fetchPollaTickets(polla.id);
+    }
     if ((event.type === "polla_cerrada" || event.type === "polla_retiros") && polla && event.polla_id === polla.id) {
       seleccionarPolla(polla.id);
     }
-  }, [fetchDisponibles, fetchClasificacion, polla, seleccionarPolla]));
+  }, [fetchDisponibles, fetchClasificacion, fetchPollaTickets, polla, seleccionarPolla]));
 
   useEffect(() => { fetchDisponibles(); }, [fetchDisponibles]);
 
@@ -126,6 +146,33 @@ export default function PollaPage() {
     intervaloRef.current = setInterval(calcular, 1000);
     return () => { clearInterval(intervaloRef.current); };
   }, [polla?.id, polla?.fecha_cierre, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
+
+  useEffect(() => {
+    const target = polla?.total_tickets || 0;
+    const pollaChanged = prevPollaIdRef.current !== polla?.id;
+    prevPollaIdRef.current = polla?.id ?? null;
+    if (animFrameRef.current) { cancelAnimationFrame(animFrameRef.current); animFrameRef.current = 0; }
+    if (pollaChanged || prevTicketsRef.current === 0 || target <= prevTicketsRef.current) {
+      prevTicketsRef.current = target;
+      setAnimTickets(target);
+      return;
+    }
+    setAnimPulse(k => k + 1);
+    const start = prevTicketsRef.current;
+    const end = target;
+    const duration = 2000;
+    const startTime = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const p = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setAnimTickets(Math.round(start + (end - start) * eased));
+      if (p < 1) animFrameRef.current = requestAnimationFrame(tick);
+    };
+    prevTicketsRef.current = target;
+    animFrameRef.current = requestAnimationFrame(tick);
+    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
+  }, [polla?.total_tickets, polla?.id]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum
@@ -338,20 +385,20 @@ export default function PollaPage() {
           )}
         </div>
 
-        <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3 mb-3">
+        <div className={`bg-gradient-to-b from-amber-500/8 to-amber-600/5 border rounded-xl px-4 py-3 mb-3 transition-all duration-700 ${animPulse ? "border-amber-400/40 shadow-[0_0_30px_rgba(255,200,0,0.15)]" : "border-amber-400/15 shadow-none"}`}>
           <div className="flex items-center justify-center gap-8">
             <div className="text-center">
-              <p className="text-amber-300 font-bold text-lg md:text-xl tabular-nums">Bs. {Math.floor(costo * (polla.total_tickets || 0) * 0.65).toLocaleString()}</p>
+              <p className="text-amber-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300">Bs. {Math.floor(costo * (animTickets || 0) * 0.65).toLocaleString()}</p>
               <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
             </div>
             <div className="w-px h-8 bg-amber-400/10" />
             <div className="text-center">
-              <p className="text-gray-300 font-bold text-lg md:text-xl tabular-nums">Bs. {Math.floor(costo * (polla.total_tickets || 0) * 0.20).toLocaleString()}</p>
+              <p className="text-gray-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300">Bs. {Math.floor(costo * (animTickets || 0) * 0.20).toLocaleString()}</p>
               <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
             </div>
           </div>
           <div className="flex items-center justify-center gap-3 mt-2 pt-2 border-t border-amber-400/8">
-            <span className="text-amber-300/40 text-[10px]">{polla.total_tickets || 0} ticket{(polla.total_tickets || 0) !== 1 ? "s" : ""}</span>
+            <span className="text-amber-300/40 text-[10px]">{animTickets || 0} ticket{(animTickets || 0) !== 1 ? "s" : ""}</span>
             <span className="text-white/10 text-[10px]">·</span>
             <span className="text-amber-300/40 text-[10px]">Bs. {costo.toLocaleString()} c/u</span>
           </div>
