@@ -25,12 +25,16 @@ export default function PollaClasificacion() {
 
   const fetchClasificacion = useCallback(async () => {
     if (!pollaId) return;
-    const [resClasif, resEstado] = await Promise.all([
-      fetch(`/api/polla/clasificacion?polla_id=${pollaId}`).then(r => r.json()),
-      fetch(`/api/polla/estado?polla_id=${pollaId}`).then(r => r.json()),
-    ]);
-    if (resClasif.ok) { setClasificacion(resClasif.clasificacion); setCarreras(resClasif.carreras || []); setResultados(resClasif.resultados || []); setAnimKey(k => k + 1); }
-    if (resEstado.ok) setPollaInfo(resEstado.polla);
+    try {
+      const [resClasif, resEstado] = await Promise.all([
+        fetch(`/api/polla/clasificacion?polla_id=${pollaId}`).then(r => r.json()),
+        fetch(`/api/polla/estado?polla_id=${pollaId}`).then(r => r.json()),
+      ]);
+      if (resClasif.ok) { setClasificacion(resClasif.clasificacion); setCarreras(resClasif.carreras || []); setResultados(resClasif.resultados || []); setAnimKey(k => k + 1); }
+      if (resEstado.ok) setPollaInfo(resEstado.polla);
+    } catch (e) {
+      console.error("Error fetching clasificacion:", e);
+    }
   }, [pollaId]);
 
   useWebSocket(useCallback((event) => {

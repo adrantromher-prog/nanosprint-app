@@ -34,12 +34,14 @@ export default function PollaPage() {
 
   const seleccionarPolla = useCallback(async (pollaId: number) => {
     setCargandoLista(true);
-    const [resDetalle, resApuesta] = await Promise.all([
+    const [resDetalle, resApuesta, resClasif] = await Promise.all([
       fetch(`/api/polla/detalle?id=${pollaId}`).then(r => r.json()),
       fetch(`/api/polla/mi-apuesta?polla_id=${pollaId}`).then(r => r.json()),
+      fetch(`/api/polla/clasificacion?polla_id=${pollaId}`).then(r => r.json()),
     ]);
     if (resDetalle.ok) setPolla(resDetalle.polla);
     if (resApuesta.ok) setMisTickets(resApuesta.apuesta || []);
+    if (resClasif.ok) setClasificacion(resClasif.clasificacion);
     setSelecciones({});
     setCargandoLista(false);
   }, []);
@@ -52,16 +54,20 @@ export default function PollaPage() {
   }, []);
 
   const fetchClasificacion = useCallback(async (pollaId: number) => {
-    const res = await fetch(`/api/polla/clasificacion?polla_id=${pollaId}`);
-    const data = await res.json();
-    if (data.ok) setClasificacion(data.clasificacion);
+    try {
+      const res = await fetch(`/api/polla/clasificacion?polla_id=${pollaId}`);
+      const data = await res.json();
+      if (data.ok) setClasificacion(data.clasificacion);
+    } catch (e) {
+      console.error("Error fetching clasificacion:", e);
+    }
   }, []);
 
   useWebSocket(useCallback((event) => {
-    if (["polla_creada", "polla_resultados", "polla_retiros"].includes(event.type)) {
+    if (["polla_creada", "polla_resultados", "polla_retiros", "polla_apuesta"].includes(event.type)) {
       fetchDisponibles();
     }
-    if (event.type === "polla_resultados" && polla) {
+    if (["polla_resultados", "polla_apuesta"].includes(event.type) && polla) {
       fetchClasificacion(polla.id);
     }
     if ((event.type === "polla_cerrada" || event.type === "polla_retiros") && polla && event.polla_id === polla.id) {
@@ -100,8 +106,9 @@ export default function PollaPage() {
   }, [pollasDisponibles]);
 
   useEffect(() => {
-    if (!polla?.fecha_cierre && !polla?.hora_cierre) return;
-    if (!polla.activa) { setAbierto(false); setTiempoRestante("00:00:00"); return; }
+    if (!polla) return;
+    if (!polla.activa) { setAbierto(false); setTiempoRestante("00:00:00"); fetchClasificacion(polla.id); return; }
+    if (!polla.fecha_cierre && !polla.hora_cierre) return;
     const calcular = () => {
       const ms = msA(polla);
       const d = ms - Date.now();
