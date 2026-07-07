@@ -64,16 +64,10 @@ export default function AdminPollaGestionar() {
     <main className="min-h-screen p-4 text-white bg-[#0a0f1e]">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl md:text-4xl font-bold">Gestionar Pollas</h1>
-        <div className="flex gap-2">
-          <button onClick={() => router.push("/admin/polla/realizadas")}
-            className="px-4 py-2 rounded-xl bg-indigo-700/70 border border-indigo-400/70 text-white font-bold text-sm shadow-[0_0_18px_rgba(100,100,255,0.5)] hover:brightness-110 active:scale-95 transition-all">
-            📋 Pollas Realizadas
-          </button>
-          <button onClick={() => router.push("/admin/polla")}
-            className="px-4 py-2 rounded-xl bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 text-white font-bold shadow-[0_0_18px_rgba(0,255,255,0.5)] hover:shadow-[0_0_28px_rgba(0,255,255,0.9)] active:scale-95 transition-all">
-            ← Volver
-          </button>
-        </div>
+        <button onClick={() => router.push("/admin/polla")}
+          className="px-4 py-2 rounded-xl bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 text-white font-bold shadow-[0_0_18px_rgba(0,255,255,0.5)] hover:shadow-[0_0_28px_rgba(0,255,255,0.9)] active:scale-95 transition-all">
+          ← Volver
+        </button>
       </div>
 
       {cargando ? (

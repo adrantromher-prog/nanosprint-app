@@ -7,7 +7,6 @@ export default function AdminPollasRealizadas() {
   const router = useRouter();
   const [pollas, setPollas] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [pollaExpandida, setPollaExpandida] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/polla/realizadas").then(r => r.json()).then(d => {
@@ -33,14 +32,12 @@ export default function AdminPollasRealizadas() {
       ) : (
         <div className="space-y-4">
           {pollas.map((p) => {
-            const expandida = pollaExpandida === p.id;
             const costo = Number(p.costo);
             const pozo1 = Math.floor(costo * p.total_tickets * 0.65);
             const pozo2 = Math.floor(costo * p.total_tickets * 0.20);
             return (
               <div key={p.id} className="bg-gray-900/70 border border-gray-700 rounded-2xl overflow-hidden">
-                <button onClick={() => setPollaExpandida(expandida ? null : p.id)}
-                  className="w-full text-left p-4 hover:bg-gray-800/50 transition-all">
+                <div className="p-4 pb-2">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-bold">Polla #{p.id} — {p.hipodromo}</h3>
@@ -56,51 +53,49 @@ export default function AdminPollasRealizadas() {
                       <p className="text-gray-400">2° Bs. {pozo2.toLocaleString()}</p>
                     </div>
                   </div>
-                </button>
+                </div>
 
-                {expandida && (
-                  <div className="border-t border-gray-700">
-                    {p.tickets.length === 0 ? (
-                      <p className="text-gray-500 text-xs p-4">Sin tickets</p>
-                    ) : (
-                      <div className="divide-y divide-gray-800">
-                        {p.tickets.map((t: any, i: number) => (
-                          <div key={i} className="px-4 py-2.5 text-xs">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-white/70">Ticket #{t.ticket}</span>
-                                <span className="text-white/90">{t.sobrenombre}</span>
-                                {t.cliente_telefono && <span className="text-gray-500">{t.cliente_telefono}</span>}
-                                {t.vendido_por_taquilla && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-400/20">Taquilla</span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 text-right">
-                                <span className="text-amber-300 font-semibold">{t.puntos} pts</span>
-                                {Number(t.premio) > 0 && (
-                                  <span className="text-green-400 font-semibold">+Bs. {Number(t.premio).toLocaleString()}</span>
-                                )}
-                                {t.pagado && <span className="text-[9px] text-green-400/60">Pagado</span>}
-                              </div>
+                <div className="border-t border-gray-700">
+                  {p.tickets.length === 0 ? (
+                    <p className="text-gray-500 text-xs p-4">Sin tickets</p>
+                  ) : (
+                    <div className="divide-y divide-gray-800">
+                      {p.tickets.map((t: any, i: number) => (
+                        <div key={i} className="px-4 py-2.5 text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-bold text-white/70 shrink-0">Ticket #{t.ticket}</span>
+                              <span className="text-white/90 truncate">{t.sobrenombre}</span>
+                              {t.cliente_telefono && <span className="text-gray-500 shrink-0">{t.cliente_telefono}</span>}
+                              {t.vendido_por_taquilla && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-400/20 shrink-0">Taquilla</span>
+                              )}
                             </div>
-                            <div className="flex flex-wrap gap-1">
-                              {(t.selecciones || []).map((s: any, j: number) => (
-                                <span key={j}
-                                  className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
-                                    s.puntos > 0
-                                      ? "bg-emerald-500/15 text-emerald-300"
-                                      : "bg-white/5 text-white/40"
-                                  }`}>
-                                  C{s.carrera_orden}: #{s.caballo_numero}{s.puntos > 0 ? ` (${s.puntos}pts)` : ""}
-                                </span>
-                              ))}
+                            <div className="flex items-center gap-2 text-right shrink-0">
+                              <span className="text-amber-300 font-semibold">{t.puntos} pts</span>
+                              {Number(t.premio) > 0 && (
+                                <span className="text-green-400 font-semibold">+Bs. {Number(t.premio).toLocaleString()}</span>
+                              )}
+                              {t.pagado && <span className="text-[9px] text-green-400/60">Pagado</span>}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                          <div className="flex flex-wrap gap-1">
+                            {(t.selecciones || []).map((s: any, j: number) => (
+                              <span key={j}
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
+                                  s.puntos > 0
+                                    ? "bg-emerald-500/15 text-emerald-300"
+                                    : "bg-white/5 text-white/40"
+                                }`}>
+                                C{s.carrera_orden}: #{s.caballo_numero}{s.puntos > 0 ? ` (${s.puntos}pts)` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
