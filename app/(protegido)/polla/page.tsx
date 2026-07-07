@@ -68,18 +68,6 @@ export default function PollaPage() {
     }
   }, []);
 
-  const fetchPollaTickets = useCallback(async (pollaId: number) => {
-    try {
-      const res = await fetch(`/api/polla/estado?polla_id=${pollaId}`);
-      const data = await res.json();
-      if (data.ok && data.polla && polla?.id === pollaId) {
-        setPolla({ ...polla, total_tickets: data.polla.total_participantes || 0 });
-      }
-    } catch (e) {
-      console.error("Error fetching tickets:", e);
-    }
-  }, [polla]);
-
   useWebSocket(useCallback((event) => {
     if (["polla_creada", "polla_resultados", "polla_retiros", "polla_apuesta"].includes(event.type)) {
       fetchDisponibles();
@@ -87,13 +75,10 @@ export default function PollaPage() {
     if (["polla_resultados", "polla_apuesta"].includes(event.type) && polla) {
       fetchClasificacion(polla.id);
     }
-    if (event.type === "polla_apuesta" && polla) {
-      fetchPollaTickets(polla.id);
-    }
     if ((event.type === "polla_cerrada" || event.type === "polla_retiros") && polla && event.polla_id === polla.id) {
       seleccionarPolla(polla.id);
     }
-  }, [fetchDisponibles, fetchClasificacion, fetchPollaTickets, polla, seleccionarPolla]));
+  }, [fetchDisponibles, fetchClasificacion, polla, seleccionarPolla]));
 
   useEffect(() => { fetchDisponibles(); }, [fetchDisponibles]);
 
@@ -147,32 +132,49 @@ export default function PollaPage() {
     return () => { clearInterval(intervaloRef.current); };
   }, [polla?.id, polla?.fecha_cierre, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
 
+  const pollaIntervalRef = useRef<any>(null);
+
   useEffect(() => {
-    const target = polla?.total_tickets || 0;
-    const pollaChanged = prevPollaIdRef.current !== polla?.id;
-    prevPollaIdRef.current = polla?.id ?? null;
-    if (animFrameRef.current) { cancelAnimationFrame(animFrameRef.current); animFrameRef.current = 0; }
-    if (pollaChanged || prevTicketsRef.current === 0 || target <= prevTicketsRef.current) {
-      prevTicketsRef.current = target;
-      setAnimTickets(target);
-      return;
-    }
-    setAnimPulse(k => k + 1);
-    const start = prevTicketsRef.current;
-    const end = target;
-    const duration = 2000;
-    const startTime = performance.now();
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const p = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setAnimTickets(Math.round(start + (end - start) * eased));
-      if (p < 1) animFrameRef.current = requestAnimationFrame(tick);
+    if (!polla?.id) return;
+    prevTicketsRef.current = polla.total_tickets || 0;
+    setAnimTickets(polla.total_tickets || 0);
+    const tickPoll = async () => {
+      try {
+        const res = await fetch(`/api/polla/estado?polla_id=${polla.id}`);
+        const data = await res.json();
+        if (data.ok && data.polla) {
+          const nuevoTotal = data.polla.total_participantes || 0;
+          const actual = prevTicketsRef.current;
+          setPolla((p: any) => p ? { ...p, total_tickets: nuevoTotal } : p);
+          if (nuevoTotal > actual) {
+            setAnimPulse(k => k + 1);
+            const start = actual;
+            const end = nuevoTotal;
+            const duration = 2000;
+            const startTime = performance.now();
+            prevTicketsRef.current = nuevoTotal;
+            const tick = (now: number) => {
+              const elapsed = now - startTime;
+              const p = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - p, 3);
+              setAnimTickets(Math.round(start + (end - start) * eased));
+              if (p < 1) animFrameRef.current = requestAnimationFrame(tick);
+            };
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+            animFrameRef.current = requestAnimationFrame(tick);
+          }
+        }
+      } catch (e) {
+        console.error("Error polling tickets:", e);
+      }
     };
-    prevTicketsRef.current = target;
-    animFrameRef.current = requestAnimationFrame(tick);
-    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
-  }, [polla?.total_tickets, polla?.id]);
+    tickPoll();
+    pollaIntervalRef.current = setInterval(tickPoll, 5000);
+    return () => {
+      clearInterval(pollaIntervalRef.current);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [polla?.id]);
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum
