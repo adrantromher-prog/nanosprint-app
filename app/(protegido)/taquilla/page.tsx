@@ -18,11 +18,11 @@ export default function TaquillaPage() {
     fetch("/api/me").then(r => r.json()).then(d => {
       if (d.rol === "taquilla") setUsuario(d);
       else window.location.href = "/home";
-    });
+    }).catch(() => window.location.href = "/home");
     fetch("/api/polla/disponibles").then(r => r.json()).then(d => {
-      if (d.ok) setPollas(d.pollas);
+      if (d.ok) setPollas((d.pollas || []).filter((p: any) => p.activa));
       setCargando(false);
-    });
+    }).catch(() => setCargando(false));
   }, []);
 
   const seleccionarPolla = async (id: number) => {
