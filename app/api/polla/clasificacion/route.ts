@@ -12,40 +12,46 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: "Falta polla_id" }, { status: 400 });
     }
 
-    const participantes = await pool.query(
-      `SELECT
-        t.ticket,
-        t.usuario_id,
-        CASE WHEN pa2.cliente_sobrenombre IS NOT NULL THEN pa2.cliente_sobrenombre ELSE u.sobrenombre END as sobrenombre,
-        pa2.cliente_telefono,
-        COALESCE(pp.puntos, 0) as puntos,
-        COALESCE(pp.premio, 0) as premio,
-        COALESCE(pp.pagado, false) as pagado,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'carrera_orden', pa.carrera_orden,
-              'caballo_numero', pa.caballo_numero,
-              'puntos', pa.puntos
-            ) ORDER BY pa.carrera_orden
-          ) FILTER (WHERE pa.id IS NOT NULL),
-          '[]'::json
-        ) as selecciones
-      FROM (
-        SELECT DISTINCT usuario_id, ticket FROM polla_apuestas WHERE polla_id = $1
-      ) t
-      JOIN usuarios u ON u.id = t.usuario_id
-      LEFT JOIN LATERAL (
-        SELECT cliente_sobrenombre, cliente_telefono FROM polla_apuestas
-        WHERE polla_id = $1 AND usuario_id = t.usuario_id AND ticket = t.ticket AND cliente_sobrenombre IS NOT NULL
-        LIMIT 1
-      ) pa2 ON true
-      LEFT JOIN polla_puntos pp ON pp.polla_id = $1 AND pp.usuario_id = t.usuario_id AND pp.ticket = t.ticket
-      LEFT JOIN polla_apuestas pa ON pa.polla_id = $1 AND pa.usuario_id = t.usuario_id AND pa.ticket = t.ticket
-      GROUP BY t.ticket, t.usuario_id, pa2.cliente_sobrenombre, pa2.cliente_telefono, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
-      ORDER BY COALESCE(pp.puntos, 0) DESC, COALESCE(pp.premio, 0) DESC`,
-      [pollaId, pollaId]
+    const tickets = await pool.query(
+      `SELECT DISTINCT pa.usuario_id, pa.ticket,
+              COALESCE(pa.cliente_sobrenombre, u.sobrenombre) as sobrenombre,
+              pa.cliente_telefono
+       FROM polla_apuestas pa
+       JOIN usuarios u ON u.id = pa.usuario_id
+       WHERE pa.polla_id = $1`,
+      [pollaId]
     );
+
+    const clasificacion = [];
+    for (const t of tickets.rows) {
+      const selecciones = await pool.query(
+        `SELECT carrera_orden, caballo_numero, puntos
+         FROM polla_apuestas
+         WHERE polla_id = $1 AND usuario_id = $2 AND ticket = $3
+         ORDER BY carrera_orden`,
+        [pollaId, t.usuario_id, t.ticket]
+      );
+
+      const puntos = await pool.query(
+        `SELECT COALESCE(puntos, 0) as puntos, COALESCE(premio, 0) as premio, COALESCE(pagado, false) as pagado
+         FROM polla_puntos
+         WHERE polla_id = $1 AND usuario_id = $2 AND ticket = $3`,
+        [pollaId, t.usuario_id, t.ticket]
+      );
+
+      clasificacion.push({
+        usuario_id: t.usuario_id,
+        ticket: t.ticket,
+        sobrenombre: t.sobrenombre,
+        cliente_telefono: t.cliente_telefono,
+        puntos: Number(puntos.rows[0]?.puntos || 0),
+        premio: Number(puntos.rows[0]?.premio || 0),
+        pagado: puntos.rows[0]?.pagado || false,
+        selecciones: selecciones.rows,
+      });
+    }
+
+    clasificacion.sort((a, b) => b.puntos - a.puntos || b.premio - a.premio);
 
     const carreras = await pool.query(
       `SELECT orden, nombre FROM polla_carreras WHERE polla_id = $1 ORDER BY orden`,
@@ -59,9 +65,15 @@ export async function GET(req: Request) {
       [pollaId]
     );
 
-    return NextResponse.json({ ok: true, clasificacion: participantes.rows, carreras: carreras.rows, resultados: resultados.rows });
+    return NextResponse.json({
+      ok: true,
+      debug_count: tickets.rows.length,
+      clasificacion,
+      carreras: carreras.rows,
+      resultados: resultados.rows,
+    });
   } catch (error) {
     console.error("Error obteniendo clasificacion polla:", error);
-    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
   }
 }
