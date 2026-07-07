@@ -119,6 +119,10 @@ app.prepare().then(async () => {
     await pool.query(`ALTER TABLE polla_apuestas DROP COLUMN IF EXISTS carrera_remate_id`);
     await pool.query(`ALTER TABLE polla_apuestas DROP COLUMN IF EXISTS caballo_id`);
     try { await pool.query(`ALTER TABLE polla_apuestas ADD CONSTRAINT polla_apuestas_ticket_unique UNIQUE (polla_id, usuario_id, ticket, carrera_orden)`); } catch (e) { if (!e.message?.includes('already exists')) throw e; }
+    await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS es_taquilla BOOLEAN DEFAULT false`);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS vendido_por INTEGER REFERENCES usuarios(id)`);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS cliente_sobrenombre VARCHAR(200)`);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS cliente_telefono VARCHAR(20)`);
     console.log("✅ Tabla polla_apuestas lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_resultados (

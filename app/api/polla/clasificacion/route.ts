@@ -16,7 +16,8 @@ export async function GET(req: Request) {
       `SELECT
         t.ticket,
         t.usuario_id,
-        u.sobrenombre,
+        CASE WHEN pa2.cliente_sobrenombre IS NOT NULL THEN pa2.cliente_sobrenombre ELSE u.sobrenombre END as sobrenombre,
+        pa2.cliente_telefono,
         COALESCE(pp.puntos, 0) as puntos,
         COALESCE(pp.premio, 0) as premio,
         COALESCE(pp.pagado, false) as pagado,
@@ -34,11 +35,16 @@ export async function GET(req: Request) {
         SELECT DISTINCT usuario_id, ticket FROM polla_apuestas WHERE polla_id = $1
       ) t
       JOIN usuarios u ON u.id = t.usuario_id
+      LEFT JOIN LATERAL (
+        SELECT cliente_sobrenombre, cliente_telefono FROM polla_apuestas
+        WHERE polla_id = $1 AND usuario_id = t.usuario_id AND ticket = t.ticket AND cliente_sobrenombre IS NOT NULL
+        LIMIT 1
+      ) pa2 ON true
       LEFT JOIN polla_puntos pp ON pp.polla_id = $1 AND pp.usuario_id = t.usuario_id AND pp.ticket = t.ticket
       LEFT JOIN polla_apuestas pa ON pa.polla_id = $1 AND pa.usuario_id = t.usuario_id AND pa.ticket = t.ticket
-      GROUP BY t.ticket, t.usuario_id, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
+      GROUP BY t.ticket, t.usuario_id, pa2.cliente_sobrenombre, pa2.cliente_telefono, u.sobrenombre, pp.puntos, pp.premio, pp.pagado
       ORDER BY COALESCE(pp.puntos, 0) DESC, COALESCE(pp.premio, 0) DESC`,
-      [pollaId]
+      [pollaId, pollaId]
     );
 
     const carreras = await pool.query(

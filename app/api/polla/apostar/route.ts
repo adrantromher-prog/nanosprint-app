@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
     const usuarioId = decoded.id;
 
-    const { polla_id, selecciones } = await req.json();
+    const { polla_id, selecciones, cliente_sobrenombre, cliente_telefono } = await req.json();
     // selecciones: { "1": 3, "2": 5, ... } -> { carrera_orden: caballo_numero }
 
     if (!polla_id || !selecciones || Object.keys(selecciones).length !== 6) {
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     }
 
     const usuario = await client.query(
-      `SELECT saldo FROM usuarios WHERE id = $1 FOR UPDATE`,
+      `SELECT saldo, es_taquilla FROM usuarios WHERE id = $1 FOR UPDATE`,
       [usuarioId]
     );
     if (usuario.rows.length === 0) {
@@ -84,29 +84,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Usuario no encontrado" }, { status: 404 });
     }
 
+    const esTaquilla = usuario.rows[0].es_taquilla;
     const costo = Number(polla.rows[0].costo);
-    const saldo = Number(usuario.rows[0].saldo);
-    if (saldo < costo) {
-      await client.query("ROLLBACK");
-      client.release();
-      return NextResponse.json({ ok: false, error: `Saldo insuficiente. Necesitas Bs. ${costo.toLocaleString()}` }, { status: 400 });
-    }
 
-    await client.query(
-      `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
-      [costo, usuarioId]
-    );
-    await client.query(
-      `INSERT INTO historial (usuario_id, tipo, monto, asunto)
-       VALUES ($1, 'polla_apuesta', $2, $3)`,
-      [usuarioId, costo, 'Apuesta Polla Hípica']
-    );
+    if (!esTaquilla) {
+      const saldo = Number(usuario.rows[0].saldo);
+      if (saldo < costo) {
+        await client.query("ROLLBACK");
+        client.release();
+        return NextResponse.json({ ok: false, error: `Saldo insuficiente. Necesitas Bs. ${costo.toLocaleString()}` }, { status: 400 });
+      }
+      await client.query(
+        `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2`,
+        [costo, usuarioId]
+      );
+      await client.query(
+        `INSERT INTO historial (usuario_id, tipo, monto, asunto)
+         VALUES ($1, 'polla_apuesta', $2, $3)`,
+        [usuarioId, costo, 'Apuesta Polla Hípica']
+      );
+    }
 
     for (const [carreraOrden, caballoNumero] of Object.entries(selecciones)) {
       await client.query(
-        `INSERT INTO polla_apuestas (polla_id, usuario_id, ticket, carrera_orden, caballo_numero)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [polla_id, usuarioId, ticketNum, parseInt(carreraOrden), caballoNumero]
+        `INSERT INTO polla_apuestas (polla_id, usuario_id, ticket, carrera_orden, caballo_numero, vendido_por, cliente_sobrenombre, cliente_telefono)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [polla_id, usuarioId, ticketNum, parseInt(carreraOrden), caballoNumero,
+         esTaquilla ? usuarioId : null, cliente_sobrenombre || null, cliente_telefono || null]
       );
     }
 

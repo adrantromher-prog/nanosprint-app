@@ -20,9 +20,8 @@ export default async function HomePage() {
     return <div className="text-white p-10">Sesión inválida</div>;
   }
 
-  // ⭐ AHORA TRAEMOS TAMBIÉN EL ROL
   const result = await pool.query(
-    "SELECT nombre, saldo, bloqueado, razon_bloqueo, rol FROM usuarios WHERE id = $1",
+    "SELECT nombre, saldo, bloqueado, razon_bloqueo, rol, es_taquilla FROM usuarios WHERE id = $1",
     [decoded.id]
   );
 
@@ -39,6 +38,7 @@ export default async function HomePage() {
       bloqueado={user.bloqueado}
       razon_bloqueo={user.razon_bloqueo}
       rol={user.rol}
+      es_taquilla={user.es_taquilla}
     />
   );
 }

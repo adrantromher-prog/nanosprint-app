@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
-export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, mantenimiento: mantenimientoInicial }: any) {
+export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, es_taquilla, mantenimiento: mantenimientoInicial }: any) {
   const router = useRouter();
   const [isBlocked, setIsBlocked] = useState(bloqueado);
   const [razon, setRazon] = useState(razon_bloqueo);
@@ -64,6 +64,27 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
           <p className="text-red-200 mt-2 text-lg">{razon || "No especificada"}</p>
         </div>
         <p className="mt-8 text-gray-300">Si crees que esto es un error, contacta al soporte.</p>
+      </main>
+    );
+  }
+
+  if (es_taquilla) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center text-white bg-[#0a0f1e] p-6">
+        <div className="flex flex-col items-center gap-6">
+          <div className="text-6xl">🎫</div>
+          <h1 className="text-2xl font-bold">Bienvenido, {nombre}</h1>
+          <p className="text-gray-400 text-sm text-center">Panel de Taquilla — Vende tickets de polla a tus clientes</p>
+          <button onClick={() => router.push("/taquilla")}
+            className="px-8 py-4 rounded-2xl bg-emerald-600/70 border border-emerald-400/60 text-white font-bold text-lg
+              shadow-[0_0_30px_rgba(52,211,153,0.3)] hover:brightness-110 active:scale-95 transition-all">
+            Vender Pollas
+          </button>
+          <button onClick={() => window.location.href = "/login"}
+            className="px-6 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold active:scale-95 transition-all">
+            Cerrar Sesión
+          </button>
+        </div>
       </main>
     );
   }
