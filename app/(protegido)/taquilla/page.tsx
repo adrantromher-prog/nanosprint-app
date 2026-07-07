@@ -128,6 +128,23 @@ export default function TaquillaPage() {
             </button>
           </div>
 
+          <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3">
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <p className="text-amber-300 font-bold text-lg tabular-nums">Bs. {Math.floor(Number(polla.costo) * (polla.total_tickets || 0) * 0.65).toLocaleString()}</p>
+                <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
+              </div>
+              <div className="w-px h-8 bg-amber-400/10" />
+              <div className="text-center">
+                <p className="text-gray-300 font-bold text-lg tabular-nums">Bs. {Math.floor(Number(polla.costo) * (polla.total_tickets || 0) * 0.20).toLocaleString()}</p>
+                <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
+              </div>
+            </div>
+            <div className="text-center mt-1">
+              <span className="text-amber-300/40 text-[10px]">{polla.total_tickets || 0} ticket{(polla.total_tickets || 0) !== 1 ? "s" : ""}</span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] text-gray-400 block mb-1">Sobrenombre del Cliente *</label>
