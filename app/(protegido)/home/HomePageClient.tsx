@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
-export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, es_taquilla, mantenimiento: mantenimientoInicial }: any) {
+export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, mantenimiento: mantenimientoInicial }: any) {
   const router = useRouter();
   const [isBlocked, setIsBlocked] = useState(bloqueado);
   const [razon, setRazon] = useState(razon_bloqueo);
@@ -68,7 +68,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
     );
   }
 
-  if (es_taquilla) {
+  if (rol === "taquilla") {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white bg-[#0a0f1e] p-6">
         <div className="flex flex-col items-center gap-6">

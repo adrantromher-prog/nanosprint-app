@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     }
 
     const usuario = await client.query(
-      `SELECT saldo, es_taquilla FROM usuarios WHERE id = $1 FOR UPDATE`,
+      `SELECT saldo, rol FROM usuarios WHERE id = $1 FOR UPDATE`,
       [usuarioId]
     );
     if (usuario.rows.length === 0) {
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Usuario no encontrado" }, { status: 404 });
     }
 
-    const esTaquilla = usuario.rows[0].es_taquilla;
+    const esTaquilla = usuario.rows[0].rol === 'taquilla';
     const costo = Number(polla.rows[0].costo);
 
     if (!esTaquilla) {

@@ -16,7 +16,7 @@ export default function TaquillaPage() {
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(d => {
-      if (d.es_taquilla) setUsuario(d);
+      if (d.rol === "taquilla") setUsuario(d);
       else window.location.href = "/home";
     });
     fetch("/api/polla/disponibles").then(r => r.json()).then(d => {
