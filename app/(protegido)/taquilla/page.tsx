@@ -13,6 +13,12 @@ export default function TaquillaPage() {
   const [clienteTelefono, setClienteTelefono] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [usuario, setUsuario] = useState<any>(null);
+  const [mostrarClasificacion, setMostrarClasificacion] = useState(false);
+  const [clasificacion, setClasificacion] = useState<any[]>([]);
+  const [carreras, setCarreras] = useState<any[]>([]);
+  const [resultados, setResultados] = useState<any[]>([]);
+  const [pollaInfoEst, setPollaInfoEst] = useState<any>(null);
+  const [conteo, setConteo] = useState("");
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(d => {
@@ -25,8 +31,58 @@ export default function TaquillaPage() {
     }).catch(() => setCargando(false));
   }, []);
 
+  const fetchClasificacion = useCallback(async (id: number) => {
+    try {
+      const [resClasif, resEstado] = await Promise.all([
+        fetch(`/api/polla/clasificacion?polla_id=${id}`).then(r => r.json()),
+        fetch(`/api/polla/estado?polla_id=${id}`).then(r => r.json()),
+      ]);
+      if (resClasif.ok) {
+        setClasificacion(resClasif.clasificacion);
+        setCarreras(resClasif.carreras || []);
+        setResultados(resClasif.resultados || []);
+      }
+      if (resEstado.ok && resEstado.polla) {
+        setPollaInfoEst(resEstado.polla);
+        if (!resEstado.polla.activa || resEstado.polla.cerrada_en) {
+          setMostrarClasificacion(true);
+        }
+      }
+    } catch (e) {
+      console.error("Error fetching data:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!polla) return;
+    const actualizar = () => {
+      const p = polla;
+      const ms = p.fecha_cierre ? new Date(p.fecha_cierre).getTime()
+        : p.hora_cierre ? (() => { const [h, m] = p.hora_cierre.split(":").map(Number); const c = new Date(); c.setUTCHours(h + 4, m, 0, 0); return c.getTime(); })()
+        : 0;
+      if (!ms) { setConteo(""); return; }
+      const d = ms - Date.now();
+      if (d <= 0) { setConteo("00:00:00"); return; }
+      const hh = Math.floor(d / 3600000);
+      const mm = Math.floor((d % 3600000) / 60000);
+      const ss = Math.floor((d % 60000) / 1000);
+      setConteo(`${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`);
+    };
+    actualizar();
+    const intervalo = setInterval(actualizar, 1000);
+    return () => clearInterval(intervalo);
+  }, [polla]);
+
+  useEffect(() => {
+    if (!polla) return;
+    fetchClasificacion(polla.id);
+    const id = setInterval(() => fetchClasificacion(polla.id), 5000);
+    return () => clearInterval(id);
+  }, [polla, fetchClasificacion]);
+
   const seleccionarPolla = async (id: number) => {
     setCargando(true);
+    setMostrarClasificacion(false);
     const res = await fetch(`/api/polla/detalle?id=${id}`).then(r => r.json());
     if (res.ok) { setPolla(res.polla); setSelecciones({}); }
     setCargando(false);
@@ -74,6 +130,20 @@ export default function TaquillaPage() {
     }
   };
 
+  const getPuesto = (puntos: number) => {
+    const unicos = [...new Set(clasificacion.map(p => Number(p.puntos)))].sort((a, b) => b - a);
+    return unicos.indexOf(Number(puntos)) + 1;
+  };
+
+  const getResultadoBox = (carreraOrden: number, caballoNum: number) => {
+    const r = resultados.find((res: any) => Number(res.carrera_orden) === carreraOrden);
+    if (!r) return null;
+    if (Number(r.primer_lugar) === caballoNum) return "1";
+    if (Number(r.segundo_lugar) === caballoNum) return "2";
+    if (Number(r.tercer_lugar) === caballoNum) return "3";
+    return null;
+  };
+
   if (!usuario) {
     return (
       <main className="min-h-screen flex items-center justify-center text-white bg-[#0a0f1e]">
@@ -115,17 +185,135 @@ export default function TaquillaPage() {
         </div>
       )}
 
-      {polla && (
+      {polla && mostrarClasificacion && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-bold">{polla.hipodromo}</h2>
+              <p className="text-red-400 text-[10px] font-semibold">🔒 Polla cerrada — Resultados finales</p>
+            </div>
+            <button onClick={() => setPolla(null)}
+              className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
+              ← Lista de pollas
+            </button>
+          </div>
+
+          {pollaInfoEst && (
+            <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3">
+              <div className="flex items-center justify-center gap-8">
+                <div className="text-center">
+                  <p className="text-amber-300 font-black text-lg tabular-nums">
+                    Bs. {(pollaInfoEst.cerrada_en && Number(pollaInfoEst.premio_1) > 0
+                      ? Number(pollaInfoEst.premio_1)
+                      : Math.floor((pollaInfoEst.total_participantes || 0) * Number(polla.costo) * 0.65)
+                    ).toLocaleString()}
+                  </p>
+                  <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
+                </div>
+                <div className="w-px h-8 bg-amber-400/10" />
+                <div className="text-center">
+                  <p className="text-gray-300 font-black text-lg tabular-nums">
+                    Bs. {(pollaInfoEst.cerrada_en && Number(pollaInfoEst.premio_2) > 0
+                      ? Number(pollaInfoEst.premio_2)
+                      : Math.floor((pollaInfoEst.total_participantes || 0) * Number(polla.costo) * 0.20)
+                    ).toLocaleString()}
+                  </p>
+                  <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
+                </div>
+              </div>
+              <div className="text-center mt-1">
+                <span className="text-white/20 text-[10px]">{pollaInfoEst.total_participantes || 0} ticket{(pollaInfoEst.total_participantes || 0) !== 1 ? "s" : ""}</span>
+              </div>
+            </div>
+          )}
+
+          {clasificacion.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">No hay participantes</p>
+          ) : (
+            <div className="space-y-1.5">
+              {carreras.length > 0 && (
+                <div className="flex items-center px-3 mb-1">
+                  <div className="flex-1 min-w-0" />
+                  <div className="flex items-center gap-0.5 mx-3">
+                    {carreras.map((c) => (
+                      <div key={c.orden} className="w-8 text-center">
+                        <p className="text-[10px] text-white/30 font-semibold truncate">{c.nombre}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="shrink-0 w-14 text-right">
+                    <p className="text-[10px] text-white/20 font-semibold">pts</p>
+                  </div>
+                </div>
+              )}
+              {clasificacion.map((p) => {
+                const puesto = getPuesto(p.puntos);
+                const selecs: any[] = (p.selecciones || [])
+                  .sort((a: any, b: any) => a.carrera_orden - b.carrera_orden);
+                return (
+                  <div key={`${p.usuario_id}-${p.ticket}`}
+                    className="rounded-xl border bg-white/[0.02] border-white/[0.06]">
+                    <div className="px-3 py-1.5">
+                      <div className="flex items-center">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 bg-white/5 text-white/40 border border-white/10">
+                            {puesto}
+                          </div>
+                          <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
+                          <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
+                          {p.cliente_telefono && <span className="text-gray-500 text-[9px] shrink-0">{p.cliente_telefono}</span>}
+                        </div>
+                        <div className="flex items-center gap-0.5 mx-3">
+                          {selecs.map((s, i) => {
+                            const res = getResultadoBox(s.carrera_orden, s.caballo_numero);
+                            const resClass = res === "1" ? "border-yellow-400/60 bg-yellow-400/15 text-yellow-300 shadow-[0_0_10px_rgba(255,200,0,0.3)]"
+                              : res === "2" ? "border-gray-300/50 bg-gray-300/12 text-gray-200 shadow-[0_0_8px_rgba(200,200,200,0.2)]"
+                              : res === "3" ? "border-orange-400/50 bg-orange-400/12 text-orange-300 shadow-[0_0_8px_rgba(255,150,50,0.2)]"
+                              : "border-white/10 bg-white/[0.03]";
+                            return (
+                              <div key={i} className={`w-8 flex flex-col items-center justify-center text-[10px] font-bold rounded border py-0.5 ${resClass}`}>
+                                <span className="leading-none">{s.caballo_numero}</span>
+                                <span className={`leading-none text-[9px] font-medium mt-0.5 ${Number(s.puntos) > 0 ? "text-emerald-400/80" : "text-white/20"}`}>
+                                  {Number(s.puntos)}pts
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="text-right shrink-0 w-14">
+                          <p className="text-white/60 text-xs font-bold">{Number(p.puntos)} <span className="font-normal text-[9px] text-white/30">pts</span></p>
+                          {Number(p.premio) > 0 && (
+                            <p className="text-emerald-400/80 font-semibold text-[9px]">+Bs. {Number(p.premio).toLocaleString()}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {polla && !mostrarClasificacion && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-bold">{polla.hipodromo}</h2>
               <p className="text-gray-400 text-[10px]">Bs. {Number(polla.costo).toLocaleString()} por ticket</p>
             </div>
-            <button onClick={() => setPolla(null)}
-              className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
-              Cambiar Polla
-            </button>
+            <div className="flex items-center gap-2">
+              {conteo && (
+                <span className={`font-mono text-xs font-bold ${conteo === "00:00:00" ? "text-red-400" : "text-amber-300/80"}`}>
+                  {conteo}
+                </span>
+              )}
+              <button onClick={() => setPolla(null)}
+                className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
+                Cambiar Polla
+              </button>
+            </div>
           </div>
 
           <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3">
