@@ -133,6 +133,7 @@ export default function PollaPage() {
   }, [polla?.id, polla?.fecha_cierre, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
 
   const pollaIntervalRef = useRef<any>(null);
+  const pulseTimeoutRef = useRef<any>(null);
 
   useEffect(() => {
     if (!polla?.id) return;
@@ -148,6 +149,7 @@ export default function PollaPage() {
           setPolla((p: any) => p ? { ...p, total_tickets: nuevoTotal } : p);
           if (nuevoTotal > actual) {
             setAnimPulse(k => k + 1);
+            pulseTimeoutRef.current = setTimeout(() => setAnimPulse(0), 700);
             const start = actual;
             const end = nuevoTotal;
             const duration = 2000;
@@ -172,6 +174,7 @@ export default function PollaPage() {
     pollaIntervalRef.current = setInterval(tickPoll, 5000);
     return () => {
       clearInterval(pollaIntervalRef.current);
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
   }, [polla?.id]);
@@ -390,12 +393,12 @@ export default function PollaPage() {
         <div className={`bg-gradient-to-b from-amber-500/8 to-amber-600/5 border rounded-xl px-4 py-3 mb-3 transition-all duration-700 ${animPulse ? "border-amber-400/40 shadow-[0_0_30px_rgba(255,200,0,0.15)]" : "border-amber-400/15 shadow-none"}`}>
           <div className="flex items-center justify-center gap-8">
             <div className="text-center">
-              <p className="text-amber-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300">Bs. {Math.floor(costo * (animTickets || 0) * 0.65).toLocaleString()}</p>
+              <p key={animPulse} className={`text-amber-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300 ${animPulse ? "scale-[1.15]" : ""}`}>Bs. {Math.floor(costo * (animTickets || 0) * 0.65).toLocaleString()}</p>
               <p className="text-amber-400/40 text-[9px] uppercase tracking-widest font-medium">1° Lugar</p>
             </div>
             <div className="w-px h-8 bg-amber-400/10" />
             <div className="text-center">
-              <p className="text-gray-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300">Bs. {Math.floor(costo * (animTickets || 0) * 0.20).toLocaleString()}</p>
+              <p key={"2"+animPulse} className={`text-gray-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300 ${animPulse ? "scale-[1.15]" : ""}`}>Bs. {Math.floor(costo * (animTickets || 0) * 0.20).toLocaleString()}</p>
               <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
             </div>
           </div>
