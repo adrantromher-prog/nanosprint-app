@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
@@ -44,6 +44,12 @@ export default function PollaClasificacion() {
   }, [fetchClasificacion]));
 
   useEffect(() => { if (pollaId) fetchClasificacion(); }, [pollaId, fetchClasificacion]);
+
+  useEffect(() => {
+    if (!pollaId) return;
+    const id = setInterval(fetchClasificacion, 5000);
+    return () => clearInterval(id);
+  }, [pollaId, fetchClasificacion]);
 
   const itemsMostrar = soloMios && usuarioId
     ? clasificacion.filter(p => Number(p.usuario_id) === usuarioId)

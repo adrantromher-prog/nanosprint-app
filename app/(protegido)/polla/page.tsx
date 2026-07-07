@@ -141,6 +141,7 @@ export default function PollaPage() {
     setAnimTickets(polla.total_tickets || 0);
     const tickPoll = async () => {
       try {
+        fetchClasificacion(polla.id);
         const res = await fetch(`/api/polla/estado?polla_id=${polla.id}`);
         const data = await res.json();
         if (data.ok && data.polla) {
