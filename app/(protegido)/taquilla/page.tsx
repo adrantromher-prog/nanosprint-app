@@ -19,6 +19,8 @@ export default function TaquillaPage() {
   const [resultados, setResultados] = useState<any[]>([]);
   const [pollaInfoEst, setPollaInfoEst] = useState<any>(null);
   const [conteo, setConteo] = useState("");
+  const [cargandoClasif, setCargandoClasif] = useState(false);
+  const pollaIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(d => {
@@ -29,28 +31,6 @@ export default function TaquillaPage() {
       if (d.ok) setPollas((d.pollas || []).filter((p: any) => p.activa));
       setCargando(false);
     }).catch(() => setCargando(false));
-  }, []);
-
-  const fetchClasificacion = useCallback(async (id: number) => {
-    try {
-      const [resClasif, resEstado] = await Promise.all([
-        fetch(`/api/polla/clasificacion?polla_id=${id}`).then(r => r.json()),
-        fetch(`/api/polla/estado?polla_id=${id}`).then(r => r.json()),
-      ]);
-      if (resClasif.ok) {
-        setClasificacion(resClasif.clasificacion);
-        setCarreras(resClasif.carreras || []);
-        setResultados(resClasif.resultados || []);
-      }
-      if (resEstado.ok && resEstado.polla) {
-        setPollaInfoEst(resEstado.polla);
-        if (!resEstado.polla.activa || resEstado.polla.cerrada_en) {
-          setMostrarClasificacion(true);
-        }
-      }
-    } catch (e) {
-      console.error("Error fetching data:", e);
-    }
   }, []);
 
   useEffect(() => {
@@ -74,15 +54,48 @@ export default function TaquillaPage() {
   }, [polla]);
 
   useEffect(() => {
-    if (!polla) return;
-    fetchClasificacion(polla.id);
-    const id = setInterval(() => fetchClasificacion(polla.id), 5000);
+    if (!polla) { pollaIdRef.current = null; return; }
+    pollaIdRef.current = polla.id;
+
+    const poll = async () => {
+      const pid = pollaIdRef.current;
+      if (!pid) return;
+      setCargandoClasif(true);
+      try {
+        const [resClasif, resEstado] = await Promise.all([
+          fetch(`/api/polla/clasificacion?polla_id=${pid}`).then(r => r.json()),
+          fetch(`/api/polla/estado?polla_id=${pid}`).then(r => r.json()),
+        ]);
+        if (resClasif.ok) {
+          setClasificacion(prev => {
+            if (JSON.stringify(prev) === JSON.stringify(resClasif.clasificacion)) return prev;
+            return resClasif.clasificacion;
+          });
+          setCarreras(resClasif.carreras || []);
+          setResultados(resClasif.resultados || []);
+        }
+        if (resEstado.ok && resEstado.polla) {
+          setPollaInfoEst(resEstado.polla);
+          if (!resEstado.polla.activa || resEstado.polla.cerrada_en) {
+            setMostrarClasificacion(true);
+          }
+        }
+      } catch (e) {
+        console.error("Error polling:", e);
+      } finally {
+        setCargandoClasif(false);
+      }
+    };
+
+    poll();
+    const id = setInterval(poll, 5000);
     return () => clearInterval(id);
-  }, [polla, fetchClasificacion]);
+  }, [polla]);
 
   const seleccionarPolla = async (id: number) => {
     setCargando(true);
     setMostrarClasificacion(false);
+    setClasificacion([]);
     const res = await fetch(`/api/polla/detalle?id=${id}`).then(r => r.json());
     if (res.ok) { setPolla(res.polla); setSelecciones({}); }
     setCargando(false);
@@ -144,6 +157,15 @@ export default function TaquillaPage() {
     return null;
   };
 
+  const volverLista = () => {
+    setPolla(null);
+    setMostrarClasificacion(false);
+    setClasificacion([]);
+    setSelecciones({});
+    setClienteSobrenombre("");
+    setClienteTelefono("");
+  };
+
   if (!usuario) {
     return (
       <main className="min-h-screen flex items-center justify-center text-white bg-[#0a0f1e]">
@@ -154,6 +176,8 @@ export default function TaquillaPage() {
       </main>
     );
   }
+
+  const tieneClasifConDatos = clasificacion.length > 0;
 
   return (
     <main className="min-h-screen p-4 text-white bg-[#0a0f1e]">
@@ -192,7 +216,7 @@ export default function TaquillaPage() {
               <h2 className="font-bold">{polla.hipodromo}</h2>
               <p className="text-red-400 text-[10px] font-semibold">🔒 Polla cerrada — Resultados finales</p>
             </div>
-            <button onClick={() => setPolla(null)}
+            <button onClick={volverLista}
               className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
               ← Lista de pollas
             </button>
@@ -227,9 +251,18 @@ export default function TaquillaPage() {
             </div>
           )}
 
-          {clasificacion.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-8">No hay participantes</p>
-          ) : (
+          {!tieneClasifConDatos && cargandoClasif && (
+            <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-8">
+              <div className="w-4 h-4 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
+              Cargando clasificación...
+            </div>
+          )}
+
+          {!tieneClasifConDatos && !cargandoClasif && (
+            <p className="text-gray-500 text-sm text-center py-8">No hay participantes en esta polla</p>
+          )}
+
+          {tieneClasifConDatos && (
             <div className="space-y-1.5">
               {carreras.length > 0 && (
                 <div className="flex items-center px-3 mb-1">
