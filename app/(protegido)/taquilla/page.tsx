@@ -28,7 +28,7 @@ export default function TaquillaPage() {
       else window.location.href = "/home";
     }).catch(() => window.location.href = "/home");
     fetch("/api/polla/disponibles").then(r => r.json()).then(d => {
-      if (d.ok) setPollas((d.pollas || []).filter((p: any) => p.activa));
+      if (d.ok) setPollas(d.pollas || []);
       setCargando(false);
     }).catch(() => setCargando(false));
   }, []);
@@ -96,8 +96,18 @@ export default function TaquillaPage() {
     setCargando(true);
     setMostrarClasificacion(false);
     setClasificacion([]);
-    const res = await fetch(`/api/polla/detalle?id=${id}`).then(r => r.json());
-    if (res.ok) { setPolla(res.polla); setSelecciones({}); }
+    const [resDetalle, resEstado] = await Promise.all([
+      fetch(`/api/polla/detalle?id=${id}`).then(r => r.json()),
+      fetch(`/api/polla/estado?polla_id=${id}`).then(r => r.json()),
+    ]);
+    if (resDetalle.ok) {
+      setPolla(resDetalle.polla);
+      setSelecciones({});
+      if (!resDetalle.polla.activa || resDetalle.polla.cerrada_en) {
+        setMostrarClasificacion(true);
+        if (resEstado.ok && resEstado.polla) setPollaInfoEst(resEstado.polla);
+      }
+    }
     setCargando(false);
   };
 
@@ -198,12 +208,19 @@ export default function TaquillaPage() {
               Cargando...
             </div>
           ) : pollas.length === 0 ? (
-            <p className="text-gray-500 text-sm">No hay pollas disponibles</p>
+            <p className="text-gray-500 text-sm">No hay pollas registradas</p>
           ) : pollas.map((p: any) => (
             <button key={p.id} onClick={() => seleccionarPolla(p.id)}
-              className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 active:scale-[0.99] transition-all">
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-all active:scale-[0.99] ${
+                p.activa
+                  ? "bg-white/5 border-white/10 hover:bg-white/10"
+                  : "bg-gray-800/30 border-gray-700/50 hover:bg-gray-800/50"
+              }`}>
               <p className="font-bold text-sm">{p.hipodromo}</p>
-              <p className="text-gray-400 text-[10px]">Bs. {Number(p.costo).toLocaleString()} · {p.total_tickets || 0} tickets</p>
+              <p className="text-gray-400 text-[10px]">
+                Bs. {Number(p.costo).toLocaleString()} · {p.total_tickets || 0} tickets
+                {!p.activa && <span className="ml-2 text-red-400 font-semibold">🔒 Cerrada</span>}
+              </p>
             </button>
           ))}
         </div>
