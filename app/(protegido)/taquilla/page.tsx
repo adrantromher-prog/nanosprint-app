@@ -424,9 +424,9 @@ export default function TaquillaPage() {
             const selected = selecciones[c.orden];
             const retirados: number[] = c.retirados || [];
             return (
-              <div key={c.orden} className="rounded-xl p-3 bg-gray-900/50 border border-gray-700">
-                <p className="text-xs font-bold text-white/80 mb-2">{c.nombre}</p>
-                <div className="flex flex-wrap gap-1.5">
+              <div key={c.orden} className="rounded-xl px-3 py-2 bg-gray-900/50 border border-gray-700 flex items-center gap-3">
+                <p className="text-xs font-bold text-white/80 shrink-0 w-20 truncate">{c.nombre}</p>
+                <div className="flex flex-wrap gap-1">
                   {Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1).map(n => {
                     const esRetirado = retirados.includes(n);
                     return (
