@@ -9,10 +9,13 @@ function calcPtsPorCaballo(primeros: number[], segundos: number[], terceros: num
     const pool = 5 + (primeros.length >= 2 ? 3 : 0) + (primeros.length >= 3 ? 1 : 0);
     return Math.floor(pool / primeros.length);
   }
-  if (primeros.length > 1) return 0;
+  if (primeros.length > 1) {
+    if (segundos.includes(caballo)) return 1;
+    return 0;
+  }
   if (segundos.includes(caballo)) {
     if (segundos.length === 1) return 3;
-    return Math.floor((3 + 1) / 2);
+    return Math.floor((3 + 1) / segundos.length);
   }
   if (segundos.length > 0) return 0;
   if (terceros.includes(caballo)) return 1;
