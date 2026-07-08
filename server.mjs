@@ -17,14 +17,16 @@ const handle = app.getRequestHandler();
 app.prepare().then(async () => {
   try {
     const { Pool } = require("pg");
-    const pool = new Pool({
-      host: process.env.PGHOST,
-      user: process.env.PGUSER,
-      password: process.env.PGPASSWORD,
-      database: process.env.PGDATABASE,
-      port: Number(process.env.PGPORT),
-      connectionTimeoutMillis: 5000,
-    });
+    const pool = process.env.DATABASE_URL
+      ? new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000 })
+      : new Pool({
+          host: process.env.PGHOST,
+          user: process.env.PGUSER,
+          password: process.env.PGPASSWORD,
+          database: process.env.PGDATABASE,
+          port: Number(process.env.PGPORT),
+          connectionTimeoutMillis: 5000,
+        });
     await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_referido VARCHAR(5) UNIQUE`);
     console.log("✅ Columna codigo_referido lista");
     await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS referido_por INTEGER REFERENCES usuarios(id)`);
