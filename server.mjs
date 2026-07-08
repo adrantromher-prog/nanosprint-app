@@ -175,26 +175,18 @@ app.prepare().then(async () => {
     handle(req, res, parsedUrl);
   });
 
-  const wss = new WebSocketServer({ noServer: true });
-  setWSS(wss);
-
-  server.on("upgrade", (req, socket, head) => {
-    const url = parse(req.url, true);
-    if (url.pathname?.startsWith("/_next/")) {
-      socket.write("HTTP/1.1 200 OK\r\n\r\n");
-      socket.destroy();
-      return;
-    }
-    wss.handleUpgrade(req, socket, head, (ws) => {
+  if (!dev) {
+    const wss = new WebSocketServer({ server });
+    setWSS(wss);
+    wss.on("connection", (ws, req) => {
       const ip = req?.socket?.remoteAddress || "desconocida";
       console.log(`🟢 Cliente WebSocket conectado desde ${ip} (total: ${wss.clients.size})`);
       ws.on("error", () => {});
       ws.on("close", () => {
         console.log(`🔴 Cliente WebSocket desconectado (total: ${wss.clients.size})`);
       });
-      wss.emit("connection", ws, req);
     });
-  });
+  }
 
   server.listen(port, hostname, () => {
     console.log(`> Ready on http://${hostname}:${port}`);
