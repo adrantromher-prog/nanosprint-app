@@ -10,8 +10,9 @@ export default function TaquillaPage() {
   const [cargando, setCargando] = useState(true);
   const [selecciones, setSelecciones] = useState<{ [carreraOrden: number]: number }>({});
   const [clienteSobrenombre, setClienteSobrenombre] = useState("");
-  const [clienteTelefono, setClienteTelefono] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [ticketVendido, setTicketVendido] = useState<any>(null);
   const [usuario, setUsuario] = useState<any>(null);
   const [mostrarClasificacion, setMostrarClasificacion] = useState(false);
   const [clasificacion, setClasificacion] = useState<any[]>([]);
@@ -145,6 +146,11 @@ export default function TaquillaPage() {
       alert("Ingresa el sobrenombre del cliente");
       return;
     }
+    setMostrarConfirmacion(true);
+  };
+
+  const confirmarVenta = async () => {
+    setMostrarConfirmacion(false);
     setEnviando(true);
     const res = await fetch("/api/polla/apostar", {
       method: "POST",
@@ -153,19 +159,19 @@ export default function TaquillaPage() {
         polla_id: polla.id,
         selecciones,
         cliente_sobrenombre: clienteSobrenombre.trim(),
-        cliente_telefono: clienteTelefono.trim(),
       }),
     });
     const data = await res.json();
     setEnviando(false);
     if (data.ok) {
-      alert(`Ticket #${data.ticket} vendido a ${clienteSobrenombre}`);
-      setPolla(null);
-      setSelecciones({});
-      setClienteSobrenombre("");
-      setClienteTelefono("");
-      fetch("/api/polla/disponibles").then(r => r.json()).then(d => {
-        if (d.ok) setPollas(d.pollas);
+      setTicketVendido({
+        ticket: data.ticket,
+        hipodromo: polla.hipodromo,
+        costo: polla.costo,
+        sobrenombre: clienteSobrenombre.trim(),
+        selecciones: { ...selecciones },
+        carreras: polla.carreras,
+        fecha: new Date().toLocaleString("es-VE"),
       });
     } else {
       alert(data.error || "Error al vender ticket");
@@ -192,7 +198,6 @@ export default function TaquillaPage() {
     setClasificacion([]);
     setSelecciones({});
     setClienteSobrenombre("");
-    setClienteTelefono("");
   };
 
   if (!usuario) {
@@ -403,19 +408,11 @@ export default function TaquillaPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[10px] text-gray-400 block mb-1">Sobrenombre del Cliente *</label>
-              <input value={clienteSobrenombre} onChange={e => setClienteSobrenombre(e.target.value)}
-                placeholder="Ej: Juan"
-                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm placeholder:text-gray-600" />
-            </div>
-            <div>
-              <label className="text-[10px] text-gray-400 block mb-1">Teléfono del Cliente</label>
-              <input value={clienteTelefono} onChange={e => setClienteTelefono(e.target.value)}
-                placeholder="Ej: 04121234567"
-                className="w-full px-3 py-2 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm placeholder:text-gray-600" />
-            </div>
+          <div>
+            <label className="text-[10px] text-gray-400 block mb-1">Sobrenombre del Cliente *</label>
+            <input value={clienteSobrenombre} onChange={e => setClienteSobrenombre(e.target.value)}
+              placeholder="Ej: Juan"
+              className="w-full px-3 py-2 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm placeholder:text-gray-600" />
           </div>
 
           <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Selecciona 1 caballo por carrera:</p>
@@ -462,6 +459,109 @@ export default function TaquillaPage() {
           </div>
         </div>
       )}
+      {mostrarConfirmacion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+          onClick={() => setMostrarConfirmacion(false)}>
+          <div onClick={e => e.stopPropagation()}
+            className="bg-gray-900 border border-gray-700 rounded-2xl p-5 w-full max-w-sm space-y-4">
+            <p className="text-sm font-bold text-center">¿Confirmar venta?</p>
+            <div className="bg-gray-800/50 rounded-xl p-3 text-xs space-y-1">
+              <p><span className="text-gray-400">Hipódromo:</span> <span className="font-semibold">{polla?.hipodromo}</span></p>
+              <p><span className="text-gray-400">Cliente:</span> <span className="font-semibold">{clienteSobrenombre}</span></p>
+              <p><span className="text-gray-400">Costo:</span> <span className="font-semibold text-emerald-400">Bs. {Number(polla?.costo || 0).toLocaleString()}</span></p>
+              <div className="pt-1">
+                <p className="text-gray-400 mb-1">Selecciones:</p>
+                {(polla?.carreras || []).map((c: any) => {
+                  const cab = selecciones[c.orden];
+                  return (
+                    <p key={c.orden} className="text-white/70">
+                      {c.nombre}: <span className="font-bold text-amber-300">#{cab}</span>
+                    </p>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setMostrarConfirmacion(false)}
+                className="flex-1 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold active:scale-95 transition-all">
+                Cancelar
+              </button>
+              <button onClick={confirmarVenta}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600/70 border border-emerald-400/60 text-white font-bold text-sm
+                  shadow-[0_0_12px_rgba(52,211,153,0.3)] active:scale-95 transition-all">
+                Sí, Vender Ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ticketVendido && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 overflow-y-auto py-4"
+          onClick={() => setTicketVendido(null)}>
+          <div onClick={e => e.stopPropagation()}
+            className="bg-white text-black rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div id="ticket-print" className="p-5 space-y-3">
+              <div className="text-center border-b border-gray-300 pb-3">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500">NANOSPRINT</p>
+                <p className="text-lg font-black">TICKET #{ticketVendido.ticket}</p>
+              </div>
+              <div className="text-xs space-y-1">
+                <p><span className="text-gray-500">Hipódromo:</span> <span className="font-bold">{ticketVendido.hipodromo}</span></p>
+                <p><span className="text-gray-500">Cliente:</span> <span className="font-bold">{ticketVendido.sobrenombre}</span></p>
+                <p><span className="text-gray-500">Fecha:</span> <span className="font-bold">{ticketVendido.fecha}</span></p>
+              </div>
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-300">
+                    <th className="text-left py-1 font-semibold text-gray-500">Carrera</th>
+                    <th className="text-right py-1 font-semibold text-gray-500">Caballo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(ticketVendido.carreras || []).sort((a: any, b: any) => a.orden - b.orden).map((c: any) => (
+                    <tr key={c.orden} className="border-b border-gray-200">
+                      <td className="py-1">{c.nombre}</td>
+                      <td className="text-right font-bold text-lg">#{ticketVendido.selecciones[c.orden]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="border-t border-gray-300 pt-2 text-right">
+                <p className="text-xs text-gray-500">Total pagado:</p>
+                <p className="text-lg font-black">Bs. {Number(ticketVendido.costo).toLocaleString()}</p>
+              </div>
+              <div className="text-center pt-1">
+                <p className="text-[8px] text-gray-400">Presenta este ticket junto a tu cédula al momento del cobro</p>
+              </div>
+            </div>
+            <div className="flex border-t border-gray-200">
+              <button onClick={() => window.print()}
+                className="flex-1 py-3 text-sm font-bold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all">
+                🖨️ Imprimir
+              </button>
+              <div className="w-px bg-gray-200" />
+              <button onClick={() => { setTicketVendido(null); setPolla(null); setSelecciones({}); setClienteSobrenombre("");
+                fetch("/api/polla/disponibles").then(r => r.json()).then(d => {
+                  if (d.ok) setPollas(d.pollas);
+                });
+              }}
+                className="flex-1 py-3 text-sm font-bold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #ticket-print, #ticket-print * { visibility: visible; }
+          #ticket-print { position: fixed; top: 0; left: 0; width: 80mm; padding: 3mm; background: white; color: black; z-index: 9999; }
+          @page { margin: 0; size: 80mm auto; }
+        }
+      `}</style>
     </main>
   );
 }
