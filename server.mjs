@@ -181,6 +181,7 @@ app.prepare().then(async () => {
   server.on("upgrade", (req, socket, head) => {
     const url = parse(req.url, true);
     if (url.pathname?.startsWith("/_next/")) {
+      socket.write("HTTP/1.1 200 OK\r\n\r\n");
       socket.destroy();
       return;
     }

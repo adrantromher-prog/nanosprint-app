@@ -11,21 +11,27 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleLogin llamado", telefono);
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telefono, password }),
-    });
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefono, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setMessage(data.error);
-      return;
+      if (!res.ok) {
+        setMessage(data.error);
+        return;
+      }
+
+      router.push("/home");
+    } catch (err) {
+      console.error("Error en login:", err);
+      setMessage("Error de conexión");
     }
-
-    router.push("/home");
   };
 
   return (
