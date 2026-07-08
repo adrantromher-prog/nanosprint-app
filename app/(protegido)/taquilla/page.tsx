@@ -331,7 +331,7 @@ export default function TaquillaPage() {
                           </div>
                           <span className="text-white/30 text-[9px] font-mono shrink-0">#{p.ticket}</span>
                           <span className="font-semibold text-white/80 text-[12px] truncate">{p.sobrenombre}</span>
-                          {p.cliente_telefono && <span className="text-gray-500 text-[9px] shrink-0">{p.cliente_telefono}</span>}
+
                         </div>
                         <div className="flex items-center gap-0.5 mx-3">
                           {selecs.map((s, i) => {
