@@ -17,7 +17,6 @@ function calcPtsPorCaballo(primeros: number[], segundos: number[], terceros: num
     if (segundos.length === 1) return 3;
     return Math.floor((3 + 1) / segundos.length);
   }
-  if (segundos.length > 0) return 0;
   if (terceros.includes(caballo)) return 1;
   return 0;
 }
