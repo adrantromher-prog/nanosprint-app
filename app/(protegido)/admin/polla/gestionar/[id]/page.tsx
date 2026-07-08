@@ -8,7 +8,7 @@ export default function AdminPollaGestionarId() {
   const params = useParams();
   const id = params.id as string;
   const [polla, setPolla] = useState<any>(null);
-  const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primer_lugar: number; segundo_lugar: number; tercer_lugar: number } }>({});
+  const [resultados, setResultados] = useState<{ [carreraOrden: number]: { primeros: number[]; segundos: number[]; terceros: number[] } }>({});
   const [guardando, setGuardando] = useState<number | null>(null);
   const [retirando, setRetirando] = useState<string | null>(null);
   const [subiendoPdf, setSubiendoPdf] = useState(false);
@@ -21,9 +21,9 @@ export default function AdminPollaGestionarId() {
       const r: any = {};
       for (const res of data.polla.resultados || []) {
         r[res.carrera_orden] = {
-          primer_lugar: res.primer_lugar,
-          segundo_lugar: res.segundo_lugar,
-          tercer_lugar: res.tercer_lugar,
+          primeros: res.primer_lugar || [],
+          segundos: res.segundo_lugar || [],
+          terceros: res.tercer_lugar || [],
         };
       }
       setResultados(r);
@@ -32,17 +32,20 @@ export default function AdminPollaGestionarId() {
 
   useEffect(() => { if (id) fetchPolla(); }, [id]);
 
-  const setResultado = (carreraOrden: number, puesto: "primer_lugar" | "segundo_lugar" | "tercer_lugar", caballoNum: number) => {
-    setResultados(prev => ({
-      ...prev,
-      [carreraOrden]: { ...prev[carreraOrden], [puesto]: caballoNum }
-    }));
+  const toggleResultado = (carreraOrden: number, puesto: "primeros" | "segundos" | "terceros", caballoNum: number) => {
+    setResultados(prev => {
+      const actuales = prev[carreraOrden]?.[puesto] || [];
+      const nuevos = actuales.includes(caballoNum)
+        ? actuales.filter((n: number) => n !== caballoNum)
+        : [...actuales, caballoNum].sort();
+      return { ...prev, [carreraOrden]: { ...prev[carreraOrden], [puesto]: nuevos } };
+    });
   };
 
   const guardarResultadosCarrera = async (carrera: any) => {
     const r = resultados[carrera.orden];
-    if (!r?.primer_lugar || !r?.segundo_lugar || !r?.tercer_lugar) {
-      alert("Completa los 3 puestos (1ro, 2do, 3ro)");
+    if (!r?.primeros?.length && !r?.segundos?.length && !r?.terceros?.length) {
+      alert("Selecciona al menos un caballo en alguna posición");
       return;
     }
     setGuardando(carrera.orden);
@@ -53,9 +56,9 @@ export default function AdminPollaGestionarId() {
         polla_id: id,
         resultados: [{
           carrera_orden: carrera.orden,
-          primer_lugar: r.primer_lugar,
-          segundo_lugar: r.segundo_lugar,
-          tercer_lugar: r.tercer_lugar,
+          primeros: r.primeros || [],
+          segundos: r.segundos || [],
+          terceros: r.terceros || [],
         }],
       }),
     });
@@ -229,7 +232,7 @@ export default function AdminPollaGestionarId() {
       <div className="space-y-3 mb-6">
         <h2 className="text-xl font-bold text-cyan-300">Resultados</h2>
         {polla.carreras?.map((c: any) => {
-          const tieneResultado = resultados[c.orden]?.primer_lugar != null;
+          const tieneResultado = resultados[c.orden]?.primeros?.length > 0;
           return (
             <div key={c.orden} className={`rounded-2xl p-4 border ${
               tieneResultado
@@ -248,23 +251,27 @@ export default function AdminPollaGestionarId() {
                 )}
               </div>
               <div className="grid grid-cols-3 gap-2 mb-3">
-                {["primer_lugar", "segundo_lugar", "tercer_lugar"].map((puesto, idx) => {
+                {(["primeros", "segundos", "terceros"] as const).map((puesto, idx) => {
                   const labels = ["1er Lugar (5 pts)", "2do Lugar (3 pts)", "3er Lugar (1 pt)"];
                   const nums = Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1);
                   const retirados: number[] = c.retirados || [];
+                  const sel = resultados[c.orden]?.[puesto] || [];
                   return (
                     <div key={puesto}>
                       <label className="text-[10px] text-gray-400 block mb-1">{labels[idx]}</label>
-                      <select
-                        value={(resultados[c.orden] as any)?.[puesto] || ""}
-                        onChange={(e) => setResultado(c.orden, puesto as any, Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded-xl bg-black/40 border border-purple-300/40 text-white text-sm"
-                      >
-                        <option value="">—</option>
+                      <div className="flex flex-wrap gap-1.5">
                         {nums.filter(n => !retirados.includes(n)).map(n => (
-                          <option key={n} value={n}>#{n}</option>
+                          <button key={n} type="button"
+                            onClick={() => toggleResultado(c.orden, puesto, n)}
+                            className={`w-8 h-8 rounded-lg text-xs font-bold transition-all border ${
+                              sel.includes(n)
+                                ? "bg-amber-500/20 border-amber-400/60 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.2)]"
+                                : "bg-black/30 border-white/10 text-white/40 hover:border-white/20 hover:text-white/60"
+                            } active:scale-90`}>
+                            #{n}
+                          </button>
                         ))}
-                      </select>
+                      </div>
                     </div>
                   );
                 })}

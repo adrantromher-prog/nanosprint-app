@@ -227,9 +227,12 @@ export default function PollaPage() {
     if (!polla?.resultados) return null;
     const r = polla.resultados.find((res: any) => Number(res.carrera_orden) === carreraOrden);
     if (!r) return null;
-    if (Number(r.primer_lugar) === caballoNum) return "1";
-    if (Number(r.segundo_lugar) === caballoNum) return "2";
-    if (Number(r.tercer_lugar) === caballoNum) return "3";
+    const p1: number[] = r.primer_lugar || [];
+    const p2: number[] = r.segundo_lugar || [];
+    const p3: number[] = r.tercer_lugar || [];
+    if (p1.includes(caballoNum)) return "1";
+    if (p2.includes(caballoNum)) return "2";
+    if (p3.includes(caballoNum)) return "3";
     return null;
   };
 
@@ -557,10 +560,10 @@ export default function PollaPage() {
                             })}
                           </div>
                           {resultado && (
-                            <div className="flex gap-1 shrink-0 mt-1">
-                              {resultado.primer_lugar && <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70 border border-amber-400/15 text-[9px] font-medium">1° #{resultado.primer_lugar}</span>}
-                              {resultado.segundo_lugar && <span className="px-1.5 py-0.5 rounded bg-gray-400/10 text-gray-300/70 border border-gray-400/15 text-[9px] font-medium">2° #{resultado.segundo_lugar}</span>}
-                              {resultado.tercer_lugar && <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300/70 border border-orange-400/15 text-[9px] font-medium">3° #{resultado.tercer_lugar}</span>}
+                            <div className="flex flex-wrap gap-1 shrink-0 mt-1">
+                              {(resultado.primer_lugar || []).map((n: number) => <span key={n} className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70 border border-amber-400/15 text-[9px] font-medium">1° #{n}</span>)}
+                              {(resultado.segundo_lugar || []).map((n: number) => <span key={n} className="px-1.5 py-0.5 rounded bg-gray-400/10 text-gray-300/70 border border-gray-400/15 text-[9px] font-medium">2° #{n}</span>)}
+                              {(resultado.tercer_lugar || []).map((n: number) => <span key={n} className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-300/70 border border-orange-400/15 text-[9px] font-medium">3° #{n}</span>)}
                             </div>
                           )}
                         </div>

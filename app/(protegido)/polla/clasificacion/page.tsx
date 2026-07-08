@@ -65,9 +65,12 @@ export default function PollaClasificacion() {
   const getResultadoBox = (carreraOrden: number, caballoNum: number) => {
     const r = resultados.find((res: any) => Number(res.carrera_orden) === carreraOrden);
     if (!r) return null;
-    if (Number(r.primer_lugar) === caballoNum) return "1";
-    if (Number(r.segundo_lugar) === caballoNum) return "2";
-    if (Number(r.tercer_lugar) === caballoNum) return "3";
+    const p1: number[] = r.primer_lugar || [];
+    const p2: number[] = r.segundo_lugar || [];
+    const p3: number[] = r.tercer_lugar || [];
+    if (p1.includes(caballoNum)) return "1";
+    if (p2.includes(caballoNum)) return "2";
+    if (p3.includes(caballoNum)) return "3";
     return null;
   };
 

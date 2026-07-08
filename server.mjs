@@ -142,6 +142,9 @@ app.prepare().then(async () => {
     try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_primer_lugar_fkey`); } catch (e) {}
     try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_segundo_lugar_fkey`); } catch (e) {}
     try { await pool.query(`ALTER TABLE polla_resultados DROP CONSTRAINT IF EXISTS polla_resultados_tercer_lugar_fkey`); } catch (e) {}
+    await pool.query(`ALTER TABLE polla_resultados ALTER COLUMN primer_lugar TYPE INTEGER[] USING CASE WHEN primer_lugar IS NOT NULL THEN ARRAY[primer_lugar] ELSE '{}'::INTEGER[] END`);
+    await pool.query(`ALTER TABLE polla_resultados ALTER COLUMN segundo_lugar TYPE INTEGER[] USING CASE WHEN segundo_lugar IS NOT NULL THEN ARRAY[segundo_lugar] ELSE '{}'::INTEGER[] END`);
+    await pool.query(`ALTER TABLE polla_resultados ALTER COLUMN tercer_lugar TYPE INTEGER[] USING CASE WHEN tercer_lugar IS NOT NULL THEN ARRAY[tercer_lugar] ELSE '{}'::INTEGER[] END`);
     console.log("✅ Tabla polla_resultados lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_puntos (
