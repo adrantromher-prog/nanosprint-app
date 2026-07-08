@@ -270,8 +270,7 @@ export default function AdminPollaGestionarId() {
                 })}
               </div>
 
-              {polla.activa && !polla.cerrada_en && (
-                <div className="mb-3 pt-2 border-t border-white/5">
+              <div className="mb-3 pt-2 border-t border-white/5">
                   <p className="text-[10px] text-gray-500 font-semibold mb-1.5">Caballos retirados</p>
                   <div className="flex flex-wrap gap-1">
                     {Array.from({ length: c.cantidad_caballos }, (_, i) => i + 1).map(n => {
@@ -295,7 +294,6 @@ export default function AdminPollaGestionarId() {
                     })}
                   </div>
                 </div>
-              )}
 
               <button onClick={() => guardarResultadosCarrera(c)}
                 disabled={guardando === c.orden}
