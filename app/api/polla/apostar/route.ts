@@ -107,8 +107,8 @@ export async function POST(req: Request) {
 
     for (const [carreraOrden, caballoNumero] of Object.entries(selecciones)) {
       await client.query(
-        `INSERT INTO polla_apuestas (polla_id, usuario_id, ticket, carrera_orden, caballo_numero, vendido_por, cliente_sobrenombre, cliente_telefono)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO polla_apuestas (polla_id, usuario_id, ticket, carrera_orden, caballo_numero, caballo_original, vendido_por, cliente_sobrenombre, cliente_telefono)
+         VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8)`,
         [polla_id, usuarioId, ticketNum, parseInt(carreraOrden), caballoNumero,
          esTaquilla ? usuarioId : null, cliente_sobrenombre || null, cliente_telefono || null]
       );

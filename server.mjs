@@ -123,6 +123,7 @@ app.prepare().then(async () => {
     await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS vendido_por INTEGER REFERENCES usuarios(id)`);
     await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS cliente_sobrenombre VARCHAR(200)`);
     await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS cliente_telefono VARCHAR(20)`);
+    await pool.query(`ALTER TABLE polla_apuestas ADD COLUMN IF NOT EXISTS caballo_original INTEGER`);
     console.log("✅ Tabla polla_apuestas lista");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_resultados (

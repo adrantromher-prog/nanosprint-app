@@ -59,25 +59,39 @@ export async function POST(req: Request) {
     const esCerrada = !polla.rows[0].activa || polla.rows[0].cerrada_en;
     const fueRetirado = !retiradosActuales.includes(caballo_numero);
 
-    if (esCerrada && fueRetirado) {
-      const apuestas = await client.query(
-        `SELECT id, usuario_id, ticket, caballo_numero
-         FROM polla_apuestas
-         WHERE polla_id = $1 AND carrera_orden = $2 AND caballo_numero = $3`,
-        [polla_id, carrera_orden, caballo_numero]
-      );
-
-      for (const ap of apuestas.rows) {
-        let nuevoNum = Number(ap.caballo_numero) + 1;
-        while (nuevosRetirados.includes(nuevoNum) && nuevoNum <= c.cantidad_caballos) {
-          nuevoNum++;
-        }
-        if (nuevoNum > c.cantidad_caballos) continue;
-
-        await client.query(
-          `UPDATE polla_apuestas SET caballo_numero = $1 WHERE id = $2`,
-          [nuevoNum, ap.id]
+    if (esCerrada) {
+      if (fueRetirado) {
+        const apuestas = await client.query(
+          `SELECT id, caballo_numero FROM polla_apuestas
+           WHERE polla_id = $1 AND carrera_orden = $2 AND caballo_numero = $3`,
+          [polla_id, carrera_orden, caballo_numero]
         );
+
+        for (const ap of apuestas.rows) {
+          let nuevoNum = Number(ap.caballo_numero) + 1;
+          while (nuevosRetirados.includes(nuevoNum) && nuevoNum <= c.cantidad_caballos) {
+            nuevoNum++;
+          }
+          if (nuevoNum > c.cantidad_caballos) continue;
+
+          await client.query(
+            `UPDATE polla_apuestas SET caballo_original = COALESCE(caballo_original, $1), caballo_numero = $2 WHERE id = $3`,
+            [ap.caballo_numero, nuevoNum, ap.id]
+          );
+        }
+      } else {
+        const apuestas = await client.query(
+          `SELECT id, caballo_original, caballo_numero FROM polla_apuestas
+           WHERE polla_id = $1 AND carrera_orden = $2 AND COALESCE(caballo_original, caballo_numero) = $3`,
+          [polla_id, carrera_orden, caballo_numero]
+        );
+
+        for (const ap of apuestas.rows) {
+          await client.query(
+            `UPDATE polla_apuestas SET caballo_numero = COALESCE(caballo_original, caballo_numero) WHERE id = $1`,
+            [ap.id]
+          );
+        }
       }
 
       await client.query(
@@ -132,7 +146,6 @@ export async function POST(req: Request) {
           [polla_id, t.usuario_id, t.ticket, Number(t.total_puntos)]
         );
       }
-
     }
 
     await client.query("COMMIT");
