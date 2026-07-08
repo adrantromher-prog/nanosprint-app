@@ -18,7 +18,7 @@ app.prepare().then(async () => {
   try {
     const { Pool } = require("pg");
     const pool = process.env.DATABASE_URL
-      ? new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000 })
+      ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 5000 })
       : new Pool({
           host: process.env.PGHOST,
           user: process.env.PGUSER,
