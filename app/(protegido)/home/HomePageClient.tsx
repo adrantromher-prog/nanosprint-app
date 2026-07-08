@@ -97,8 +97,10 @@ function ModalEstadisticas() {
 
   const cargar = async () => {
     setCargando(true);
-    const res = await fetch("/api/taquilla/estadisticas").then(r => r.json());
-    if (res.ok) setData(res);
+    try {
+      const res = await fetch("/api/taquilla/estadisticas").then(r => r.json());
+      if (res.ok) setData(res);
+    } catch {}
     setCargando(false);
   };
 
@@ -128,28 +130,28 @@ function ModalEstadisticas() {
               <div className="space-y-3">
                 <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
                   <p className="text-gray-400 text-[10px] uppercase tracking-wider">Ventas Totales</p>
-                  <p className="text-white font-bold text-2xl">Bs. {data.ventas.toLocaleString()}</p>
+                  <p className="text-white font-bold text-2xl">Bs. {(data?.ventas || 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
                   <p className="text-gray-400 text-[10px] uppercase tracking-wider">Comisión 10%</p>
-                  <p className="text-emerald-400 font-bold text-2xl">Bs. {data.comision.toLocaleString()}</p>
+                  <p className="text-emerald-400 font-bold text-2xl">Bs. {(data?.comision || 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
                   <p className="text-gray-400 text-[10px] uppercase tracking-wider">Entrega al Admin</p>
-                  <p className="text-amber-400 font-bold text-2xl">Bs. {data.totalAdmin.toLocaleString()}</p>
+                  <p className="text-amber-400 font-bold text-2xl">Bs. {(data?.totalAdmin || 0).toLocaleString()}</p>
                 </div>
                 <div className="pt-2 border-t border-gray-700">
                   <div className="flex justify-between text-xs text-gray-400">
                     <span>Premios recibidos:</span>
-                    <span className="text-green-400">Bs. {data.premios_recibidos.toLocaleString()}</span>
+                    <span className="text-green-400">Bs. {(data?.premios_recibidos || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
                     <span>Premios pagados a clientes:</span>
-                    <span className="text-red-400">Bs. {data.premios_pagados.toLocaleString()}</span>
+                    <span className="text-red-400">Bs. {(data?.premios_pagados || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
                     <span>Pendientes de pago:</span>
-                    <span className="text-yellow-400">{data.pendientes_pago?.length || 0} ticket(s)</span>
+                    <span className="text-yellow-400">{data?.pendientes_pago?.length || 0} ticket(s)</span>
                   </div>
                 </div>
               </div>
@@ -234,7 +236,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
             <p className="text-gray-400 text-xs">Taquilla</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-green-300 font-extrabold text-sm">Bs. {Number(saldo).toLocaleString()}</span>
+            <span className="text-green-300 font-extrabold text-sm">Bs. {(Number(saldo) || 0).toLocaleString()}</span>
             <button onClick={async () => { await fetch("/api/logout", { method: "GET", credentials: "include" }); window.location.href = "/login"; }}
               className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
               Salir
