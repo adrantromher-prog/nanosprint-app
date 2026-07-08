@@ -172,6 +172,8 @@ export default function TaquillaPage() {
         selecciones: { ...selecciones },
         carreras: polla.carreras,
         fecha: new Date().toLocaleString("es-VE"),
+        nombreTaquilla: usuario?.nombre_taquilla || "",
+        sobrenombreTaquilla: usuario?.sobrenombre || "",
       });
     } else {
       alert(data.error || "Error al vender ticket");
@@ -508,6 +510,7 @@ export default function TaquillaPage() {
               <div className="text-center border-b border-gray-300 pb-3">
                 <p className="text-[10px] uppercase tracking-widest text-gray-500">NANOSPRINT</p>
                 <p className="text-lg font-black">TICKET #{ticketVendido.ticket}</p>
+                <p className="text-[10px] text-gray-600 font-semibold mt-0.5">Vendido por: {ticketVendido.sobrenombreTaquilla}</p>
               </div>
               <div className="text-xs space-y-1">
                 <p><span className="text-gray-500">Hipódromo:</span> <span className="font-bold">{ticketVendido.hipodromo}</span></p>

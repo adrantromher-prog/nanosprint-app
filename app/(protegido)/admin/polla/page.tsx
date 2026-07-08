@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FaPlusCircle, FaListUl } from "react-icons/fa";
+import { FaPlusCircle, FaListUl, FaStore } from "react-icons/fa";
 
 export default function AdminPollaHub() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function AdminPollaHub() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mt-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-12">
         <button onClick={() => router.push("/admin/polla/crear")}
           className="bg-gray-900 hover:bg-gray-800 transition-all p-8 rounded-2xl shadow-xl border border-gray-700 hover:shadow-2xl hover:scale-[1.02] text-left">
           <div className="bg-emerald-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
@@ -33,6 +33,15 @@ export default function AdminPollaHub() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Gestionar Pollas</h2>
           <p className="text-gray-400 text-sm">Administra los resultados y cierra las pollas creadas.</p>
+        </button>
+
+        <button onClick={() => router.push("/admin/polla/taquillas")}
+          className="bg-gray-900 hover:bg-gray-800 transition-all p-8 rounded-2xl shadow-xl border border-gray-700 hover:shadow-2xl hover:scale-[1.02] text-left">
+          <div className="bg-purple-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+            <FaStore size={32} />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Taquillas</h2>
+          <p className="text-gray-400 text-sm">Movimientos y ventas realizadas por las taquillas.</p>
         </button>
       </div>
     </main>

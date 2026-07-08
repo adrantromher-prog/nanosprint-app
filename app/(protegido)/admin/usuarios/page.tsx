@@ -11,6 +11,9 @@ export default function AdminUsuarios() {
   const [monto, setMonto] = useState<number>(0);
   const [asunto, setAsunto] = useState("");
   const [razonBloqueo, setRazonBloqueo] = useState("");
+  const [newRol, setNewRol] = useState("");
+  const [nombreTaquilla, setNombreTaquilla] = useState("");
+  const [comision, setComision] = useState(10);
 
   const buscarUsuario = async () => {
     const res = await fetch("/api/admin/buscar", {
@@ -28,6 +31,9 @@ export default function AdminUsuarios() {
 
     setUsuario(data);
     setRazonBloqueo(data.razon_bloqueo || "");
+    setNewRol(data.rol || "user");
+    setNombreTaquilla(data.nombre_taquilla || "");
+    setComision(data.comision ?? 10);
   };
 
   const enviarMovimiento = async (tipo: "recarga" | "retiro") => {
@@ -124,7 +130,12 @@ export default function AdminUsuarios() {
             <div className="bg-[#0F172A] p-4 rounded-lg border border-white/10 text-sm">
               <p><b>Nombre:</b> {usuario.nombre}</p>
               <p><b>Apellido:</b> {usuario.apellido}</p>
+              <p><b>Sobrenombre:</b> <span className="text-purple-300">{usuario.sobrenombre}</span></p>
               <p><b>Comida favorita:</b> {usuario.comida_favorita}</p>
+              <p><b>Rol:</b> <span className="text-amber-300 uppercase">{usuario.rol || "user"}</span></p>
+              {usuario.rol === "taquilla" && usuario.nombre_taquilla && (
+                <p><b>Nombre Taquilla:</b> <span className="text-emerald-300">{usuario.nombre_taquilla}</span></p>
+              )}
             </div>
 
             <div className="bg-[#0F172A] p-4 rounded-lg border border-white/10 text-sm">
@@ -242,6 +253,55 @@ export default function AdminUsuarios() {
               className="bg-green-600 hover:bg-green-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base"
             >
               Desbloquear Usuario
+            </button>
+          </div>
+
+        </div>
+      )}
+
+      {usuario && (
+        <div className="bg-[#1E293B] p-4 md:p-6 rounded-xl border border-white/10 shadow-lg space-y-4 md:space-y-6">
+
+          <h2 className="text-xl md:text-2xl font-semibold text-white">Rol del Usuario</h2>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
+            <select value={newRol} onChange={e => setNewRol(e.target.value)}
+              className="bg-white text-black px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm">
+              <option value="user">Usuario</option>
+              <option value="taquilla">Taquilla</option>
+              <option value="admin">Admin</option>
+            </select>
+
+            {newRol === "taquilla" && (
+              <>
+                <input type="text" placeholder="Nombre de taquilla (ej: Taquilla 1)"
+                  value={nombreTaquilla} onChange={e => setNombreTaquilla(e.target.value)}
+                  className="bg-white text-black px-3 py-2 rounded w-full sm:w-64 border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm" />
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-300 shrink-0">Comisión:</label>
+                  <input type="number" min="0" max="100"
+                    value={comision} onChange={e => setComision(Number(e.target.value))}
+                    className="bg-white text-black px-3 py-2 rounded w-20 border border-gray-300 focus:ring-2 focus:ring-blue-500 text-sm text-center" />
+                  <span className="text-sm text-gray-400">%</span>
+                </div>
+              </>
+            )}
+
+            <button onClick={async () => {
+              await fetch("/api/admin/usuario/rol", {
+                method: "POST",
+                body: JSON.stringify({
+                  usuarioId: usuario.id,
+                  rol: newRol,
+                  nombre_taquilla: newRol === "taquilla" ? nombreTaquilla : "",
+                  comision: newRol === "taquilla" ? comision : undefined,
+                }),
+              });
+              alert("Rol actualizado");
+              buscarUsuario();
+            }}
+              className="bg-amber-600 hover:bg-amber-700 px-4 sm:px-6 py-2 rounded text-sm sm:text-base">
+              Guardar Cambios
             </button>
           </div>
 

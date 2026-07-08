@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const { telefono } = await req.json();
 
     const result = await pool.query(
-      `SELECT id, nombre, apellido, telefono, saldo, creado_en, comida_favorita
+      `SELECT id, nombre, apellido, sobrenombre, telefono, saldo, creado_en, comida_favorita, rol, bloqueado, razon_bloqueo, comision
        FROM usuarios
        WHERE telefono = $1`,
       [telefono]

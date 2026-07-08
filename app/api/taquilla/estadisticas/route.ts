@@ -22,12 +22,18 @@ export async function GET() {
       [decoded.id]
     );
 
+    const userData = await pool.query(
+      `SELECT COALESCE(comision, 10) as comision FROM usuarios WHERE id = $1`,
+      [decoded.id]
+    );
+    const pct = Number(userData.rows[0]?.comision) || 10;
+
     let ventas = 0;
     for (const t of tickets.rows) {
       ventas += Number(t.costo);
     }
 
-    const comision = Math.floor(ventas * 0.10);
+    const comision = Math.floor(ventas * pct / 100);
     const totalAdmin = ventas - comision;
 
     const premiosRecibidos = await pool.query(
@@ -56,6 +62,7 @@ export async function GET() {
       ok: true,
       ventas,
       comision,
+      comision_pct: pct,
       totalAdmin,
       premios_recibidos: Number(premiosRecibidos.rows[0].total_premios),
       premios_pagados: Number(premiosPagados.rows[0].total_premios),
