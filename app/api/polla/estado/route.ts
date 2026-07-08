@@ -30,6 +30,28 @@ export async function GET(req: Request) {
 
     const p = polla.rows[0];
 
+    if (p.activa && (p.fecha_cierre || p.hora_cierre)) {
+      const ahora = new Date();
+      let vencido = false;
+      if (p.fecha_cierre) {
+        vencido = new Date(p.fecha_cierre).getTime() <= ahora.getTime();
+      }
+      if (!vencido && p.hora_cierre) {
+        const [h, m] = p.hora_cierre.split(":").map(Number);
+        const cierreHoy = new Date(ahora);
+        cierreHoy.setUTCHours(h + 4, m, 0, 0);
+        vencido = cierreHoy.getTime() <= ahora.getTime();
+      }
+      if (vencido) {
+        await pool.query(
+          `UPDATE polla_config SET activa = false, cerrada_en = NOW() WHERE id = $1`,
+          [p.id]
+        );
+        p.activa = false;
+        p.cerrada_en = new Date().toISOString();
+      }
+    }
+
     const totalParticipantes = await pool.query(
       `SELECT COUNT(*) as count FROM (SELECT 1 FROM polla_apuestas WHERE polla_id = $1 GROUP BY usuario_id, ticket) sub`,
       [p.id]
