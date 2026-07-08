@@ -157,6 +157,7 @@ app.prepare().then(async () => {
     await pool.query(`ALTER TABLE polla_puntos ADD COLUMN IF NOT EXISTS ticket INTEGER NOT NULL DEFAULT 1`);
     await pool.query(`ALTER TABLE polla_puntos DROP CONSTRAINT IF EXISTS polla_puntos_polla_id_usuario_id_key`);
     try { await pool.query(`ALTER TABLE polla_puntos ADD CONSTRAINT polla_puntos_ticket_unique UNIQUE (polla_id, usuario_id, ticket)`); } catch (e) { if (!e.message?.includes('already exists')) throw e; }
+    await pool.query(`ALTER TABLE polla_puntos ADD COLUMN IF NOT EXISTS pagado_al_cliente BOOLEAN NOT NULL DEFAULT false`);
     console.log("✅ Tabla polla_puntos lista");
 
     await pool.end();

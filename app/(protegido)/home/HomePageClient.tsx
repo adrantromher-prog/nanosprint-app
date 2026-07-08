@@ -4,6 +4,163 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
+function ModalPendientes({ nombre }: { nombre: string }) {
+  const router = useRouter();
+  const [abierto, setAbierto] = useState(false);
+  const [pendientes, setPendientes] = useState<any[]>([]);
+  const [cargando, setCargando] = useState(false);
+  const [pagando, setPagando] = useState<number | null>(null);
+  const [mensaje, setMensaje] = useState("");
+
+  const cargar = async () => {
+    setCargando(true);
+    const res = await fetch("/api/taquilla/estadisticas").then(r => r.json());
+    if (res.ok) setPendientes(res.pendientes_pago || []);
+    setCargando(false);
+  };
+
+  useEffect(() => { if (abierto) cargar(); }, [abierto]);
+
+  const confirmarPago = async (p: any) => {
+    if (!confirm(`¿Confirmas que pagaste Bs. ${Number(p.premio).toLocaleString()} al cliente?`)) return;
+    setPagando(p.id);
+    setMensaje("");
+    const res = await fetch("/api/taquilla/confirmar-pago", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ polla_id: p.polla_id, usuario_id: p.usuario_id, ticket: p.ticket }),
+    });
+    const data = await res.json();
+    setPagando(null);
+    if (data.ok) {
+      setMensaje(`✅ Pago de Bs. ${Number(p.premio).toLocaleString()} confirmado`);
+      cargar();
+      router.refresh();
+    } else {
+      setMensaje(`❌ ${data.error || "Error"}`);
+    }
+  };
+
+  return (
+    <>
+      <button onClick={() => setAbierto(true)}
+        className="w-full py-5 rounded-2xl bg-indigo-600/60 border border-indigo-400/50 text-white font-bold text-base
+          shadow-[0_0_20px_rgba(100,100,255,0.2)] hover:brightness-110 active:scale-95 transition-all">
+        💰 Confirmar Pago a Ganadores
+      </button>
+
+      {abierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => setAbierto(false)}>
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Pagos Pendientes</h2>
+              <button onClick={() => setAbierto(false)} className="text-gray-400 text-xl">&times;</button>
+            </div>
+
+            {mensaje && <div className="text-sm text-center mb-3 bg-gray-800/50 rounded-xl py-2 px-3">{mensaje}</div>}
+
+            {cargando ? (
+              <div className="text-center py-8 text-gray-400 text-sm">Cargando...</div>
+            ) : pendientes.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 text-sm">No hay pagos pendientes</div>
+            ) : (
+              <div className="space-y-2">
+                {pendientes.map((p: any) => (
+                  <div key={p.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold">{p.hipodromo}</p>
+                        <p className="text-gray-400 text-[10px]">Polla #{p.polla_id} · Ticket #{p.ticket}</p>
+                      </div>
+                      <p className="text-green-400 font-bold text-sm">Bs. {Number(p.premio).toLocaleString()}</p>
+                    </div>
+                    <button onClick={() => confirmarPago(p)} disabled={pagando === p.id}
+                      className="mt-2 w-full py-2 rounded-xl bg-emerald-600/60 border border-emerald-400/50 text-white font-semibold text-xs
+                        hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                      {pagando === p.id ? "Confirmando..." : "Confirmar Pago"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function ModalEstadisticas() {
+  const [abierto, setAbierto] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [cargando, setCargando] = useState(false);
+
+  const cargar = async () => {
+    setCargando(true);
+    const res = await fetch("/api/taquilla/estadisticas").then(r => r.json());
+    if (res.ok) setData(res);
+    setCargando(false);
+  };
+
+  useEffect(() => { if (abierto) cargar(); }, [abierto]);
+
+  return (
+    <>
+      <button onClick={() => setAbierto(true)}
+        className="w-full py-5 rounded-2xl bg-amber-600/50 border border-amber-400/40 text-white font-bold text-base
+          shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:brightness-110 active:scale-95 transition-all">
+        📊 Ver Estadísticas
+      </button>
+
+      {abierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => setAbierto(false)}>
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Estadísticas</h2>
+              <button onClick={() => setAbierto(false)} className="text-gray-400 text-xl">&times;</button>
+            </div>
+
+            {cargando ? (
+              <div className="text-center py-8 text-gray-400 text-sm">Cargando...</div>
+            ) : !data ? (
+              <div className="text-center py-8 text-gray-500 text-sm">Sin datos</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider">Ventas Totales</p>
+                  <p className="text-white font-bold text-2xl">Bs. {data.ventas.toLocaleString()}</p>
+                </div>
+                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider">Comisión 10%</p>
+                  <p className="text-emerald-400 font-bold text-2xl">Bs. {data.comision.toLocaleString()}</p>
+                </div>
+                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                  <p className="text-gray-400 text-[10px] uppercase tracking-wider">Entrega al Admin</p>
+                  <p className="text-amber-400 font-bold text-2xl">Bs. {data.totalAdmin.toLocaleString()}</p>
+                </div>
+                <div className="pt-2 border-t border-gray-700">
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Premios recibidos:</span>
+                    <span className="text-green-400">Bs. {data.premios_recibidos.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>Premios pagados a clientes:</span>
+                    <span className="text-red-400">Bs. {data.premios_pagados.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>Pendientes de pago:</span>
+                    <span className="text-yellow-400">{data.pendientes_pago?.length || 0} ticket(s)</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, mantenimiento: mantenimientoInicial }: any) {
   const router = useRouter();
   const [isBlocked, setIsBlocked] = useState(bloqueado);
@@ -70,20 +227,30 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
 
   if (rol === "taquilla") {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-white bg-[#0a0f1e] p-6">
-        <div className="flex flex-col items-center gap-6">
-          <div className="text-6xl">🎫</div>
-          <h1 className="text-2xl font-bold">Bienvenido, {nombre}</h1>
-          <p className="text-gray-400 text-sm text-center">Panel de Taquilla — Vende tickets de polla a tus clientes</p>
+      <main className="min-h-screen flex flex-col items-center text-white bg-[#0a0f1e] p-6">
+        <div className="flex items-center justify-between w-full mb-6">
+          <div>
+            <h1 className="text-xl font-bold">{nombre}</h1>
+            <p className="text-gray-400 text-xs">Taquilla</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-300 font-extrabold text-sm">Bs. {Number(saldo).toLocaleString()}</span>
+            <button onClick={async () => { await fetch("/api/logout", { method: "GET", credentials: "include" }); window.location.href = "/login"; }}
+              className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
+              Salir
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 w-full max-w-md flex-1 justify-center">
           <button onClick={() => router.push("/taquilla")}
-            className="px-8 py-4 rounded-2xl bg-emerald-600/70 border border-emerald-400/60 text-white font-bold text-lg
+            className="w-full py-5 rounded-2xl bg-emerald-600/70 border border-emerald-400/60 text-white font-bold text-lg
               shadow-[0_0_30px_rgba(52,211,153,0.3)] hover:brightness-110 active:scale-95 transition-all">
-            Vender Pollas
+            🎫 Vender Pollas
           </button>
-          <button onClick={() => window.location.href = "/login"}
-            className="px-6 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold active:scale-95 transition-all">
-            Cerrar Sesión
-          </button>
+
+          <ModalPendientes nombre={nombre} />
+          <ModalEstadisticas />
         </div>
       </main>
     );
