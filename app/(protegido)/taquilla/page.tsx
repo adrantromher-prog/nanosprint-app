@@ -20,6 +20,7 @@ export default function TaquillaPage() {
   const [pollaInfoEst, setPollaInfoEst] = useState<any>(null);
   const [conteo, setConteo] = useState("");
   const [cargandoClasif, setCargandoClasif] = useState(false);
+  const [conteos, setConteos] = useState<{ [id: number]: string }>({});
   const pollaIdRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -33,25 +34,43 @@ export default function TaquillaPage() {
     }).catch(() => setCargando(false));
   }, []);
 
+  const calcMs = useCallback((p: any) => {
+    if (p.fecha_cierre) return new Date(p.fecha_cierre).getTime();
+    if (p.hora_cierre) {
+      const [h, m] = p.hora_cierre.split(":").map(Number);
+      const c = new Date(); c.setUTCHours(h + 4, m, 0, 0); return c.getTime();
+    }
+    return 0;
+  }, []);
+
+  const fmtTiempo = useCallback((ms: number) => {
+    if (!ms) return "";
+    const d = ms - Date.now();
+    if (d <= 0) return "00:00:00";
+    const hh = Math.floor(d / 3600000);
+    const mm = Math.floor((d % 3600000) / 60000);
+    const ss = Math.floor((d % 60000) / 1000);
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  }, []);
+
   useEffect(() => {
-    if (!polla) return;
     const actualizar = () => {
-      const p = polla;
-      const ms = p.fecha_cierre ? new Date(p.fecha_cierre).getTime()
-        : p.hora_cierre ? (() => { const [h, m] = p.hora_cierre.split(":").map(Number); const c = new Date(); c.setUTCHours(h + 4, m, 0, 0); return c.getTime(); })()
-        : 0;
-      if (!ms) { setConteo(""); return; }
-      const d = ms - Date.now();
-      if (d <= 0) { setConteo("00:00:00"); return; }
-      const hh = Math.floor(d / 3600000);
-      const mm = Math.floor((d % 3600000) / 60000);
-      const ss = Math.floor((d % 60000) / 1000);
-      setConteo(`${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`);
+      const obj: { [id: number]: string } = {};
+      for (const p of pollas) obj[p.id] = fmtTiempo(calcMs(p));
+      setConteos(obj);
     };
     actualizar();
     const intervalo = setInterval(actualizar, 1000);
     return () => clearInterval(intervalo);
-  }, [polla]);
+  }, [pollas, fmtTiempo, calcMs]);
+
+  useEffect(() => {
+    if (!polla) return;
+    const actualizar = () => setConteo(fmtTiempo(calcMs(polla)));
+    actualizar();
+    const intervalo = setInterval(actualizar, 1000);
+    return () => clearInterval(intervalo);
+  }, [polla, fmtTiempo, calcMs]);
 
   useEffect(() => {
     if (!polla) { pollaIdRef.current = null; return; }
@@ -219,6 +238,7 @@ export default function TaquillaPage() {
               <p className="font-bold text-sm">{p.hipodromo}</p>
               <p className="text-gray-400 text-[10px]">
                 Bs. {Number(p.costo).toLocaleString()} · {p.total_tickets || 0} tickets
+                {p.activa && conteos[p.id] && <span className="ml-2 text-amber-400 font-mono">{conteos[p.id]}</span>}
                 {!p.activa && <span className="ml-2 text-red-400 font-semibold">🔒 Cerrada</span>}
               </p>
             </button>
