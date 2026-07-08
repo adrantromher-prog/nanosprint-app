@@ -3,93 +3,6 @@ import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { broadcast } from "@/lib/ws";
 
-async function recalcularPremios(client: any, pollaId: number) {
-  const polla = await client.query(
-    `SELECT costo FROM polla_config WHERE id = $1`,
-    [pollaId]
-  );
-  const costo = Number(polla.rows[0]?.costo || 700);
-
-  const resultados = await client.query(
-    `SELECT COUNT(*) as count FROM polla_resultados WHERE polla_id = $1`,
-    [pollaId]
-  );
-  if (Number(resultados.rows[0].count) < 6) return;
-
-  const puntajes = await client.query(
-    `SELECT pp.usuario_id, pp.ticket, pp.puntos
-     FROM polla_puntos pp
-     WHERE pp.polla_id = $1
-     ORDER BY pp.puntos DESC`,
-    [pollaId]
-  );
-
-  if (puntajes.rows.length === 0) return;
-
-  const previos = await client.query(
-    `SELECT usuario_id, ticket, premio FROM polla_puntos WHERE polla_id = $1 AND premio > 0 AND pagado = true`,
-    [pollaId]
-  );
-  for (const p of previos.rows) {
-    await client.query(
-      `UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2 AND saldo >= $1`,
-      [Number(p.premio), p.usuario_id]
-    );
-    await client.query(
-      `UPDATE polla_puntos SET premio = 0, pagado = false WHERE polla_id = $1 AND usuario_id = $2 AND ticket = $3`,
-      [pollaId, p.usuario_id, p.ticket]
-    );
-  }
-
-  const totalRecaudado = puntajes.rows.length * costo;
-  const premio1 = Math.round(totalRecaudado * 0.65);
-  const premio2 = Math.round(totalRecaudado * 0.20);
-
-  const ordenados = puntajes.rows.map((r: any) => ({ ...r, puntos: Number(r.puntos) }));
-  const puntosSet: number[] = (ordenados.map((p: any) => Number(p.puntos)) as number[]).filter((v, i, a) => a.indexOf(v) === i).sort((a: any, b: any) => b - a) as number[];
-
-  const grupos: { [key: number]: typeof ordenados } = {};
-  for (const p of ordenados) {
-    if (!grupos[p.puntos]) grupos[p.puntos] = [];
-    grupos[p.puntos].push(p);
-  }
-
-  await client.query(
-    `UPDATE polla_config SET premio_1 = $1, premio_2 = $2 WHERE id = $3`,
-    [premio1, premio2, pollaId]
-  );
-
-  for (let i = 0; i < Math.min(2, puntosSet.length); i++) {
-    const pts = puntosSet[i];
-    const grupo = grupos[pts];
-    const cant = grupo.length;
-    let premioTotal = 0;
-    if (i === 0) premioTotal = premio1;
-    else premioTotal = premio2;
-
-    const premioIndividual = Math.floor(premioTotal / cant);
-
-    for (const p of grupo) {
-      await client.query(
-        `UPDATE polla_puntos SET premio = $1 WHERE polla_id = $2 AND usuario_id = $3 AND ticket = $4`,
-        [premioIndividual, pollaId, p.usuario_id, p.ticket]
-      );
-
-      if (premioIndividual > 0) {
-        await client.query(
-          `UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2`,
-          [premioIndividual, p.usuario_id]
-        );
-      }
-
-      await client.query(
-        `UPDATE polla_puntos SET pagado = true WHERE polla_id = $1 AND usuario_id = $2 AND ticket = $3`,
-        [pollaId, p.usuario_id, p.ticket]
-      );
-    }
-  }
-}
-
 export async function POST(req: Request) {
   const error = await requireAdmin();
   if (error) return error;
@@ -220,7 +133,6 @@ export async function POST(req: Request) {
         );
       }
 
-      await recalcularPremios(client, polla_id);
     }
 
     await client.query("COMMIT");
