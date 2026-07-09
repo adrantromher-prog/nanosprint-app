@@ -64,6 +64,6 @@ export async function POST(req: Request) {
     try { await client.query("ROLLBACK"); } catch {}
     try { client.release(); } catch {}
     console.error("Error confirmando pago:", error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }

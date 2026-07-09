@@ -3,7 +3,7 @@ import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
 export async function POST(req: Request) {
-  const error = await requireAdmin();
+  const error = await requireAdmin(req);
   if (error) return error;
   try {
     const { telefono } = await req.json();

@@ -70,6 +70,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error estadisticas taquilla:", error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }

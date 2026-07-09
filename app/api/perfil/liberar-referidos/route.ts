@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 
-export async function POST() {
-  const userOrError = await requireUser();
+export async function POST(req: Request) {
+  const userOrError = await requireUser(req);
   if (userOrError instanceof NextResponse) return userOrError;
   const { id: userId } = userOrError;
 

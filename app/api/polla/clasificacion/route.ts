@@ -74,6 +74,6 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("Error obteniendo clasificacion polla:", error);
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }
 }

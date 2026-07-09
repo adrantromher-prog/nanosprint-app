@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const error = await requireAdmin();
+  const error = await requireAdmin(req);
   if (error) return error;
 
   try {
@@ -68,6 +68,6 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("Error obteniendo polla:", error);
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }
 }

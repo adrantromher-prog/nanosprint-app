@@ -4,8 +4,8 @@ import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const error = await requireAdmin();
+export async function GET(req: Request) {
+  const error = await requireAdmin(req);
   if (error) return error;
   try {
     const { rows } = await pool.query(`

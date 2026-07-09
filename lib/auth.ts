@@ -2,7 +2,28 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-export async function requireAdmin(): Promise<NextResponse | null> {
+function checkOrigin(req?: Request): NextResponse | null {
+  if (!req) return null;
+  const method = req.method;
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(method)) return null;
+  const origin = req.headers.get("origin");
+  const referer = req.headers.get("referer");
+  const host = req.headers.get("host");
+  if (!host) return null;
+  if (!origin && !referer) return null;
+  if (origin && !origin.includes(host)) {
+    return NextResponse.json({ error: "Origen no válido" }, { status: 403 });
+  }
+  if (referer && !referer.includes(host)) {
+    return NextResponse.json({ error: "Origen no válido" }, { status: 403 });
+  }
+  return null;
+}
+
+export async function requireAdmin(req?: Request): Promise<NextResponse | null> {
+  const originErr = checkOrigin(req);
+  if (originErr) return originErr;
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -21,7 +42,10 @@ export async function requireAdmin(): Promise<NextResponse | null> {
   }
 }
 
-export async function requireUser(): Promise<{ id: number } | NextResponse> {
+export async function requireUser(req?: Request): Promise<{ id: number } | NextResponse> {
+  const originErr = checkOrigin(req);
+  if (originErr) return originErr;
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 

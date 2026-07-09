@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!checkRateLimit(`login:${ip}`, 10, 60000)) {
+      return NextResponse.json({ error: "Demasiados intentos. Espera un minuto." }, { status: 429 });
+    }
+
     const { telefono, password } = await req.json();
 
     // Buscar usuario por teléfono

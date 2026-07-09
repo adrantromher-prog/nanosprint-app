@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const error = await requireAdmin();
+  const error = await requireAdmin(req);
   if (error) return error;
   try {
     const { searchParams } = new URL(req.url);

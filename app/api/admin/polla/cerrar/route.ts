@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
-  const error = await requireAdmin();
+  const error = await requireAdmin(req);
   if (error) return error;
   const client = await pool.connect();
   try {
@@ -111,6 +111,6 @@ export async function POST(req: Request) {
     try { await client.query("ROLLBACK"); } catch {}
     try { client.release(); } catch {}
     console.error("Error cerrando polla:", error);
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }
 }

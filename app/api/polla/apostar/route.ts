@@ -131,6 +131,6 @@ export async function POST(req: Request) {
     try { await client.query("ROLLBACK"); } catch {}
     try { client.release(); } catch {}
     console.error("Error en apuesta polla:", error);
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }
 }

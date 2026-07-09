@@ -6,6 +6,7 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const { setWSS } = require("./lib/ws.js");
+const jwt = require("jsonwebtoken");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
@@ -182,6 +183,21 @@ app.prepare().then(async () => {
     setWSS(wss);
     wss.on("connection", (ws, req) => {
       const ip = req?.socket?.remoteAddress || "desconocida";
+      const cookies = req?.headers?.cookie || "";
+      const tokenMatch = cookies.match(/(?:^|;\s*)token=([^;]+)/);
+      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+      if (!token) {
+        console.log(`⛔ WebSocket rechazado desde ${ip}: sin token`);
+        ws.close(4001, "Token requerido");
+        return;
+      }
+      try {
+        jwt.verify(token, process.env.JWT_SECRET);
+      } catch {
+        console.log(`⛔ WebSocket rechazado desde ${ip}: token inválido`);
+        ws.close(4001, "Token inválido");
+        return;
+      }
       console.log(`🟢 Cliente WebSocket conectado desde ${ip} (total: ${wss.clients.size})`);
       ws.on("error", () => {});
       ws.on("close", () => {

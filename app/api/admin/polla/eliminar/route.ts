@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
-  const error = await requireAdmin();
+  const error = await requireAdmin(req);
   if (error) return error;
 
   try {
@@ -29,6 +29,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error eliminando polla:", error);
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
   }
 }

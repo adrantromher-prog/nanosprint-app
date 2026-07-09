@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!checkRateLimit(`registro:${ip}`, 5, 60000)) {
+      return NextResponse.json({ error: "Demasiados registros. Espera un minuto." }, { status: 429 });
+    }
+
     const { nombre, apellido, sobrenombre, telefono, comida, sexo, password, codigo_referido: codigoIngresado } = await req.json();
 
     const existeTelefono = await pool.query(

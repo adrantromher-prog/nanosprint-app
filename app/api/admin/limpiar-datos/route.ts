@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
-export async function POST() {
-  const error = await requireAdmin();
+export async function POST(req: Request) {
+  const error = await requireAdmin(req);
   if (error) return error;
   const client = await pool.connect();
   try {

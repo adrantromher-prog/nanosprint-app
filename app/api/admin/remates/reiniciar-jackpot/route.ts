@@ -3,8 +3,8 @@ import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { broadcast } from "@/lib/ws";
 
-export async function POST() {
-  const error = await requireAdmin();
+export async function POST(req: Request) {
+  const error = await requireAdmin(req);
   if (error) return error;
   try {
     await pool.query("UPDATE jackpot_remates SET monto = 0 WHERE id = 1");

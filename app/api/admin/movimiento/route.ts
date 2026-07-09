@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
-  const error = await requireAdmin();
+  const error = await requireAdmin(req);
   if (error) return error;
   try {
     const { usuarioId, tipo, monto, asunto } = await req.json();

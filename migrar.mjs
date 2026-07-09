@@ -1,7 +1,11 @@
 import pg from "pg";
 
-const railwayUrl = "postgresql://postgres:fkSJjrDARAfaiyjbqaFbNTmyyCldGboY@zephyr.proxy.rlwy.net:58124/railway";
-const neonUrl = "postgresql://neondb_owner:npg_0J9HaWhrmTcf@ep-shy-tree-atp62u7t-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const railwayUrl = process.env.ORIGIN_DATABASE_URL;
+const neonUrl = process.env.DATABASE_URL;
+if (!railwayUrl || !neonUrl) {
+  console.error("Falta ORIGIN_DATABASE_URL (Railway) o DATABASE_URL (Neon) en las variables de entorno");
+  process.exit(1);
+}
 
 const rail = new pg.Pool({ connectionString: railwayUrl, ssl: { rejectUnauthorized: false }, max: 5 });
 const neon = new pg.Pool({ connectionString: neonUrl, ssl: { rejectUnauthorized: false }, max: 5 });
