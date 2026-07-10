@@ -183,15 +183,19 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
   }, []);
 
   useWebSocket(useCallback((event) => {
-    if (["puja", "movimiento", "ganador", "jackpot_actualizado"].includes(event.type)) {
+    if (event.type === "puja" && event.saldo !== undefined) {
+      setSaldo(event.saldo);
+    }
+    if (event.type === "movimiento" && event.usuario_id) {
+      recargarDatos();
+    }
+    if (event.type === "ganador" || event.type === "jackpot_actualizado" || event.type === "sync_estado") {
       recargarDatos();
     }
   }, [recargarDatos]));
 
   useEffect(() => {
     recargarDatos();
-    const interval = setInterval(recargarDatos, 30000);
-    return () => clearInterval(interval);
   }, [recargarDatos]);
 
   if (mantenimiento) {
@@ -267,11 +271,8 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
         }
         .btn-remates { animation: cardGlow 3s ease-in-out infinite; }
       `}</style>
-      <video src="/fondos/fondohome.mp4" autoPlay loop muted playsInline
-        className="absolute inset-0 w-full h-full object-cover scale-[1.1] brightness-[0.6] contrast-[1.1] saturate-[1.1]"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/80" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent pointer-events-none" />
+      <div className="absolute inset-0" style={{background: "radial-gradient(ellipse at 20% 80%, rgba(0,80,150,0.3) 0%, transparent 50%),radial-gradient(ellipse at 80% 20%, rgba(0,150,200,0.2) 0%, transparent 50%),radial-gradient(ellipse at 50% 50%, rgba(0,40,80,0.4) 0%, transparent 70%),linear-gradient(180deg, #0a0f1e 0%, #0d1f3c 40%, #091428 100%)"}} />
+      <div className="absolute inset-0 opacity-[0.03] bg-[length:40px_40px] bg-[image:radial-gradient(circle,rgba(255,255,255,0.15)_1px,transparent_1px)]" />
 
       <div className="relative z-10 w-full h-full flex flex-col px-5 pt-5 pb-4">
         <div className="flex items-start justify-between flex-shrink-0">
@@ -303,7 +304,7 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
               </button>
             )}
             <button onClick={async () => { await fetch("/api/logout", { method: "GET", credentials: "include" }); window.location.href = "/login"; }}
-              className="px-5 py-3 rounded-xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] text-white font-semibold text-sm tracking-wide shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] active:scale-95 transition-all">
+              className="px-5 py-3 rounded-xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] text-white font-semibold text-sm tracking-wide shadow-[4px_16px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] active:scale-95 transition-all">
               Salir
             </button>
           </div>

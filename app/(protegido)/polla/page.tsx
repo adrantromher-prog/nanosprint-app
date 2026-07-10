@@ -69,14 +69,45 @@ export default function PollaPage() {
   }, []);
 
   useWebSocket(useCallback((event) => {
-    if (["polla_creada", "polla_resultados", "polla_retiros", "polla_apuesta"].includes(event.type)) {
+    if (event.type === "polla_apuesta") {
       fetchDisponibles();
+      if (polla && event.polla_id === polla.id) {
+        if (event.saldo !== undefined) {
+          setUsuario((prev: any) => prev ? { ...prev, saldo: event.saldo } : prev);
+        }
+        if (event.total_tickets !== undefined) {
+          const nuevoTotal = event.total_tickets;
+          const actual = prevTicketsRef.current;
+          setPolla((p: any) => p ? { ...p, total_tickets: nuevoTotal } : p);
+          if (nuevoTotal > actual) {
+            setAnimPulse(k => k + 1);
+            const start = actual;
+            const end = nuevoTotal;
+            const duration = 2000;
+            const startTime = performance.now();
+            prevTicketsRef.current = nuevoTotal;
+            const tick = (now: number) => {
+              const elapsed = now - startTime;
+              const p = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - p, 3);
+              setAnimTickets(Math.round(start + (end - start) * eased));
+              if (p < 1) animFrameRef.current = requestAnimationFrame(tick);
+            };
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+            animFrameRef.current = requestAnimationFrame(tick);
+          }
+        }
+        fetchClasificacion(polla.id);
+      }
     }
-    if (["polla_resultados", "polla_apuesta"].includes(event.type) && polla) {
-      fetchClasificacion(polla.id);
+    if (event.type === "polla_resultados" && polla && event.polla_id === polla.id) {
+      seleccionarPolla(polla.id);
     }
     if ((event.type === "polla_cerrada" || event.type === "polla_retiros") && polla && event.polla_id === polla.id) {
       seleccionarPolla(polla.id);
+    }
+    if (event.type === "polla_creada") {
+      fetchDisponibles();
     }
   }, [fetchDisponibles, fetchClasificacion, polla, seleccionarPolla]));
 
@@ -131,54 +162,16 @@ export default function PollaPage() {
     intervaloRef.current = setInterval(calcular, 1000);
     return () => { clearInterval(intervaloRef.current); };
   }, [polla?.id, polla?.fecha_cierre, polla?.hora_cierre, polla?.activa, fetchClasificacion]);
-
-  const pollaIntervalRef = useRef<any>(null);
-  const pulseTimeoutRef = useRef<any>(null);
-
+  // Efecto para animación inicial de tickets al entrar a una polla
   useEffect(() => {
-    if (!polla?.id) return;
-    prevTicketsRef.current = polla.total_tickets || 0;
-    setAnimTickets(polla.total_tickets || 0);
-    const tickPoll = async () => {
-      try {
-        fetchClasificacion(polla.id);
-        const res = await fetch(`/api/polla/estado?polla_id=${polla.id}`);
-        const data = await res.json();
-        if (data.ok && data.polla) {
-          const nuevoTotal = data.polla.total_participantes || 0;
-          const actual = prevTicketsRef.current;
-          setPolla((p: any) => p ? { ...p, total_tickets: nuevoTotal } : p);
-          if (nuevoTotal > actual) {
-            setAnimPulse(k => k + 1);
-            pulseTimeoutRef.current = setTimeout(() => setAnimPulse(0), 700);
-            const start = actual;
-            const end = nuevoTotal;
-            const duration = 2000;
-            const startTime = performance.now();
-            prevTicketsRef.current = nuevoTotal;
-            const tick = (now: number) => {
-              const elapsed = now - startTime;
-              const p = Math.min(elapsed / duration, 1);
-              const eased = 1 - Math.pow(1 - p, 3);
-              setAnimTickets(Math.round(start + (end - start) * eased));
-              if (p < 1) animFrameRef.current = requestAnimationFrame(tick);
-            };
-            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-            animFrameRef.current = requestAnimationFrame(tick);
-          }
-        }
-      } catch (e) {
-        console.error("Error polling tickets:", e);
-      }
-    };
-    tickPoll();
-    pollaIntervalRef.current = setInterval(tickPoll, 5000);
-    return () => {
-      clearInterval(pollaIntervalRef.current);
-      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [polla?.id]);
+    if (polla?.id && polla.id !== prevPollaIdRef.current) {
+      prevPollaIdRef.current = polla.id;
+      prevTicketsRef.current = polla.total_tickets || 0;
+      setAnimTickets(polla.total_tickets || 0);
+    }
+  }, [polla?.id, polla?.total_tickets]);
+
+
 
   const seleccionarCaballo = (carreraOrden: number, caballoNum: number) => {
     setSelecciones(prev => prev[carreraOrden] === caballoNum

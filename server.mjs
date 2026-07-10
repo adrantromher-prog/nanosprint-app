@@ -5,7 +5,7 @@ import next from "next";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
-const { setWSS } = require("./lib/ws.js");
+const { setWSS, broadcast } = require("./lib/ws.js");
 const jwt = require("jsonwebtoken");
 
 const dev = process.env.NODE_ENV !== "production";
@@ -50,7 +50,6 @@ app.prepare().then(async () => {
     `);
     console.log("✅ Tabla historial lista");
 
-    // Generar codigo_referido para usuarios existentes que no tengan uno
     const sinCodigo = await pool.query(`SELECT id FROM usuarios WHERE codigo_referido IS NULL`);
     for (const u of sinCodigo.rows) {
       for (let i = 0; i < 50; i++) {
@@ -66,8 +65,6 @@ app.prepare().then(async () => {
       console.log(`✅ Códigos generados para ${sinCodigo.rows.length} usuarios existentes`);
     }
 
-    // Verificar que las columnas existen
-    // ─── Polla Hípica ───
     await pool.query(`
       CREATE TABLE IF NOT EXISTS polla_config (
         id SERIAL PRIMARY KEY,
@@ -183,27 +180,55 @@ app.prepare().then(async () => {
     setWSS(wss);
     wss.on("connection", (ws, req) => {
       const ip = req?.socket?.remoteAddress || "desconocida";
+      // Try query param first (mobile), then cookie fallback
+      const url = new URL(req.url || "", "http://localhost");
+      const queryToken = url.searchParams.get("token");
       const cookies = req?.headers?.cookie || "";
-      const tokenMatch = cookies.match(/(?:^|;\s*)token=([^;]+)/);
-      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+      const cookieMatch = cookies.match(/(?:^|;\s*)token=([^;]+)/);
+      const rawToken = queryToken || (cookieMatch ? cookieMatch[1] : null);
+      const token = rawToken ? decodeURIComponent(rawToken) : null;
       if (!token) {
-        console.log(`⛔ WebSocket rechazado desde ${ip}: sin token`);
+        console.log(`⛔ WebSocket rechazado desde ${ip}: sin token (query=${!!queryToken}, cookie=${!!cookieMatch})`);
         ws.close(4001, "Token requerido");
         return;
       }
       try {
-        jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        ws.userId = decoded.userId || decoded.id || decoded.sub;
       } catch {
         console.log(`⛔ WebSocket rechazado desde ${ip}: token inválido`);
         ws.close(4001, "Token inválido");
         return;
       }
-      console.log(`🟢 Cliente WebSocket conectado desde ${ip} (total: ${wss.clients.size})`);
+      console.log(`🟢 Cliente WebSocket conectado #${ws.userId} desde ${ip} (total: ${wss.clients.size})`);
       ws.on("error", () => {});
       ws.on("close", () => {
-        console.log(`🔴 Cliente WebSocket desconectado (total: ${wss.clients.size})`);
+        console.log(`🔴 Cliente WebSocket #${ws.userId} desconectado (total: ${wss.clients.size})`);
       });
     });
+
+    // Heartbeat: sync estado cada 15s
+    setInterval(async () => {
+      if (wss.clients.size === 0) return;
+      try {
+        const { Pool } = require("pg");
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false },
+          max: 2,
+          connectionTimeoutMillis: 3000,
+        });
+        const carreras = (await pool.query(
+          "SELECT id, hipodromo, numero_carrera, hora_cierre, tipo, estado, ganador, imagen, caballos FROM carreras_remate WHERE estado != 'eliminada' ORDER BY id DESC LIMIT 20"
+        )).rows;
+        const jackpot = (await pool.query("SELECT monto FROM jackpot_remates WHERE id = 1")).rows[0]?.monto || 0;
+        const config = (await pool.query("SELECT id, activa FROM polla_config ORDER BY id DESC LIMIT 1")).rows[0];
+        await pool.end();
+        broadcast({ type: "sync_estado", carreras, jackpot, polla_activa: config?.activa || false, ts: Date.now() });
+      } catch (e) {
+        console.log("⚠️ Heartbeat sync error:", e.message);
+      }
+    }, 15000);
   }
 
   server.listen(port, hostname, () => {

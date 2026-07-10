@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
@@ -134,19 +134,6 @@ export default function LobbyRemates() {
   const [jackpot, setJackpot] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" });
-        const data = await res.json();
-        if (data.nombre) setUsuario(data);
-      } catch {}
-    };
-    fetchUser();
-    const intervalo = setInterval(fetchUser, 5000);
-    return () => clearInterval(intervalo);
-  }, []);
-
   const recargarCarreras = useCallback(async () => {
     try {
       const [resCarreras, resJackpot] = await Promise.all([
@@ -158,17 +145,28 @@ export default function LobbyRemates() {
     } catch {}
   }, []);
 
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" });
+      const data = await res.json();
+      if (data.nombre) setUsuario(data);
+    } catch {}
+  }, []);
+
   useWebSocket(useCallback((event) => {
+    if (event.type === "sync_estado" && event.carreras) {
+      setCarreras(event.carreras);
+      if (event.jackpot !== undefined) setJackpot(event.jackpot);
+    }
     if (["puja", "ganador", "carrera_creada", "carrera_cerrada", "carrera_eliminada", "caballo_retirado", "jackpot_actualizado"].includes(event.type)) {
       recargarCarreras();
     }
-  }, [recargarCarreras]));
+  }, [recargarCarreras]), fetchUser);
 
   useEffect(() => {
+    fetchUser();
     recargarCarreras();
-    const intervalo = setInterval(recargarCarreras, 30000);
-    return () => clearInterval(intervalo);
-  }, [recargarCarreras]);
+  }, [fetchUser, recargarCarreras]);
 
   const ordenar = (a: Carrera, b: Carrera) => {
     const aAbierta = a.estado === "abierta" && !a.ganador ? 0 : 1;

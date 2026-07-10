@@ -134,22 +134,15 @@ export default function DetalleCarrera() {
     if (["ganador", "carrera_cerrada", "caballo_retirado"].includes(event.type)) {
       fetchCarrera();
     }
+    if (event.type === "sync_estado" && event.carreras) {
+      const found = event.carreras.find((c: any) => c.id === Number(id));
+      if (found) setCarrera(found);
+    }
   }, [id, fetchCarrera]));
 
-  // Polling frecuente como respaldo por si WebSocket falla
-  const lastFetchRef = useRef(0);
   useEffect(() => {
     fetchCarrera();
     fetchUser();
-    const intervalo = setInterval(() => {
-      const now = Date.now();
-      if (now - lastFetchRef.current > 2000) {
-        lastFetchRef.current = now;
-        fetchCarrera();
-      }
-      fetchUser();
-    }, 3000);
-    return () => clearInterval(intervalo);
   }, [id, fetchCarrera, fetchUser]);
 
   const totalPujas = carrera?.caballos
@@ -201,7 +194,6 @@ export default function DetalleCarrera() {
     if (data.ok) {
       setPopup(null);
       setMontos((prev) => ({ ...prev, [popup.caballo.id]: 0 }));
-      // Optimistic update — refleja la puja al instante sin esperar HTTP
       setCarrera((prev) => {
         if (!prev) return prev;
         return {
@@ -354,140 +346,96 @@ export default function DetalleCarrera() {
                                 setErrorMsg("");
                                 setMontos((prev) => ({ ...prev, [caballo.id]: (prev[caballo.id] || 0) + cant }));
                               }}
-                              className="px-2 py-1 rounded-md text-[10px] font-bold bg-gradient-to-b from-cyan-600 to-cyan-900 border border-cyan-400/40 text-cyan-100 shadow-[0_0_8px_rgba(0,255,255,0.1)] hover:shadow-[0_0_14px_rgba(0,255,255,0.35)] hover:border-cyan-300/60 active:scale-90 transition-all duration-150"
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-b from-cyan-500/20 to-cyan-600/10 border border-cyan-400/30 text-cyan-300 font-bold text-xs hover:brightness-125 active:scale-90 transition-all shadow-[0_0_6px_rgba(0,255,255,0.08)]"
                             >
-                              +{cant.toLocaleString()}
+                              +Bs.{cant.toLocaleString()}
                             </button>
                           ))}
-                          {montos[caballo.id] > 0 && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setErrorMsg("");
-                                setMontos((prev) => ({ ...prev, [caballo.id]: 0 }));
-                              }}
-                              className="px-2 py-1 rounded-md text-[10px] font-bold bg-gradient-to-b from-red-700 to-red-950 border border-red-400/30 text-red-200 shadow-[0_0_6px_rgba(255,0,0,0.1)] hover:shadow-[0_0_12px_rgba(255,0,0,0.3)] hover:border-red-300/50 active:scale-90 transition-all duration-150"
-                            >
-                              ✕
-                            </button>
-                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMontos((prev) => ({ ...prev, [caballo.id]: 0 }));
+                              setErrorMsg("");
+                            }}
+                            className="px-1.5 py-1 rounded-lg bg-black/30 border border-white/10 text-gray-400 font-bold text-[10px] hover:text-white active:scale-90 transition-all"
+                          >
+                            ✕
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              abrirPopup(caballo);
+                            }}
+                            className="px-3 py-1 rounded-lg bg-gradient-to-b from-green-500/30 to-green-600/20 border border-green-400/40 text-green-300 font-bold text-xs hover:brightness-125 active:scale-90 transition-all shadow-[0_0_8px_rgba(0,255,0,0.1)]"
+                          >
+                            Pujar
+                          </button>
                         </div>
                       )}
+
                     </div>
                   </div>
                 ))}
               </div>
+
             </div>
-          </div>
 
-          <div className="w-full lg:w-72 flex flex-col gap-2 shrink-0">
-
-            {carrera.estado === "abierta" && (
-              <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-3 flex flex-col gap-2 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
-                {errorMsg && (
-                  <p className="text-red-400 text-xs text-center font-semibold">{errorMsg}</p>
-                )}
-
-                {carrera.caballos.filter((c) => !c.retirado && montos[c.id]).length > 0 ? (
-                  carrera.caballos
-                    .filter((c) => !c.retirado && montos[c.id])
-                    .map((caballo) => (
-                      <button
-                        key={caballo.id}
-                        onClick={() => abrirPopup(caballo)}
-                        className="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-b from-purple-600 to-purple-900 border border-purple-400/60 shadow-[0_0_18px_rgba(200,0,255,0.3)] hover:shadow-[0_0_30px_rgba(200,0,255,0.6)] hover:border-purple-300/80 active:scale-[0.97] transition-all duration-300"
-                      >
-                        🏇 Rematar #{caballo.numero}
-                      </button>
-                    ))
-                ) : (
-                  <button
-                    disabled
-                    className="w-full py-2.5 rounded-xl font-bold text-sm bg-gray-800/50 border border-gray-700/50 text-gray-600 cursor-not-allowed"
-                  >
-                    🏇 Rematar
-                  </button>
-                )}
+            {!carrera.ganador && (
+              <div className="flex items-center justify-center gap-6 mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-white/[0.02] to-white/[0.01] border border-white/[0.04]">
+                <span className="text-gray-400 text-[10px] font-medium">Total pujas: <span className="text-white font-bold text-sm">Bs. {totalPujas.toLocaleString()}</span></span>
+                <span className="text-gray-500">|</span>
+                <span className="text-gray-400 text-[10px] font-medium">Casa 20%: <span className="text-amber-400 font-bold text-sm">Bs. {casa.toLocaleString()}</span></span>
+                <span className="text-gray-500">|</span>
+                <span className="text-gray-400 text-[10px] font-medium">Ganador: <span className="text-green-400 font-bold text-sm">Bs. {totalGanador.toLocaleString()}</span></span>
               </div>
             )}
 
-            <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-3 flex flex-col gap-2 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
-
-              <h3 className="text-[10px] font-bold text-cyan-300 text-center uppercase tracking-[0.2em] drop-shadow-[0_0_6px_rgba(0,255,255,0.1)]">
-                Pozo de la carrera
-              </h3>
-
-              <div className="flex justify-between items-center px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-gray-400 text-[10px]">Total pujas</span>
-                <span className="text-white font-bold text-[10px]">Bs. {totalPujas.toLocaleString()}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-2.5 py-1.5 rounded-xl bg-red-500/[0.06] border border-red-400/15">
-                <span className="text-gray-400 text-[10px]">Casa 20%</span>
-                <span className="text-red-300 font-bold text-[10px]">− Bs. {casa.toLocaleString()}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-2.5 py-1.5 rounded-xl bg-green-500/[0.06] border border-green-400/20">
-                <span className="text-gray-400 text-[10px]">Total ganador</span>
-                <span className="text-green-300 font-extrabold text-xs drop-shadow-[0_0_8px_rgba(0,255,0,0.15)]">Bs. {totalGanador.toLocaleString()}</span>
-              </div>
-            </div>
-
           </div>
         </div>
+
+        {errorMsg && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-red-500/20 border border-red-400/30 text-red-300 text-xs font-semibold shadow-[0_0_20px_rgba(255,0,0,0.2)] backdrop-blur-md text-center">
+            {errorMsg}
+          </div>
+        )}
+
+        {popup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => !cargando && setPopup(null)}>
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="text-sm font-bold text-center">Confirmar Puja</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Caballo:</span>
+                  <span className="font-bold">#{popup.caballo.numero} {popup.caballo.nombre}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Monto:</span>
+                  <span className="font-bold text-green-300">Bs. {popup.monto.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Tu saldo:</span>
+                  <span className={`font-bold ${Number(usuario?.saldo || 0) >= popup.monto ? "text-green-300" : "text-red-300"}`}>
+                    Bs. {Number(usuario?.saldo || 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2 p-4 pt-0">
+                <button onClick={() => setPopup(null)} disabled={cargando}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/50 font-semibold text-xs hover:bg-white/10 active:scale-95 transition-all disabled:opacity-30">
+                  Cancelar
+                </button>
+                <button onClick={confirmarRemate} disabled={cargando}
+                  className="flex-1 py-2.5 rounded-xl bg-green-500/20 border border-green-400/30 text-green-300 font-semibold text-xs hover:bg-green-500/30 active:scale-95 transition-all disabled:opacity-30">
+                  {cargando ? "Procesando..." : "Confirmar Puja"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {popup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-gradient-to-b from-gray-900 to-gray-950 border border-purple-400/40 rounded-2xl p-6 shadow-[0_0_50px_rgba(200,0,255,0.25)] w-80">
-
-            <h2 className="text-lg font-bold text-white text-center mb-5">Confirmar Remate</h2>
-
-            <div className="space-y-2.5 mb-5">
-              <div className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-gray-400 text-sm">Caballo</span>
-                <span className="text-white font-bold text-sm">#{popup.caballo.numero} {popup.caballo.nombre}</span>
-              </div>
-              <div className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-gray-400 text-sm">Monto</span>
-                <span className="text-cyan-300 font-bold text-sm drop-shadow-[0_0_6px_rgba(0,255,255,0.15)]">Bs. {popup.monto.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-gray-400 text-sm">Saldo actual</span>
-                <span className="text-green-300 font-bold text-sm drop-shadow-[0_0_4px_rgba(0,255,0,0.15)]">Bs. {Number(usuario.saldo).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center px-3 py-2.5 rounded-xl bg-yellow-500/[0.04] border border-yellow-400/10">
-                <span className="text-gray-400 text-sm">Saldo restante</span>
-                <span className="text-yellow-300 font-bold text-sm drop-shadow-[0_0_4px_rgba(255,200,0,0.15)]">
-                  Bs. {(Number(usuario.saldo) - popup.monto).toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {errorMsg && (
-              <p className="text-red-400 text-xs text-center mb-3 font-semibold">{errorMsg}</p>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setPopup(null); setErrorMsg(""); }}
-                className="flex-1 py-3 rounded-xl font-bold bg-gray-800 border border-gray-700/50 text-gray-300 hover:bg-gray-700 hover:text-white active:scale-[0.97] transition-all duration-200"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmarRemate}
-                disabled={cargando}
-                className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-b from-purple-600 to-purple-900 border border-purple-400/60 text-white shadow-[0_0_18px_rgba(200,0,255,0.3)] hover:shadow-[0_0_30px_rgba(200,0,255,0.6)] hover:border-purple-300/80 active:scale-[0.97] transition-all duration-200 disabled:opacity-50"
-              >
-                {cargando ? "Procesando..." : "✅ Sí, Rematar"}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
     </main>
   );
 }

@@ -124,7 +124,15 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    try { broadcast({ type: "polla_apuesta", polla_id, usuario_id: usuarioId }); } catch {}
+    let saldoNuevo: number | undefined;
+    let totalTickets: number | undefined;
+    try {
+      const userRes = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [usuarioId]);
+      if (userRes.rows.length > 0) saldoNuevo = Number(userRes.rows[0].saldo);
+      const ticketRes = await pool.query("SELECT COUNT(DISTINCT ticket) as total FROM polla_apuestas WHERE polla_id = $1", [polla_id]);
+      if (ticketRes.rows.length > 0) totalTickets = Number(ticketRes.rows[0].total);
+    } catch {}
+    try { broadcast({ type: "polla_apuesta", polla_id, usuario_id: usuarioId, saldo: saldoNuevo, total_tickets: totalTickets }); } catch {}
 
     return NextResponse.json({ ok: true, ticket: ticketNum });
   } catch (error) {
