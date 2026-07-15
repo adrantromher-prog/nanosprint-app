@@ -38,7 +38,7 @@ export default function PollaClasificacion() {
   }, [pollaId]);
 
   useWebSocket(useCallback((event) => {
-    if (["polla_resultados", "polla_cerrada", "polla_apuesta"].includes(event.type)) {
+    if (["polla_resultados", "polla_cerrada", "polla_apuesta", "polla_retiros"].includes(event.type)) {
       fetchClasificacion();
     }
   }, [fetchClasificacion]));
@@ -103,6 +103,12 @@ export default function PollaClasificacion() {
             </button>
           </div>
         </div>
+
+        {pollaInfo && !pollaInfo.activa && (
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-red-400 text-[10px] font-semibold">{"\uD83D\uDD12"} Polla cerrada — Resultados finales</p>
+          </div>
+        )}
 
         {pollaInfo && (
           <div className="bg-gradient-to-b from-amber-500/8 to-amber-600/5 border border-amber-400/15 rounded-xl px-4 py-3 mb-4">

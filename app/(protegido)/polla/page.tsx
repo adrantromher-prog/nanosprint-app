@@ -51,13 +51,6 @@ export default function PollaPage() {
     setCargandoLista(false);
   }, []);
 
-  const volverLista = useCallback(() => {
-    setPolla(null);
-    setMisTickets([]);
-    setClasificacion([]);
-    if (intervaloRef.current) clearInterval(intervaloRef.current);
-  }, []);
-
   const fetchClasificacion = useCallback(async (pollaId: number) => {
     try {
       const res = await fetch(`/api/polla/clasificacion?polla_id=${pollaId}`);
@@ -354,10 +347,6 @@ export default function PollaPage() {
             <p className="text-amber-300/60 text-xs font-medium">{polla.hipodromo}</p>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={volverLista}
-              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
-              Atrás
-            </button>
             <button onClick={() => router.push("/home")}
               className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 font-medium text-xs hover:bg-white/10 active:scale-95 transition-all">
               Salir
@@ -427,8 +416,15 @@ export default function PollaPage() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-bold text-white/60">Clasificación</h2>
-              {usuario && clasificacion.some((p: any) => Number(p.usuario_id) === Number(usuario.id)) && (
-                <button onClick={() => setSoloMios(v => !v)}
+              <div className="flex gap-1.5">
+                {!polla.activa && (
+                  <button onClick={() => fetchClasificacion(polla.id)}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500/30 to-teal-600/30 border border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(0,200,150,0.2)] hover:shadow-[0_0_20px_rgba(0,200,150,0.5)] hover:border-emerald-300/70 active:scale-95 transition-all duration-300">
+                    Actualizar Polla
+                  </button>
+                )}
+                {usuario && clasificacion.some((p: any) => Number(p.usuario_id) === Number(usuario.id)) && (
+                  <button onClick={() => setSoloMios(v => !v)}
                   className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all active:scale-95 ${
                     soloMios
                       ? "bg-emerald-500/15 border-emerald-400/25 text-emerald-400"
@@ -437,6 +433,7 @@ export default function PollaPage() {
                   {soloMios ? "Ver todos" : "Mis tickets"}
                 </button>
               )}
+              </div>
             </div>
             {itemsClasif.length === 0 ? (
               <p className="text-center py-8 text-white/20 text-sm">{soloMios ? "No tienes tickets en esta polla" : "Aún no hay participantes"}</p>
