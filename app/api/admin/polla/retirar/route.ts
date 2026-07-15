@@ -67,10 +67,14 @@ export async function POST(req: Request) {
 
       for (const ap of apuestas.rows) {
         let nuevoNum = Number(ap.caballo_numero) + 1;
-        while (nuevosRetirados.includes(nuevoNum) && nuevoNum <= c.cantidad_caballos) {
+        if (nuevoNum > c.cantidad_caballos) nuevoNum = 1;
+        let intentos = 0;
+        while (nuevosRetirados.includes(nuevoNum) && intentos < c.cantidad_caballos) {
           nuevoNum++;
+          if (nuevoNum > c.cantidad_caballos) nuevoNum = 1;
+          intentos++;
         }
-        if (nuevoNum > c.cantidad_caballos) continue;
+        if (nuevosRetirados.includes(nuevoNum)) continue;
 
         await client.query(
           `UPDATE polla_apuestas SET caballo_original = COALESCE(caballo_original, $1), caballo_numero = $2 WHERE id = $3`,

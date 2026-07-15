@@ -75,10 +75,7 @@ export default function HistorialPage() {
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden select-none">
-      <video src="/fondos/fondohome.mp4" autoPlay loop muted playsInline
-        className="absolute inset-0 w-full h-full object-cover scale-[1.1] brightness-[0.3] contrast-[1.05] saturate-[1.05] blur-[1px]"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/90" />
+      <div className="absolute inset-0" style={{background: "linear-gradient(135deg, #0a0f1e 0%, #0d1f3c 50%, #091428 100%)"}} />
 
       <div className="relative z-10 w-full h-full flex flex-col px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4 flex-shrink-0">

@@ -68,12 +68,13 @@ function Temporizador({ horaCierre, estado }: { horaCierre: string; estado?: str
   );
 }
 
-function TarjetaAdmin({ carrera, onCerrar, onRetirar, onDeclararGanador, onEliminar }: {
+function TarjetaAdmin({ carrera, onCerrar, onRetirar, onDeclararGanador, onEliminar, onAnular }: {
   carrera: Carrera;
   onCerrar: (carrera_id: number) => void;
   onRetirar: (caballo_id: number) => void;
   onDeclararGanador: (carrera_id: number, numero: number) => void;
   onEliminar: (carrera_id: number) => void;
+  onAnular: (carrera_id: number) => void;
 }) {
   const [expandida, setExpandida] = useState(false);
   const [ganadorSeleccionado, setGanadorSeleccionado] = useState<number | "">("");
@@ -191,17 +192,28 @@ function TarjetaAdmin({ carrera, onCerrar, onRetirar, onDeclararGanador, onElimi
             </div>
           )}
 
-          <div className="border-t border-gray-700 pt-4 mt-4">
+          <div className="border-t border-gray-700 pt-4 mt-4 flex gap-2">
+            <button
+              onClick={() => onAnular(carrera.id)}
+              className="
+                flex-1 py-2 rounded-xl font-bold text-sm
+                bg-purple-500/20 border border-purple-400/50 text-purple-300
+                hover:bg-purple-500/40 hover:shadow-[0_0_10px_rgba(150,50,255,0.4)]
+                active:scale-95 transition-all duration-200
+              "
+            >
+              🚫 Anular Carrera
+            </button>
             <button
               onClick={() => onEliminar(carrera.id)}
               className="
-                w-full py-2 rounded-xl font-bold text-sm
+                flex-1 py-2 rounded-xl font-bold text-sm
                 bg-red-500/20 border border-red-400/50 text-red-300
                 hover:bg-red-500/40 hover:shadow-[0_0_10px_rgba(255,0,0,0.4)]
                 active:scale-95 transition-all duration-200
               "
             >
-              🗑️ Eliminar Carrera
+              🗑️ Eliminar
             </button>
           </div>
 
@@ -260,8 +272,18 @@ export default function GestionarRemates() {
   const eliminarCarrera = async (carrera_id: number) => {
     const confirmar = window.confirm("¿Estás seguro de eliminar esta carrera? Se borrarán todos sus caballos y pujas.");
     if (!confirmar) return;
-
     await fetch("/api/admin/remates/eliminar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ carrera_id }),
+    });
+    fetchCarreras();
+  };
+
+  const anularCarrera = async (carrera_id: number) => {
+    const confirmar = window.confirm("¿Anular esta carrera? Se devolverá el dinero a todos los pujadores.");
+    if (!confirmar) return;
+    await fetch("/api/admin/remates/anular", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ carrera_id }),
@@ -275,12 +297,7 @@ export default function GestionarRemates() {
   return (
     <main className="relative min-h-screen w-full text-white overflow-hidden">
 
-      <video
-        src="/fondos/fondoapuesta.mp4"
-        autoPlay loop muted playsInline
-        className="absolute inset-0 w-full h-full object-cover scale-[1.2] brightness-[0.75] contrast-[1.2] saturate-[1.2] blur-[1.5px]"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0a0f1e 0%, #0d1f3c 50%, #091428 100%)" }} />
 
       <div className="relative z-10 p-6">
 
@@ -319,6 +336,7 @@ export default function GestionarRemates() {
                   onRetirar={retirarCaballo}
                   onDeclararGanador={declararGanador}
                   onEliminar={eliminarCarrera}
+                  onAnular={anularCarrera}
                 />
               ))
             }
@@ -338,6 +356,7 @@ export default function GestionarRemates() {
                   onRetirar={retirarCaballo}
                   onDeclararGanador={declararGanador}
                   onEliminar={eliminarCarrera}
+                  onAnular={anularCarrera}
                 />
               ))
             }

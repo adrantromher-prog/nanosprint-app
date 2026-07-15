@@ -8,35 +8,45 @@ export async function GET(req: Request) {
   const error = await requireAdmin(req);
   if (error) return error;
   try {
-    const { rows } = await pool.query(`
-      SELECT COALESCE(SUM(sub.max_monto), 0) as total_base
+    const { rows: diario } = await pool.query(`
+      SELECT
+        DATE(sub.creado_en - INTERVAL '4 hours') as dia,
+        ROUND(SUM(sub.max_monto))::numeric as total_pujas,
+        ROUND(SUM(sub.max_monto) * 0.20)::numeric as casa,
+        ROUND(SUM(sub.max_monto) * 0.05)::numeric as ganancia_final
       FROM (
-        SELECT cr.id as carrera_id, cc.id as caballo_id, MAX(rp.monto) as max_monto
+        SELECT cr.id as carrera_id, cr.creado_en, cc.id as caballo_id, COALESCE(MAX(rp.monto), 0) as max_monto
         FROM carreras_remate cr
         JOIN carreras_caballos cc ON cc.id_carrera = cr.id
         LEFT JOIN remates_pujas rp ON rp.id_caballo = cc.id
         WHERE cr.ganador IS NOT NULL AND cc.retirado = false
-        GROUP BY cr.id, cc.id
+        GROUP BY cr.id, cr.creado_en, cc.id
       ) sub
+      GROUP BY DATE(sub.creado_en - INTERVAL '4 hours')
+      ORDER BY dia DESC
+      LIMIT 60
     `);
-
-    const totalPujas = Number(rows[0].total_base);
-    const casa = Math.round(totalPujas * 0.20);
-    const aporteJackpot = Math.round(casa * 0.25);
-    const comisionReferidos = Math.round(casa * 0.25);
-    const gananciaFinal = casa - aporteJackpot - comisionReferidos;
-
-    return NextResponse.json({
-      ok: true,
-      totalRemates: totalPujas,
-      totalPujas,
-      casa,
-      aporteJackpot,
-      comisionReferidos,
-      gananciaFinal,
-    });
+    const { rows: mensual } = await pool.query(`
+      SELECT
+        DATE_TRUNC('month', sub.creado_en - INTERVAL '4 hours') as mes,
+        ROUND(SUM(sub.max_monto))::numeric as total_pujas,
+        ROUND(SUM(sub.max_monto) * 0.20)::numeric as casa,
+        ROUND(SUM(sub.max_monto) * 0.05)::numeric as ganancia_final
+      FROM (
+        SELECT cr.id as carrera_id, cr.creado_en, cc.id as caballo_id, COALESCE(MAX(rp.monto), 0) as max_monto
+        FROM carreras_remate cr
+        JOIN carreras_caballos cc ON cc.id_carrera = cr.id
+        LEFT JOIN remates_pujas rp ON rp.id_caballo = cc.id
+        WHERE cr.ganador IS NOT NULL AND cc.retirado = false
+        GROUP BY cr.id, cr.creado_en, cc.id
+      ) sub
+      GROUP BY DATE_TRUNC('month', sub.creado_en - INTERVAL '4 hours')
+      ORDER BY mes DESC
+      LIMIT 24
+    `);
+    return NextResponse.json({ ok: true, diario, mensual });
   } catch (error) {
-    console.error("Error obteniendo movimientos remates:", error);
-    return NextResponse.json({ ok: false, totalRemates: 0, totalPujas: 0, casa: 0, aporteJackpot: 0, gananciaFinal: 0 });
+    console.error("Error:", error);
+    return NextResponse.json({ ok: false, diario: [], mensual: [] });
   }
 }

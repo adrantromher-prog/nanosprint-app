@@ -296,10 +296,10 @@ export default function PollaPage() {
                 return (
                   <button key={p.id}
                     onClick={() => seleccionarPolla(p.id)}
-                    className="w-full text-left rounded-xl bg-white/[0.02] border border-white/[0.06] p-3.5 hover:bg-white/[0.04] hover:border-white/20 active:scale-[0.98] transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-semibold text-white/80 text-sm">{p.hipodromo}</span>
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                    className="w-full text-left rounded-xl bg-gradient-to-b from-[#1a1a2e] to-[#111827] border-l-4 border-l-amber-500/60 border border-white/[0.06] p-4 hover:bg-[#1a1a2e] hover:border-l-amber-400/80 hover:border-white/[0.12] hover:shadow-[0_4px_20px_rgba(217,119,6,0.15)] active:scale-[0.98] transition-all">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-white/90 text-base">{p.hipodromo}</span>
+                      <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
                         abierta
                           ? "bg-emerald-500/10 text-emerald-400/80 border border-emerald-400/20"
                           : "bg-red-500/10 text-red-400/80 border border-red-400/20"
@@ -307,16 +307,16 @@ export default function PollaPage() {
                         {abierta ? "Abierta" : "Cerrada"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-white/30 text-[10px]">
-                      <span className={`font-mono font-bold tabular-nums ${abierta ? "text-amber-300/80" : "text-red-400/60"}`}>
+                    <div className="flex items-center gap-4 text-white/40 text-sm">
+                      <span className={`font-mono font-bold tabular-nums text-base ${abierta ? "text-amber-300/80" : "text-red-400/60"}`}>
                         {abierta ? conteos[p.id] || "--:--:--" : "00:00:00"}
                       </span>
                       <span>Bs. {Number(p.costo).toLocaleString()}</span>
                       <span>{p.total_tickets || 0} tickets</span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1.5 text-[10px]">
-                      <span className="text-amber-400/50">1° Bs. {Math.floor(Number(p.costo) * (p.total_tickets || 0) * 0.65).toLocaleString()}</span>
-                      <span className="text-gray-400/40">2° Bs. {Math.floor(Number(p.costo) * (p.total_tickets || 0) * 0.20).toLocaleString()}</span>
+                    <div className="flex items-center gap-4 mt-2 text-sm">
+                      <span className="text-amber-300/70 font-semibold">1° Bs. {Math.floor(Number(p.costo) * (p.total_tickets || 0) * 0.65).toLocaleString()}</span>
+                      <span className="text-gray-300/60 font-semibold">2° Bs. {Math.floor(Number(p.costo) * (p.total_tickets || 0) * 0.20).toLocaleString()}</span>
                     </div>
                   </button>
                 );
@@ -396,7 +396,7 @@ export default function PollaPage() {
             <div className="w-px h-8 bg-amber-400/10" />
             <div className="text-center">
               <p key={"2"+animPulse} className={`text-gray-300 font-bold text-lg md:text-xl tabular-nums transition-all duration-300 ${animPulse ? "scale-[1.15]" : ""}`}>Bs. {Math.floor(costo * (animTickets || 0) * 0.20).toLocaleString()}</p>
-              <p className="text-gray-400/40 text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
+              <p className="text-gray-300/60 font-semibold text-[9px] uppercase tracking-widest font-medium">2° Lugar</p>
             </div>
           </div>
           <div className="flex items-center justify-center gap-3 mt-2 pt-2 border-t border-amber-400/8">

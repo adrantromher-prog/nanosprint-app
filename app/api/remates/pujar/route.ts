@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { cookies } from "next/headers";
-import { broadcast } from "@/lib/ws";
+import { broadcast, sendToUser } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const client = await pool.connect();
@@ -174,6 +174,16 @@ export async function POST(req: Request) {
         caballos: resCaballos.rows.map((c: any) => ({ ...c, puja_actual: Number(c.puja_actual) })),
       };
       broadcast({ type: "puja", carrera: carreraData, usuario_id: usuarioId, saldo: Number(resSaldo.rows[0].saldo) });
+
+      // Notify outbid user of their refunded balance
+      if (pujaAnterior && pujaAnterior.id_usuario !== usuarioId) {
+        try {
+          const resAnteriorSaldo = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [pujaAnterior.id_usuario]);
+          if (resAnteriorSaldo.rows[0]) {
+            sendToUser(pujaAnterior.id_usuario, { type: "balance_updated", saldo: Number(resAnteriorSaldo.rows[0].saldo) });
+          }
+        } catch {}
+      }
     } catch (e) {
       console.error("Error broadcasting carrera data:", e);
     }

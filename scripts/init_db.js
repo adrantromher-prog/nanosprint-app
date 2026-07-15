@@ -98,7 +98,6 @@ async function init() {
       )
     `);
     await pool.query(`
-      INSERT INTO configuracion (clave, valor) VALUES ('mantenimiento', 'false') ON CONFLICT (clave) DO NOTHING
     `);
     console.log("Tabla configuracion lista");
 

@@ -28,7 +28,9 @@ type WSEvent =
   | { type: "polla_resultados"; polla_id: number }
   | { type: "polla_cerrada"; polla_id: number }
   | { type: "polla_retiros"; polla_id: number; carrera_orden?: number }
-  | { type: "sync_estado"; carreras?: CarreraData[]; jackpot?: number; polla_activa?: boolean; ts: number };
+  | { type: "sync_estado"; carreras?: CarreraData[]; jackpot?: number; polla_activa?: boolean; ts: number }
+  | { type: "balance_updated"; saldo: number }
+  | { type: "balance_reset" };
 
 export default function useWebSocket(handler: (event: WSEvent) => void, onFallback?: () => void) {
   const wsRef = useRef<WebSocket | null>(null);
@@ -49,7 +51,7 @@ export default function useWebSocket(handler: (event: WSEvent) => void, onFallba
       // Read token from cookie and pass as query param for mobile compatibility
       const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/);
       const token = match ? encodeURIComponent(match[1]) : "";
-      const wsUrl = `${protocol}//${window.location.host}?token=${token}`;
+      const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 

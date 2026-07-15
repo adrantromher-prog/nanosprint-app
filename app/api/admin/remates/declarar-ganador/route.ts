@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { broadcast } from "@/lib/ws";
+import { broadcast, sendToUser } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin(req);
@@ -111,6 +111,18 @@ export async function POST(req: Request) {
     client.release();
 
     broadcast({ type: "ganador", carrera_id });
+
+    // Send real-time balance updates to winner and admin
+    try {
+      if (winnerUserId) {
+        const resWinner = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [winnerUserId]);
+        if (resWinner.rows[0]) sendToUser(winnerUserId, { type: "balance_updated", saldo: Number(resWinner.rows[0].saldo) });
+      }
+      if (adminId) {
+        const resAdmin = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [adminId]);
+        if (resAdmin.rows[0]) sendToUser(adminId, { type: "balance_updated", saldo: Number(resAdmin.rows[0].saldo) });
+      }
+    } catch {}
 
     return NextResponse.json({ ok: true, totalGanador });
   } catch (error) {

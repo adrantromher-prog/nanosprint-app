@@ -11,159 +11,86 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("handleLogin llamado", telefono);
 
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefono, password }),
-      });
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ telefono, password }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        setMessage(data.error);
-        return;
-      }
-
-      router.push("/home");
-    } catch (err) {
-      console.error("Error en login:", err);
-      setMessage("Error de conexión");
+    if (!res.ok) {
+      setMessage(data.error);
+      return;
     }
+
+    router.push("/home");
   };
 
   return (
     <main className="relative h-screen w-full overflow-hidden">
-
-      {/* ⭐ FONDO DIFUMINADO + OSCURECIDO */}
-      <img
-        src="/fondos/fondologin.png"
-        alt="Fondo futurista"
-        className="
-          absolute top-0 left-0 w-full h-full object-cover 
-          blur-md brightness-50
-        "
-      />
-
-      {/* CONTENIDO */}
       <div className="relative z-10 flex items-center justify-center h-full px-4">
 
-        {/* TARJETA FUTURISTA */}
-        <div
-          className="
-            w-full max-w-sm 
-            bg-white/10 
-            backdrop-blur-xl 
-            border border-cyan-300/30 
-            shadow-[0_0_15px_rgba(0,255,255,0.4)] 
-            rounded-xl 
-            p-5
-          "
-        >
-          <h1 className="text-2xl font-bold text-center text-white mb-4 drop-shadow">
-            Iniciar Sesión
-          </h1>
+        <div className="w-full max-w-sm bg-white/[0.06] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
 
-          {/* FORMULARIO */}
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <div className="h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600" />
 
-            {/* ⭐ INPUT TELEFONO OSCURECIDO */}
-            <input
-              type="tel"
-              placeholder="Número de teléfono"
-              value={telefono}
-              onChange={(e) => {
-                setTelefono(e.target.value);
-                setMessage("");
-              }}
-              className="
-                w-full p-3 
-                bg-black/40 
-                text-white 
-                border border-cyan-300/40 
-                rounded-lg 
-                focus:outline-none 
-                focus:border-cyan-300 
-                focus:shadow-[0_0_12px_rgba(0,255,255,0.7)]
-                placeholder-white/50
-                text-sm
-              "
-            />
+          <div className="p-7">
+            <h1 className="text-xl font-bold text-center text-white/90 mb-6 tracking-wide">
+              {"Iniciar sesi\u00f3n"}
+            </h1>
 
-            {/* ⭐ INPUT PASSWORD OSCURECIDO */}
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setMessage("");
-              }}
-              className="
-                w-full p-3 
-                bg-black/40 
-                text-white 
-                border border-cyan-300/40 
-                rounded-lg 
-                focus:outline-none 
-                focus:border-cyan-300 
-                focus:shadow-[0_0_12px_rgba(0,255,255,0.7)]
-                placeholder-white/50
-                text-sm
-              "
-            />
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
 
-            {/* BOTÓN LOGIN */}
-            <button
-              type="submit"
-              className="
-                w-full py-2.5 
-                text-base font-bold 
-                text-white 
-                rounded-lg 
-                border border-orange-400 
-                shadow-[0_0_12px_rgba(255,150,0,0.7)] 
-                hover:shadow-[0_0_20px_rgba(255,150,0,1)] 
-                hover:border-orange-300 
-                transition 
-                duration-300 
-                backdrop-blur-sm 
-                bg-orange-500/20
-                active:scale-95
-              "
-            >
-              Entrar
-            </button>
+              <div className="space-y-1">
+                <label className="text-[11px] text-white/40 font-medium uppercase tracking-wider">{"N\u00famer" +
+                "o de tel\u00e9fono"}</label>
+                <input
+                  type="tel"
+                  placeholder=""
+                  value={telefono}
+                  onChange={(e) => {
+                    setTelefono(e.target.value);
+                    setMessage("");
+                  }}
+                  className="w-full px-4 py-3 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                />
+              </div>
 
-            {/* BOTÓN REGISTRO */}
-            <button
-              type="button"
-              onClick={() => router.push("/registro")}
-              className="
-                w-full py-2.5 
-                text-base font-bold 
-                text-cyan-300 
-                rounded-lg 
-                border border-cyan-300 
-                shadow-[0_0_8px_rgba(0,255,255,0.4)] 
-                hover:shadow-[0_0_15px_rgba(0,255,255,0.8)] 
-                hover:border-cyan-200 
-                transition 
-                duration-300 
-                backdrop-blur-sm 
-                bg-white/10
-                active:scale-95
-              "
-            >
-              Registrarse
-            </button>
+              <div className="space-y-1">
+                <label className="text-[11px] text-white/40 font-medium uppercase tracking-wider">{"Contrase\u00f1a"}</label>
+                <input
+                  type="password"
+                  placeholder=""
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setMessage("");
+                  }}
+                  className="w-full px-4 py-3 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                />
+              </div>
 
-            {message && (
-              <p className="text-center text-red-400 text-sm mt-1">{message}</p>
-            )}
-          </form>
+              <button type="submit"
+                className="w-full py-3 text-sm font-bold text-white rounded-xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] hover:border-white/30 active:scale-[0.98] transition-all mt-1 tracking-wide"
+              >
+                Entrar
+              </button>
+
+              <button type="button"
+                onClick={() => router.push("/registro")}
+                className="w-full py-3 text-sm font-bold text-white/50 rounded-xl border border-white/5 bg-transparent hover:bg-white/[0.04] hover:text-white/70 hover:border-white/15 active:scale-[0.98] transition-all tracking-wide"
+              >
+                Registrarse
+              </button>
+
+              {message && (
+                <p className="text-center text-red-400 text-sm mt-1">{message}</p>
+              )}
+
+            </form>
+          </div>
         </div>
       </div>
     </main>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { broadcast } from "@/lib/ws";
+import { broadcast, sendToUser } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin(req);
@@ -30,6 +30,14 @@ export async function POST(req: Request) {
     );
 
     broadcast({ type: "movimiento", usuario_id: usuarioId, monto });
+
+    // Send real-time balance update to the affected user
+    try {
+      const resSaldo = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [usuarioId]);
+      if (resSaldo.rows[0]) {
+        sendToUser(usuarioId, { type: "balance_updated", saldo: Number(resSaldo.rows[0].saldo) });
+      }
+    } catch {}
 
     return NextResponse.json({ mensaje: "Movimiento registrado" });
 

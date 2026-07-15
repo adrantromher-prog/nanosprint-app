@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { broadcast } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin(req);
@@ -28,6 +29,8 @@ export async function POST(req: Request) {
 
     await client.query("COMMIT");
     client.release();
+
+    try { broadcast({ type: "balance_reset" }); } catch {}
 
     return NextResponse.json({ ok: true, mensaje: "Todos los datos han sido eliminados" });
   } catch (error) {

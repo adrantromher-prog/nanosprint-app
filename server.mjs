@@ -1,4 +1,5 @@
 import { createServer } from "http";
+import { createConnection } from "net";
 import { parse } from "url";
 import { WebSocketServer } from "ws";
 import next from "next";
@@ -19,14 +20,14 @@ app.prepare().then(async () => {
   try {
     const { Pool } = require("pg");
     const pool = process.env.DATABASE_URL
-      ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 5000 })
+      ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 20, connectionTimeoutMillis: 5000 })
       : new Pool({
           host: process.env.PGHOST,
           user: process.env.PGUSER,
           password: process.env.PGPASSWORD,
           database: process.env.PGDATABASE,
           port: Number(process.env.PGPORT),
-          connectionTimeoutMillis: 5000,
+          connectionTimeoutMillis: 5000, max: 20
         });
     await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_referido VARCHAR(5) UNIQUE`);
     console.log("✅ Columna codigo_referido lista");
@@ -166,6 +167,9 @@ app.prepare().then(async () => {
     await pool.query(`ALTER TABLE polla_puntos ADD COLUMN IF NOT EXISTS pagado_al_cliente BOOLEAN NOT NULL DEFAULT false`);
     console.log("✅ Tabla polla_puntos lista");
 
+    await pool.query("DELETE FROM historial WHERE fecha < NOW() - INTERVAL '3 months'");
+    console.log("Historial limpio (>3 meses)");
+
     await pool.end();
   } catch (e) {
     console.log("⚠️ Error en migraciones:", e.message);
@@ -175,61 +179,78 @@ app.prepare().then(async () => {
     handle(req, res, parsedUrl);
   });
 
-  if (!dev) {
-    const wss = new WebSocketServer({ server });
-    setWSS(wss);
-    wss.on("connection", (ws, req) => {
-      const ip = req?.socket?.remoteAddress || "desconocida";
-      // Try query param first (mobile), then cookie fallback
-      const url = new URL(req.url || "", "http://localhost");
-      const queryToken = url.searchParams.get("token");
-      const cookies = req?.headers?.cookie || "";
-      const cookieMatch = cookies.match(/(?:^|;\s*)token=([^;]+)/);
-      const rawToken = queryToken || (cookieMatch ? cookieMatch[1] : null);
-      const token = rawToken ? decodeURIComponent(rawToken) : null;
-      if (!token) {
-        console.log(`⛔ WebSocket rechazado desde ${ip}: sin token (query=${!!queryToken}, cookie=${!!cookieMatch})`);
-        ws.close(4001, "Token requerido");
-        return;
-      }
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        ws.userId = decoded.userId || decoded.id || decoded.sub;
-      } catch {
-        console.log(`⛔ WebSocket rechazado desde ${ip}: token inválido`);
-        ws.close(4001, "Token inválido");
-        return;
-      }
-      console.log(`🟢 Cliente WebSocket conectado #${ws.userId} desde ${ip} (total: ${wss.clients.size})`);
-      ws.on("error", () => {});
-      ws.on("close", () => {
-        console.log(`🔴 Cliente WebSocket #${ws.userId} desconectado (total: ${wss.clients.size})`);
+  // WebSocket server in a COMPLETELY ISOLATED HTTP server (port 3001) — no Next.js interference
+  const WS_PORT = parseInt(process.env.WS_PORT || "3001", 10);
+  const wsHttpServer = createServer(); // No request handler at all — pure upgrade server
+
+  const wss = new WebSocketServer({ noServer: true });
+  setWSS(wss);
+
+  wsHttpServer.on("upgrade", (req, socket, head) => {
+    const ip = req?.socket?.remoteAddress || "desconocida";
+    const url = new URL(req.url || "", "http://localhost");
+    const queryToken = url.searchParams.get("token");
+    const cookies = req?.headers?.cookie || "";
+    const cookieMatch = cookies.match(/(?:^|;\s*)token=([^;]+)/);
+    const rawToken = queryToken || (cookieMatch ? cookieMatch[1] : null);
+    const token = rawToken ? decodeURIComponent(rawToken) : null;
+
+    if (!token) {
+      console.log(`⛔ WebSocket rechazado desde ${ip}: sin token`);
+      socket.end("HTTP/1.1 401 Unauthorized");
+      return;
+    }
+
+    let userId;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      userId = decoded.userId || decoded.id || decoded.sub;
+    } catch {
+      console.log(`⛔ WebSocket rechazado desde ${ip}: token inválido`);
+      socket.end("HTTP/1.1 401 Unauthorized");
+      return;
+    }
+
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      ws.userId = userId;
+      console.log(`🟢 Cliente WebSocket conectado #${userId} desde ${ip} (total: ${wss.clients.size})`);
+      ws.on("error", (err) => console.error("⚠️ WS error:", err.message));
+      ws.on("close", (code) => {
+        console.log(`🔴 Cliente WebSocket #${userId} desconectado (total: ${wss.clients.size}) code=${code}`);
       });
     });
+  });
 
-    // Heartbeat: sync estado cada 15s
-    setInterval(async () => {
-      if (wss.clients.size === 0) return;
-      try {
-        const { Pool } = require("pg");
-        const pool = new Pool({
-          connectionString: process.env.DATABASE_URL,
-          ssl: { rejectUnauthorized: false },
-          max: 2,
-          connectionTimeoutMillis: 3000,
-        });
-        const carreras = (await pool.query(
-          "SELECT id, hipodromo, numero_carrera, hora_cierre, tipo, estado, ganador, imagen, caballos FROM carreras_remate WHERE estado != 'eliminada' ORDER BY id DESC LIMIT 20"
-        )).rows;
-        const jackpot = (await pool.query("SELECT monto FROM jackpot_remates WHERE id = 1")).rows[0]?.monto || 0;
-        const config = (await pool.query("SELECT id, activa FROM polla_config ORDER BY id DESC LIMIT 1")).rows[0];
-        await pool.end();
-        broadcast({ type: "sync_estado", carreras, jackpot, polla_activa: config?.activa || false, ts: Date.now() });
-      } catch (e) {
-        console.log("⚠️ Heartbeat sync error:", e.message);
+  wsHttpServer.listen(WS_PORT, hostname, () => {
+    console.log(`🔌 WebSocket server listening on port ${WS_PORT}`);
+  });
+
+  // Proxy WebSocket upgrade requests from main server to isolated WS server (port 3001)
+  server.on("upgrade", (req, socket, head) => {
+    const proxySocket = createConnection({ port: 3001, host: "localhost" }, () => {
+      proxySocket.write(`${req.method} ${req.url} HTTP/1.1\r\n`);
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (value !== undefined) {
+          proxySocket.write(`${key}: ${value}\r\n`);
+        }
       }
-    }, 15000);
-  }
+      proxySocket.write("\r\n");
+      if (head && head.length > 0) {
+        proxySocket.write(head);
+      }
+      // Forward data bidirectionally without pipe()
+      socket.on("data", (data) => {
+        try { proxySocket.write(data); } catch {}
+      });
+      proxySocket.on("data", (data) => {
+        try { socket.write(data); } catch {}
+      });
+      socket.on("close", () => { try { proxySocket.end(); } catch {} });
+      proxySocket.on("close", () => { try { socket.end(); } catch {} });
+      socket.resume();
+    });
+
+  });
 
   server.listen(port, hostname, () => {
     console.log(`> Ready on http://${hostname}:${port}`);

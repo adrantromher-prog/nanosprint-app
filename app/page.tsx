@@ -8,35 +8,30 @@ export default function Home() {
   return (
     <main className="relative h-screen w-full overflow-hidden">
 
-      {/* VIDEO DE FONDO */}
-      <video
-        src="/fondos/fondoinicio.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover"
+      {/* FONDO */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/fondos/entrada.png')" }}
       />
 
       {/* CONTENIDO */}
-      <div className="relative z-10 flex flex-col items-center justify-end h-full pb-7">
+      <div className="relative z-10 flex flex-col items-center justify-end h-full pb-24">
 
-        {/* BOTÓN NEÓN FUTURISTA */}
+        {/* BOTÓN */}
         <button
           onClick={() => router.push("/login")}
           className="
-            px-12 py-4 
-            text-xl font-bold 
-            text-white 
-            rounded-xl 
-            border-2 border-cyan-400 
-            shadow-[0_0_15px_rgba(0,255,255,0.7)] 
-            hover:shadow-[0_0_25px_rgba(0,255,255,1)] 
-            hover:border-cyan-300 
-            transition 
-            duration-300 
-            backdrop-blur-sm 
-            bg-white/10
+            px-12 py-4
+            text-xl font-bold
+            text-white
+            rounded-xl
+            border-2 border-white/30
+            shadow-[0_0_15px_rgba(255,255,255,0.15)]
+            hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]
+            hover:border-white/50
+            transition duration-300
+            backdrop-blur-sm
+            bg-black/40
             active:scale-95
           "
         >

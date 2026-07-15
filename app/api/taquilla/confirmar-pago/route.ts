@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { cookies } from "next/headers";
+import { sendToUser } from "@/lib/ws";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,11 @@ export async function POST(req: Request) {
 
     await client.query("COMMIT");
     client.release();
+
+    try {
+      const resSaldo = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [decoded.id]);
+      if (resSaldo.rows[0]) sendToUser(decoded.id, { type: "balance_updated", saldo: Number(resSaldo.rows[0].saldo) });
+    } catch {}
 
     return NextResponse.json({ ok: true, premio });
   } catch (error) {

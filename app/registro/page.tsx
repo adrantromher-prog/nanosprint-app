@@ -12,7 +12,6 @@ export default function RegistroPage() {
   const [telefono, setTelefono] = useState("");
   const [comida, setComida] = useState("");
   const [sexo, setSexo] = useState("");
-  const [codigoReferido, setCodigoReferido] = useState("");
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [message, setMessage] = useState("");
@@ -28,13 +27,13 @@ export default function RegistroPage() {
     }
 
     if (!/^04(12|14|16|24|26)\d{7}$/.test(telefono)) {
-      setMessage("Número de teléfono inválido. Debe ser 04XX XXX XXXX (11 dígitos)");
+      setMessage("N\u00famero de tel\u00e9fono inv\u00e1lido (11 d\u00edgitos, ej: 04121234567)");
       setIsError(true);
       return;
     }
 
     if (password !== confirmar) {
-      setMessage("Las contraseñas no coinciden");
+      setMessage("Las contrase\u00f1as no coinciden");
       setIsError(true);
       return;
     }
@@ -43,14 +42,7 @@ export default function RegistroPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        nombre,
-        apellido,
-        sobrenombre,
-        telefono,
-        comida,
-        sexo,
-        password,
-        codigo_referido: codigoReferido,
+        nombre, apellido, sobrenombre, telefono, comida, sexo, password,
       }),
     });
 
@@ -62,7 +54,7 @@ export default function RegistroPage() {
       return;
     }
 
-    setMessage("Registro exitoso ✔");
+    setMessage("Registro exitoso");
     setIsError(false);
 
     setTimeout(() => {
@@ -72,148 +64,115 @@ export default function RegistroPage() {
 
   return (
     <main className="relative h-screen w-full overflow-hidden">
-      <img
-        src="/fondos/fondoregistro.png"
-        alt="Fondo registro"
-        className="absolute inset-0 w-full h-full object-cover blur-md brightness-50"
-      />
 
-      <button
-        type="button"
-        onClick={() => router.push("/login")}
-        className="
-          absolute top-4 right-4 z-20
-          px-3 py-1.5 text-sm font-bold text-cyan-300
-          rounded-lg border border-cyan-300/60
-          shadow-[0_0_8px_rgba(0,255,255,0.4)]
-          hover:shadow-[0_0_16px_rgba(0,255,255,0.8)]
-          transition duration-300
-          backdrop-blur-sm bg-white/10
-          active:scale-95
-        "
+      <button type="button" onClick={() => router.push("/login")}
+        className="absolute top-4 right-4 z-20 px-4 py-2 text-xs font-bold text-white/60 rounded-xl border border-white/10 bg-white/[0.06] hover:bg-white/[0.10] hover:text-white/80 hover:border-white/20 active:scale-95 transition-all backdrop-blur-sm"
       >
-        ← Volver
+        {"\u2190"} Volver
       </button>
 
-      <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
-        <div className="w-full max-w-sm mx-auto">
-          <h1 className="text-2xl font-extrabold text-center text-white mb-4 drop-shadow">
-            Crear cuenta
-          </h1>
+      <div className="relative z-10 flex items-center justify-center h-full px-4 pt-12">
+        <div className="w-full max-w-sm bg-white/[0.06] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2.5">
+          <div className="h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600" />
 
-            {/* Fila 1 */}
-            <input
-              type="text" placeholder="Nombre" value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-            <input
-              type="text" placeholder="Comida favorita" value={comida}
-              onChange={(e) => setComida(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-
-            {/* Fila 2 */}
-            <input
-              type="text" placeholder="Apellido" value={apellido}
-              onChange={(e) => setApellido(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-            <select
-              value={sexo} onChange={(e) => setSexo(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            >
-              <option value="" disabled className="text-gray-400">Sexo</option>
-              <option value="M" className="text-white">Masculino</option>
-              <option value="F" className="text-white">Femenino</option>
-            </select>
-
-            {/* Fila 3 */}
-            <input
-              type="text" placeholder="Sobrenombre" value={sobrenombre}
-              onChange={(e) => setSobrenombre(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-            <input
-              type="password" placeholder="Contraseña" value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-
-            {/* Fila 4 */}
-            <input
-              type="tel" placeholder="Teléfono" value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-            <input
-              type="password" placeholder="Repetir contraseña" value={confirmar}
-              onChange={(e) => setConfirmar(e.target.value)}
-              className={`p-3 bg-black/50 text-white border rounded-lg placeholder-white/60 text-sm focus:outline-none focus:border-cyan-300 focus:shadow-[0_0_12px_rgba(0,255,255,0.7)] transition-all duration-300 ${isError ? "border-red-500 shadow-[0_0_12px_rgba(255,0,0,0.7)] animate-shake" : "border-cyan-400/40"}`}
-            />
-
-            {/* Fila 5 - Código de referido (opcional) */}
-            <input
-              type="text" placeholder="Código de referido (opcional)" value={codigoReferido}
-              onChange={(e) => setCodigoReferido(e.target.value)}
-              className="col-span-2 p-2.5 bg-black/30 text-white border border-yellow-400/30 rounded-lg placeholder-yellow-200/40 text-xs text-center focus:outline-none focus:border-yellow-300 focus:shadow-[0_0_10px_rgba(255,200,0,0.4)] transition-all duration-300"
-            />
-
-            <button
-              type="submit"
-              className="
-                col-span-2
-                w-3/5 mx-auto mt-1 py-2.5
-                text-base font-bold text-white
-                rounded-lg border border-orange-400
-                shadow-[0_0_15px_rgba(255,150,0,0.9)]
-                hover:shadow-[0_0_25px_rgba(255,150,0,1)]
-                hover:border-orange-300
-                transition duration-300
-                backdrop-blur-sm bg-orange-500/30
-                active:scale-95
-              "
-            >
+          <div className="p-6">
+            <h1 className="text-lg font-bold text-center text-white/90 mb-5 tracking-wide">
               Crear cuenta
-            </button>
+            </h1>
 
-            {message && (
-              <p
-                className={`
-                  col-span-2 text-center text-xs font-bold py-1.5 px-3 rounded-lg backdrop-blur-sm animate-pulse
-                  ${isError ? "animate-shake" : ""} transition-all duration-300
-                  ${
-                    isError
-                      ? "text-red-300 bg-red-900/40 border border-red-500/60 shadow-[0_0_12px_rgba(255,0,0,0.7)]"
-                      : "text-green-300 bg-green-900/40 border border-green-500/60 shadow-[0_0_12px_rgba(0,255,0,0.7)]"
-                  }
-                `}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">Nombre</label>
+                  <input type="text" placeholder=""
+                    value={nombre} onChange={(e) => setNombre(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">Apellido</label>
+                  <input type="text" placeholder=""
+                    value={apellido} onChange={(e) => setApellido(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">Sobrenombre</label>
+                <input type="text" placeholder=""
+                  value={sobrenombre} onChange={(e) => setSobrenombre(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">{"N\u00famero de tel\u00e9fono"}</label>
+                <input type="tel" placeholder=""
+                  value={telefono} onChange={(e) => setTelefono(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">Comida favorita</label>
+                  <input type="text" placeholder=""
+                    value={comida} onChange={(e) => setComida(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">Sexo</label>
+                  <select value={sexo} onChange={(e) => setSexo(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 text-sm transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Seleccionar</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">{"Contrase\u00f1a"}</label>
+                  <input type="password" placeholder=""
+                    value={password} onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 font-medium uppercase tracking-wider">{"Repetir contrase\u00f1a"}</label>
+                  <input type="password" placeholder=""
+                    value={confirmar} onChange={(e) => setConfirmar(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-black/50 text-white border border-white/10 rounded-xl focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 placeholder-white/30 text-sm transition-all"
+                  />
+                </div>
+              </div>
+
+              <button type="submit"
+                className="w-full py-2.5 text-sm font-bold text-white rounded-xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] hover:border-white/30 active:scale-[0.98] transition-all mt-1 tracking-wide"
               >
-                {message}
-              </p>
-            )}
-          </form>
+                Crear cuenta
+              </button>
+
+              {message && (
+                <p className={`text-center text-xs font-bold py-2 px-3 rounded-xl backdrop-blur-sm transition-all ${
+                  isError
+                    ? "text-red-300 bg-red-900/30 border border-red-500/30"
+                    : "text-green-300 bg-green-900/30 border border-green-500/30"
+                }`}>
+                  {message}
+                </p>
+              )}
+
+            </form>
+          </div>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes shake {
-            0% { transform: translateX(0); }
-            20% { transform: translateX(-4px); }
-            40% { transform: translateX(4px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-            100% { transform: translateX(0); }
-          }
-
-          .animate-shake {
-            animation: shake 0.3s ease-in-out;
-          }
-        `}
-      </style>
     </main>
   );
 }

@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
-import MantenimientoOverlay from "./MantenimientoOverlay";
-import TrompetaNotifier from "./TrompetaNotifier";
 
 export default async function ProtectedLayout({
   children,
@@ -22,9 +20,5 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
-  return (
-    <MantenimientoOverlay>
-      <TrompetaNotifier>{children}</TrompetaNotifier>
-    </MantenimientoOverlay>
-  );
+  return <>{children}</>;
 }

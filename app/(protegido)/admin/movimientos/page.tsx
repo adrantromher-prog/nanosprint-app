@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+type RematesItem = {
+  dia?: string; mes?: string; total_pujas: number; casa: number; ganancia_final: number;
+};
+
 type MovimientosRemates = {
   totalRemates: number;
   totalPujas: number;
@@ -14,8 +18,12 @@ type MovimientosRemates = {
 
 export default function AdminMovimientos() {
   const router = useRouter();
-  const [remates, setRemates] = useState<MovimientosRemates | null>(null);
+  const [remates, setRemates] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
+  const [virtuales, setVirtuales] = useState<any>(null);
+  const [cargandoV, setCargandoV] = useState(false);
+  const [vista, setVista] = useState("diario");
+  const [vistaR, setVistaR] = useState("diario");
 
   const cargar = async () => {
     setCargando(true);
@@ -25,6 +33,16 @@ export default function AdminMovimientos() {
       if (data.ok) setRemates(data);
     } catch {}
     setCargando(false);
+  };
+
+  const cargarVirtuales = async () => {
+    setCargandoV(true);
+    try {
+      const res = await fetch("/api/admin/movimientos/virtuales");
+      const data = await res.json();
+      if (data.ok) setVirtuales(data);
+    } catch {}
+    setCargandoV(false);
   };
 
   return (
@@ -38,8 +56,12 @@ export default function AdminMovimientos() {
         <div className="w-14 md:w-20" />
       </div>
 
-      {!remates && (
-        <div className="flex flex-col items-center mt-8 md:mt-16">
+      {!virtuales && !remates && (
+        <div className="flex flex-col items-center mt-8 md:mt-16 gap-4">
+          <button onClick={cargarVirtuales} disabled={cargandoV}
+            className="w-full max-w-xs py-4 md:py-6 rounded-2xl text-sm md:text-xl font-bold bg-gradient-to-b from-emerald-700 to-emerald-900 border border-emerald-400/30 shadow-[0_0_22px_rgba(4,120,87,0.3)] hover:shadow-[0_0_35px_rgba(4,120,87,0.6)] active:scale-95 transition-all disabled:opacity-50">
+            {cargandoV ? "Cargando..." : "Ver Virtuales"}
+          </button>
           <button onClick={cargar} disabled={cargando}
             className="w-full max-w-xs py-4 md:py-6 rounded-2xl text-sm md:text-xl font-bold bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 shadow-[0_0_22px_rgba(0,255,255,0.5)] hover:shadow-[0_0_35px_rgba(0,255,255,0.9)] active:scale-95 transition-all disabled:opacity-50">
             {cargando ? "Cargando..." : "Ver Remates"}
@@ -47,33 +69,87 @@ export default function AdminMovimientos() {
         </div>
       )}
 
-      {remates && (
-        <div className="max-w-lg mx-auto mt-6 md:mt-8 space-y-4">
+      {virtuales && !remates && (
+        <div className="max-w-4xl mx-auto mt-6 md:mt-8 space-y-4">
           <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 md:p-6 shadow-xl">
-            <h2 className="text-xl md:text-2xl font-bold text-cyan-300 mb-4">Remates</h2>
-            <div className="space-y-3 text-sm md:text-lg">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Suma total de remates</span>
-                <span className="font-bold">Bs. {remates.totalPujas.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Ganancia de la casa (20%)</span>
-                <span className="font-bold text-green-400">Bs. {remates.casa.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">% que va al jackpot (25% de la casa)</span>
-                <span className="font-bold text-yellow-300">Bs. {remates.aporteJackpot.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">% que va a referidos (25% de la casa)</span>
-                <span className="font-bold text-purple-300">Bs. {remates.comisionReferidos.toFixed(2)}</span>
-              </div>
-              <div className="border-t border-gray-700 pt-3 flex justify-between">
-                <span className="text-gray-200 font-bold">Ganancia final de la casa</span>
-                <span className="font-bold text-green-400 text-xl">Bs. {remates.gananciaFinal.toFixed(2)}</span>
-              </div>
+            <h2 className="text-xl md:text-2xl font-bold text-emerald-300 mb-4">Carreras Virtuales</h2>
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setVista('diario')} className={'px-4 py-2 rounded-lg text-xs font-semibold transition-all ' + (vista === 'diario' ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300' : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10')}>Diario</button>
+              <button onClick={() => setVista('mensual')} className={'px-4 py-2 rounded-lg text-xs font-semibold transition-all ' + (vista === 'mensual' ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300' : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10')}>Mensual</button>
+            </div>
+            <div className='overflow-x-auto'>
+              <table className='w-full text-xs md:text-sm'>
+                <thead>
+                  <tr className='text-gray-400 border-b border-gray-700'>
+                    <th className='text-left py-2 pr-2'>Fecha</th>
+                    <th className='text-right px-2'>Apuestas</th>
+                    <th className='text-right px-2'>Monto</th>
+                    <th className='text-right px-2'>Premios</th>
+                    <th className='text-right pl-2'>Ganancia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(vista === 'diario' ? virtuales.diario : virtuales.mensual).map((r: any, i: number) => {
+                    const g = Number(r.ganancia_casa);
+                    return (
+                      <tr key={i} className='border-b border-gray-800/50 hover:bg-white/[0.02]'>
+                        <td className='py-2 pr-2 text-white/70 font-mono'>{vista === 'diario' ? (r.dia||'').substring(0,10) : (r.mes||'').substring(0,7)}</td>
+                        <td className='text-right px-2 text-white/80'>{r.total_apuestas}</td>
+                        <td className='text-right px-2 text-white/80'>Bs. {Number(r.monto_apostado).toFixed(2)}</td>
+                        <td className='text-right px-2 text-red-400'>- Bs. {Number(r.premios_pagados).toFixed(2)}</td>
+                        <td className={'text-right pl-2 font-bold ' + (g >= 0 ? 'text-green-400' : 'text-red-400')}>Bs. {g.toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
+          <button onClick={() => { setVirtuales(null); setVista('diario'); }}
+            className='w-full py-3 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 active:scale-[0.98] transition-all'>
+            ← Volver
+          </button>
+        </div>
+      )}
+
+      {remates && (
+        <div className="max-w-4xl mx-auto mt-6 md:mt-8 space-y-4">
+          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 md:p-6 shadow-xl">
+            <h2 className="text-xl md:text-2xl font-bold text-cyan-300 mb-4">Remates</h2>
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setVistaR("diario")} className={"px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (vistaR === "diario" ? "bg-cyan-500/20 border border-cyan-400/40 text-cyan-300" : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>Diario</button>
+              <button onClick={() => setVistaR("mensual")} className={"px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (vistaR === "mensual" ? "bg-cyan-500/20 border border-cyan-400/40 text-cyan-300" : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>Mensual</button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs md:text-sm">
+                <thead>
+                  <tr className="text-gray-400 border-b border-gray-700">
+                    <th className="text-left py-2 pr-2">Fecha</th>
+                    <th className="text-right px-2">Total pujas</th>
+                    <th className="text-right px-2">Casa (20%)</th>
+                    <th className="text-right pl-2">Ganancia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {((vistaR === "diario" ? (remates.diario || []) : (remates.mensual || []))).map((r: any, i: number) => {
+                    const g = Number(r.ganancia_final);
+                    return (
+                      <tr key={i} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
+                        <td className="py-2 pr-2 text-white/70 font-mono">{vistaR === "diario" ? (r.dia||"").substring(0,10) : (r.mes||"").substring(0,7)}</td>
+                        <td className="text-right px-2 text-white/80">Bs. {Number(r.total_pujas).toFixed(2)}</td>
+                        <td className="text-right px-2 text-amber-400">Bs. {Number(r.casa).toFixed(2)}</td>
+                        <td className={"text-right pl-2 font-bold " + (g >= 0 ? "text-green-400" : "text-red-400")}>Bs. {g.toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <button onClick={() => { setRemates(null); setVistaR("diario"); }}
+            className="w-full py-3 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 active:scale-[0.98] transition-all">
+            ← Volver
+          </button>
         </div>
       )}
     </main>

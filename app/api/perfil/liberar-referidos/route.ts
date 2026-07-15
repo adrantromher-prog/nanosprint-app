@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { sendToUser } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const userOrError = await requireUser(req);
@@ -41,6 +42,11 @@ export async function POST(req: Request) {
 
     await client.query("COMMIT");
     client.release();
+
+    try {
+      const resSaldo = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [userId]);
+      if (resSaldo.rows[0]) sendToUser(userId, { type: "balance_updated", saldo: Number(resSaldo.rows[0].saldo) });
+    } catch {}
 
     return NextResponse.json({ ok: true, monto: referidoSaldo });
   } catch (error) {

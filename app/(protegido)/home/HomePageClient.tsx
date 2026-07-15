@@ -163,22 +163,17 @@ function ModalEstadisticas() {
   );
 }
 
-export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol, mantenimiento: mantenimientoInicial }: any) {
+export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol }: any) {
   const router = useRouter();
   const [isBlocked, setIsBlocked] = useState(bloqueado);
   const [razon, setRazon] = useState(razon_bloqueo);
   const [saldo, setSaldo] = useState(saldoInicial);
-  const [mantenimiento, setMantenimiento] = useState(mantenimientoInicial);
 
   const recargarDatos = useCallback(async () => {
     try {
-      const [resME, resMant] = await Promise.all([
-        fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" }).then(r => r.json()),
-        fetch("/api/admin/mantenimiento", { cache: "no-store" }).then(r => r.json()),
-      ]);
+      const resME = await fetch(`/api/me?_t=${Date.now()}`, { cache: "no-store" }).then(r => r.json());
       if (resME.bloqueado) { setIsBlocked(true); setRazon(resME.razon_bloqueo); }
       setSaldo(resME.saldo);
-      setMantenimiento(resMant.mantenimiento);
     } catch {}
   }, []);
 
@@ -197,25 +192,6 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
   useEffect(() => {
     recargarDatos();
   }, [recargarDatos]);
-
-  if (mantenimiento) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-white p-10 text-center"
-        style={{ background: "linear-gradient(135deg, #0a0f1e 0%, #0d1f3c 50%, #091428 100%)" }}
-      >
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-cyan-900/20 blur-[120px]" />
-        </div>
-        <div className="relative flex flex-col items-center gap-6 max-w-lg">
-          <div className="text-7xl animate-pulse">🔧</div>
-          <h1 className="text-4xl font-extrabold text-cyan-300 drop-shadow-[0_0_20px_rgba(0,255,255,0.8)]">Sitio en Mantenimiento</h1>
-          <p className="text-white/70 text-lg leading-relaxed">Estamos realizando mejoras para brindarte una mejor experiencia. Vuelve en unos minutos.</p>
-          <div className="w-full h-px bg-white/10 my-2" />
-          <p className="text-white/40 text-sm font-mono tracking-widest">Nos disculpamos por los inconvenientes.</p>
-        </div>
-      </main>
-    );
-  }
 
   if (isBlocked) {
     return (
@@ -271,7 +247,6 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
         }
         .btn-remates { animation: cardGlow 3s ease-in-out infinite; }
       `}</style>
-      <div className="absolute inset-0" style={{background: "radial-gradient(ellipse at 20% 80%, rgba(0,80,150,0.3) 0%, transparent 50%),radial-gradient(ellipse at 80% 20%, rgba(0,150,200,0.2) 0%, transparent 50%),radial-gradient(ellipse at 50% 50%, rgba(0,40,80,0.4) 0%, transparent 70%),linear-gradient(180deg, #0a0f1e 0%, #0d1f3c 40%, #091428 100%)"}} />
       <div className="absolute inset-0 opacity-[0.03] bg-[length:40px_40px] bg-[image:radial-gradient(circle,rgba(255,255,255,0.15)_1px,transparent_1px)]" />
 
       <div className="relative z-10 w-full h-full flex flex-col px-5 pt-5 pb-4">
@@ -329,6 +304,26 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
               <span className="text-white/40 font-medium tracking-wide text-center leading-tight max-w-[120px] md:max-w-[160px] hidden md:block text-[10px]">
                 Subastas de caballos
               </span>
+            </div>
+          </button>
+
+          <button onClick={() => router.push("/carrerasvirtuales")}
+            className="group relative flex-1 max-w-[200px] h-[130px] md:h-[160px] rounded-2xl overflow-hidden bg-gradient-to-b from-purple-600 to-indigo-800 border border-purple-400/40 shadow-[0_0_24px_rgba(180,0,255,0.25)] hover:shadow-[0_0_40px_rgba(200,0,255,0.6)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+            <div className="relative h-full flex flex-col items-center justify-center gap-1 md:gap-2 px-2 md:px-4">
+              <div className="text-white/90 group-hover:scale-110 group-hover:text-white transition-all duration-300">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7 md:w-10 md:h-10">
+                  <circle cx="5" cy="18" r="2" />
+                  <circle cx="19" cy="18" r="2" />
+                  <path d="M5 18V6h14l-3 6 3 6H5z" />
+                  <path d="M8 12h8" />
+                </svg>
+              </div>
+              <span className="text-white/60 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[10px]">APUESTA YA</span>
+              <span className="text-white font-black text-lg md:text-2xl tracking-wide text-center drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]">
+                VIRTUALES
+              </span>
+              <span className="text-white/40 font-bold tracking-[0.2em] md:tracking-[0.25em] uppercase hidden md:block text-[8px]">CARRERAS</span>
             </div>
           </button>
 

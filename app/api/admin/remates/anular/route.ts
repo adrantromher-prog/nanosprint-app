@@ -1,0 +1,43 @@
+import { NextResponse } from "next/server";
+import pool from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
+import { broadcast } from "@/lib/ws";
+
+export async function POST(req: Request) {
+  const error = await requireAdmin(req);
+  if (error) return error;
+  const client = await pool.connect();
+  try {
+    const { carrera_id } = await req.json();
+    if (!carrera_id) { client.release(); return NextResponse.json({ ok: false, error: "Falta carrera_id" }, { status: 400 }); }
+
+    const carrera = await client.query("SELECT estado FROM carreras_remate WHERE id = $1", [carrera_id]);
+    if (carrera.rows.length === 0) { client.release(); return NextResponse.json({ ok: false, error: "Carrera no encontrada" }, { status: 404 }); }
+
+    await client.query("BEGIN");
+
+    const pujas = await client.query(
+      "SELECT rp.id_usuario, rp.monto FROM remates_pujas rp JOIN carreras_caballos cc ON cc.id = rp.id_caballo WHERE cc.id_carrera = $1",
+      [carrera_id]
+    );
+
+    for (const puja of pujas.rows) {
+      await client.query("UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2", [Number(puja.monto), puja.id_usuario]);
+      await client.query(`INSERT INTO historial (usuario_id, tipo, monto, asunto) VALUES ($1, 'reembolso_anulacion', $2, 'Reembolso por anulacion de carrera')`, [puja.id_usuario, puja.monto]);
+    }
+
+    await client.query("UPDATE carreras_remate SET estado = 'anulada', ganador = NULL WHERE id = $1", [carrera_id]);
+
+    await client.query("COMMIT");
+    client.release();
+
+    broadcast({ type: "carrera_anulada", carrera_id });
+
+    return NextResponse.json({ ok: true, reembolsos: pujas.rows.length });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    client.release();
+    console.error("Error anulando carrera:", error);
+    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 });
+  }
+}

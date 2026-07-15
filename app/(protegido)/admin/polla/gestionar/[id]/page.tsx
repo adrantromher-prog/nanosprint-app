@@ -288,14 +288,15 @@ export default function AdminPollaGestionarId() {
                         <button key={n}
                           onClick={() => retirarCaballo(c.orden, n)}
                           disabled={retirando === key}
+                          title={esRetirado ? "Click para restaurar caballo #" + n : "Click para retirar caballo #" + n}
                           className={`w-7 h-7 rounded-md border flex items-center justify-center text-[10px] font-bold transition-all
                             ${esRetirado
-                              ? "border-red-400/40 bg-red-500/15 text-red-300 line-through"
+                              ? "border-red-400/40 bg-red-500/15 text-red-300 line-through hover:bg-green-500/15 hover:border-green-400/40 hover:text-green-300 hover:no-underline"
                               : "border-white/10 bg-white/[0.03] text-white/40 hover:border-white/20 hover:text-white/60"
                             }
                             ${retirando === key ? "opacity-40" : "cursor-pointer active:scale-90"}
                             `}>
-                          {n}
+                          {n}{esRetirado ? " ↩" : ""}
                         </button>
                       );
                     })}

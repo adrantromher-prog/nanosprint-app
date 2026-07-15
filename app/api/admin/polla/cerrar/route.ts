@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { broadcast } from "@/lib/ws";
+import { broadcast, sendToUser } from "@/lib/ws";
 
 export async function POST(req: Request) {
   const error = await requireAdmin(req);
@@ -87,6 +87,10 @@ export async function POST(req: Request) {
              VALUES ($1, 'premio_polla', $2, $3)`,
             [p.usuario_id, premioIndividual, `Premio Polla Hípica - ${polla_id}`]
           );
+          try {
+            const resSaldo = await client.query("SELECT saldo FROM usuarios WHERE id = $1", [p.usuario_id]);
+            if (resSaldo.rows[0]) sendToUser(p.usuario_id, { type: "balance_updated", saldo: Number(resSaldo.rows[0].saldo) });
+          } catch {}
         }
 
         await client.query(

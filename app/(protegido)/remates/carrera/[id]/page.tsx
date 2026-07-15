@@ -123,6 +123,12 @@ export default function DetalleCarrera() {
   }, []);
 
   useWebSocket(useCallback((event: any) => {
+    if (event.type === "balance_updated" && event.saldo !== undefined) {
+      setUsuario((prev: any) => prev ? { ...prev, saldo: event.saldo } : prev);
+    }
+    if (event.type === "balance_reset") {
+      setUsuario((prev: any) => prev ? { ...prev, saldo: 0 } : prev);
+    }
     if (event.type === "puja") {
       if (event.carrera?.id === Number(id)) {
         setCarrera(event.carrera);
@@ -131,7 +137,7 @@ export default function DetalleCarrera() {
         setUsuario((prev: any) => prev ? { ...prev, saldo: event.saldo } : prev);
       }
     }
-    if (["ganador", "carrera_cerrada", "caballo_retirado"].includes(event.type)) {
+    if (["ganador", "carrera_cerrada", "caballo_retirado", "carrera_anulada"].includes(event.type)) {
       fetchCarrera();
     }
     if (event.type === "sync_estado" && event.carreras) {
@@ -206,7 +212,7 @@ export default function DetalleCarrera() {
         };
       });
     } else {
-      setErrorMsg(data.error || "Error al pujar.");
+      setErrorMsg(data.error || "Error al rematar.");
     }
   };
 
@@ -244,6 +250,7 @@ export default function DetalleCarrera() {
                 className="w-9 h-9 rounded-xl text-sm font-bold bg-gradient-to-b from-yellow-500/30 to-orange-600/30 border border-yellow-400/40 shadow-[0_0_12px_rgba(255,200,0,0.15)] hover:shadow-[0_0_20px_rgba(255,200,0,0.4)] hover:border-yellow-300/60 active:scale-95 transition-all duration-300 flex items-center justify-center"
               >
                 <svg className="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-amber-200 text-[10px] font-bold">REVISTA</span>
               </button>
             )}
             <button
@@ -281,6 +288,13 @@ export default function DetalleCarrera() {
             <div className="w-full text-center mb-1">
               <span className="inline-block px-4 py-1 rounded-full bg-red-500/20 border border-red-400/50 text-red-300 font-bold text-xs shadow-[0_0_10px_rgba(255,0,0,0.1)]">
                 🔒 Carrera Cerrada — No se aceptan más pujas
+              </span>
+            </div>
+          )}
+          {carrera.estado === "anulada" && (
+            <div className="w-full text-center mb-1">
+              <span className="inline-block px-4 py-1 rounded-full bg-purple-500/20 border border-purple-400/50 text-purple-300 font-bold text-xs shadow-[0_0_10px_rgba(150,50,255,0.1)]">
+                🚫 Carrera Anulada — Todas las pujas fueron reembolsadas
               </span>
             </div>
           )}
@@ -368,7 +382,7 @@ export default function DetalleCarrera() {
                             }}
                             className="px-3 py-1 rounded-lg bg-gradient-to-b from-green-500/30 to-green-600/20 border border-green-400/40 text-green-300 font-bold text-xs hover:brightness-125 active:scale-90 transition-all shadow-[0_0_8px_rgba(0,255,0,0.1)]"
                           >
-                            Pujar
+                            Rematar
                           </button>
                         </div>
                       )}
@@ -380,15 +394,20 @@ export default function DetalleCarrera() {
 
             </div>
 
-            {!carrera.ganador && (
-              <div className="flex items-center justify-center gap-6 mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-white/[0.02] to-white/[0.01] border border-white/[0.04]">
-                <span className="text-gray-400 text-[10px] font-medium">Total pujas: <span className="text-white font-bold text-sm">Bs. {totalPujas.toLocaleString()}</span></span>
-                <span className="text-gray-500">|</span>
-                <span className="text-gray-400 text-[10px] font-medium">Casa 20%: <span className="text-amber-400 font-bold text-sm">Bs. {casa.toLocaleString()}</span></span>
-                <span className="text-gray-500">|</span>
-                <span className="text-gray-400 text-[10px] font-medium">Ganador: <span className="text-green-400 font-bold text-sm">Bs. {totalGanador.toLocaleString()}</span></span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+              <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-gray-700/60 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
+                <span className="text-gray-500 text-[9px] uppercase tracking-[0.15em] font-semibold">Total Pujas</span>
+                <span className="text-white font-bold text-base drop-shadow-[0_0_6px_rgba(255,255,255,0.1)]">Bs. {totalPujas.toLocaleString()}</span>
               </div>
-            )}
+              <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-gray-700/60 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
+                <span className="text-gray-500 text-[9px] uppercase tracking-[0.15em] font-semibold">Casa 20%</span>
+                <span className="text-amber-400 font-bold text-base drop-shadow-[0_0_6px_rgba(255,200,0,0.15)]">- Bs. {casa.toLocaleString()}</span>
+              </div>
+              <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-green-900/60 to-green-950/60 border border-green-700/60 shadow-[0_0_15px_rgba(0,255,0,0.08)]">
+                <span className="text-gray-500 text-[9px] uppercase tracking-[0.15em] font-semibold">Premio Ganador</span>
+                <span className="text-green-400 font-bold text-base drop-shadow-[0_0_8px_rgba(0,255,0,0.2)]">Bs. {totalGanador.toLocaleString()}</span>
+              </div>
+            </div>
 
           </div>
         </div>
@@ -404,7 +423,7 @@ export default function DetalleCarrera() {
             onClick={() => !cargando && setPopup(null)}>
             <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
               <div className="p-4 border-b border-gray-700">
-                <h3 className="text-sm font-bold text-center">Confirmar Puja</h3>
+                <h3 className="text-sm font-bold text-center">Confirmar Remate</h3>
               </div>
               <div className="p-4 space-y-3">
                 <div className="flex justify-between text-xs">
@@ -429,7 +448,7 @@ export default function DetalleCarrera() {
                 </button>
                 <button onClick={confirmarRemate} disabled={cargando}
                   className="flex-1 py-2.5 rounded-xl bg-green-500/20 border border-green-400/30 text-green-300 font-semibold text-xs hover:bg-green-500/30 active:scale-95 transition-all disabled:opacity-30">
-                  {cargando ? "Procesando..." : "Confirmar Puja"}
+                  {cargando ? "Procesando..." : "Confirmar Remate"}
                 </button>
               </div>
             </div>
