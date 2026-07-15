@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { broadcast } from "@/lib/ws";
+import { sendNotify } from "@/lib/notify";
 
 export async function POST(req: Request) {
   const error = await requireAdmin(req);
@@ -16,14 +16,28 @@ export async function POST(req: Request) {
 
     await client.query("BEGIN");
 
+    // Solo reembolsar la Ãºltima puja de cada caballo NO retirado
     const pujas = await client.query(
-      "SELECT rp.id_usuario, rp.monto FROM remates_pujas rp JOIN carreras_caballos cc ON cc.id = rp.id_caballo WHERE cc.id_carrera = $1",
+      `SELECT rp.id_usuario, rp.monto, cc.numero
+       FROM remates_pujas rp
+       JOIN carreras_caballos cc ON cc.id = rp.id_caballo
+       WHERE cc.id_carrera = $1
+       AND cc.retirado = false
+       AND rp.monto = (SELECT COALESCE(MAX(rp2.monto), 0) FROM remates_pujas rp2 WHERE rp2.id_caballo = rp.id_caballo)`,
       [carrera_id]
     );
 
+    const usuariosAfectados: { id: number; monto: number }[] = [];
+
     for (const puja of pujas.rows) {
-      await client.query("UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2", [Number(puja.monto), puja.id_usuario]);
-      await client.query(`INSERT INTO historial (usuario_id, tipo, monto, asunto) VALUES ($1, 'reembolso_anulacion', $2, 'Reembolso por anulacion de carrera')`, [puja.id_usuario, puja.monto]);
+      const monto = Number(puja.monto);
+      if (monto <= 0) continue;
+      await client.query("UPDATE usuarios SET saldo = saldo + $1 WHERE id = $2", [monto, puja.id_usuario]);
+      await client.query(
+        "INSERT INTO historial (usuario_id, tipo, monto, asunto) VALUES ($1, 'reembolso_anulacion', $2, $3)",
+        [puja.id_usuario, monto, 'Reembolso por anulaci\u00f3n de carrera']
+      );
+      usuariosAfectados.push({ id: puja.id_usuario, monto });
     }
 
     await client.query("UPDATE carreras_remate SET estado = 'anulada', ganador = NULL WHERE id = $1", [carrera_id]);
@@ -31,9 +45,9 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    broadcast({ type: "carrera_anulada", carrera_id });
+    sendNotify("carrera_anulada", { carrera_id, reembolsos: usuariosAfectados });
 
-    return NextResponse.json({ ok: true, reembolsos: pujas.rows.length });
+    return NextResponse.json({ ok: true, reembolsos: usuariosAfectados.length });
   } catch (error) {
     await client.query("ROLLBACK");
     client.release();

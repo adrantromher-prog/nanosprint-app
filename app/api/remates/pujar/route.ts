@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { cookies } from "next/headers";
-import { broadcast, sendToUser } from "@/lib/ws";
+import { sendNotify } from "@/lib/notify";
 
 export async function POST(req: Request) {
   const client = await pool.connect();
@@ -149,44 +149,7 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    // Fetch full carrera data and broadcast to all clients for instant update
-    try {
-      const resCarrera = await pool.query(`SELECT * FROM carreras_remate WHERE id = $1`, [carrera_id]);
-      const resCaballos = await pool.query(
-        `SELECT 
-          cc.id, cc.numero, cc.nombre, cc.retirado,
-          COALESCE(MAX(rp.monto), 0) as puja_actual,
-          (SELECT u.sobrenombre FROM remates_pujas rp2
-           JOIN usuarios u ON u.id = rp2.id_usuario
-           WHERE rp2.id_caballo = cc.id
-           ORDER BY rp2.monto DESC LIMIT 1
-          ) as pujador_sobrenombre
-         FROM carreras_caballos cc
-         LEFT JOIN remates_pujas rp ON rp.id_caballo = cc.id
-         WHERE cc.id_carrera = $1
-         GROUP BY cc.id, cc.numero, cc.nombre, cc.retirado
-         ORDER BY cc.numero ASC`,
-        [carrera_id]
-      );
-      const resSaldo = await pool.query(`SELECT saldo FROM usuarios WHERE id = $1`, [usuarioId]);
-      const carreraData = {
-        ...resCarrera.rows[0],
-        caballos: resCaballos.rows.map((c: any) => ({ ...c, puja_actual: Number(c.puja_actual) })),
-      };
-      broadcast({ type: "puja", carrera: carreraData, usuario_id: usuarioId, saldo: Number(resSaldo.rows[0].saldo) });
-
-      // Notify outbid user of their refunded balance
-      if (pujaAnterior && pujaAnterior.id_usuario !== usuarioId) {
-        try {
-          const resAnteriorSaldo = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [pujaAnterior.id_usuario]);
-          if (resAnteriorSaldo.rows[0]) {
-            sendToUser(pujaAnterior.id_usuario, { type: "balance_updated", saldo: Number(resAnteriorSaldo.rows[0].saldo) });
-          }
-        } catch {}
-      }
-    } catch (e) {
-      console.error("Error broadcasting carrera data:", e);
-    }
+    sendNotify("puja", { carrera_id, caballo_id, usuario_id: usuarioId, monto, pujaAnteriorId: pujaAnterior?.id_usuario, pujaAnteriorMonto: pujaAnterior?.monto });
 
     return NextResponse.json({ ok: true });
 

@@ -225,6 +225,86 @@ app.prepare().then(async () => {
     console.log(`🔌 WebSocket server listening on port ${WS_PORT}`);
   });
 
+  // PostgreSQL LISTEN/NOTIFY — recibe eventos de las API routes y las reenvía a WebSocket clients
+  const { Pool } = require("pg");
+  const queryPool = new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000, max: 2 });
+  const listenPool = new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000, max: 1 });
+  listenPool.connect((err, listenClient, done) => {
+    if (err) { console.error("❌ LISTEN pool connect error:", err.message); return; }
+    listenClient.on("notification", async (msg) => {
+      try {
+        const event = JSON.parse(msg.payload);
+        const wss = globalThis.__wss;
+        if (!wss) return;
+
+        if (event.type === "puja") {
+          // Fetch full carrera data from DB
+          const [resCarrera, resCaballos] = await Promise.all([
+            queryPool.query("SELECT * FROM carreras_remate WHERE id = $1", [event.carrera_id]),
+            queryPool.query(`SELECT cc.id, cc.numero, cc.nombre, cc.retirado,
+              COALESCE((SELECT rp.monto FROM remates_pujas rp WHERE rp.id_caballo = cc.id ORDER BY rp.monto DESC LIMIT 1), 0) as puja_actual,
+              (SELECT u.sobrenombre FROM remates_pujas rp2 JOIN usuarios u ON u.id = rp2.id_usuario WHERE rp2.id_caballo = cc.id ORDER BY rp2.monto DESC LIMIT 1) as pujador_sobrenombre
+              FROM carreras_caballos cc WHERE cc.id_carrera = $1 ORDER BY cc.numero ASC`, [event.carrera_id])
+          ]);
+          if (resCarrera.rows.length === 0) return;
+          const carreraData = { ...resCarrera.rows[0], caballos: resCaballos.rows.map(c => ({ ...c, puja_actual: Number(c.puja_actual) })) };
+          broadcast({ type: "puja", carrera: carreraData, usuario_id: event.usuario_id });
+          // Send balance_updated to the bidder
+          if (event.usuario_id) {
+            const resSaldo = await queryPool.query("SELECT saldo FROM usuarios WHERE id = $1", [event.usuario_id]);
+            if (resSaldo.rows[0]) {
+              const saldo = Number(resSaldo.rows[0].saldo);
+              for (const c of [...wss.clients]) {
+                if (c.readyState === 1 && c.userId === event.usuario_id) {
+                  try { c.send(JSON.stringify({ type: "balance_updated", saldo }), () => {}); } catch {}
+                }
+              }
+            }
+          }
+          // Send balance_updated to the outbid user
+          if (event.pujaAnteriorId) {
+            const resAnterior = await queryPool.query("SELECT saldo FROM usuarios WHERE id = $1", [event.pujaAnteriorId]);
+            if (resAnterior.rows[0]) {
+              const saldo = Number(resAnterior.rows[0].saldo);
+              for (const c of [...wss.clients]) {
+                if (c.readyState === 1 && c.userId === event.pujaAnteriorId) {
+                  try { c.send(JSON.stringify({ type: "balance_updated", saldo }), () => {}); } catch {}
+                }
+              }
+            }
+          }
+        } else if (event.type === "caballo_retirado") {
+          broadcast({ type: "caballo_retirado", caballo_id: event.caballo_id });
+          if (event.usuario_id) {
+            const resSaldo = await queryPool.query("SELECT saldo FROM usuarios WHERE id = $1", [event.usuario_id]);
+            if (resSaldo.rows[0]) {
+              for (const c of [...wss.clients]) {
+                if (c.readyState === 1 && c.userId === event.usuario_id) {
+                  try { c.send(JSON.stringify({ type: "balance_updated", saldo: Number(resSaldo.rows[0].saldo) }), () => {}); } catch {}
+                }
+              }
+            }
+          }
+        } else if (event.type === "carrera_anulada") {
+          broadcast({ type: "carrera_anulada", carrera_id: event.carrera_id });
+          // Send balance_updated to affected users
+          for (const r of (event.reembolsos || [])) {
+            if (r.monto <= 0) continue;
+            for (const c of [...wss.clients]) {
+              if (c.readyState === 1 && c.userId === r.id) {
+                try { c.send(JSON.stringify({ type: "balance_updated", saldo: r.monto }), () => {}); } catch {}
+              }
+            }
+          }
+        }
+      } catch (e) { console.error("❌ LISTEN handler error:", e); }
+    });
+    listenClient.query("LISTEN remates_evento", (err) => {
+      if (err) { console.error("❌ LISTEN remates_evento error:", err.message); return; }
+      console.log("🔔 PostgreSQL LISTEN remates_evento activo");
+    });
+  });
+
   // Proxy WebSocket upgrade requests from main server to isolated WS server (port 3001)
   server.on("upgrade", (req, socket, head) => {
     const proxySocket = createConnection({ port: 3001, host: "localhost" }, () => {

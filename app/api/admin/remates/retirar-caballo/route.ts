@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { broadcast, sendToUser } from "@/lib/ws";
+import { sendNotify } from "@/lib/notify";
 
 export async function POST(req: Request) {
   const error = await requireAdmin(req);
@@ -37,17 +37,7 @@ export async function POST(req: Request) {
     await client.query("COMMIT");
     client.release();
 
-    broadcast({ type: "caballo_retirado", caballo_id });
-
-    // Send real-time balance update to the refunded user
-    if (ultimaPuja.rows[0]) {
-      try {
-        const resSaldo = await pool.query("SELECT saldo FROM usuarios WHERE id = $1", [ultimaPuja.rows[0].id_usuario]);
-        if (resSaldo.rows[0]) {
-          sendToUser(ultimaPuja.rows[0].id_usuario, { type: "balance_updated", saldo: Number(resSaldo.rows[0].saldo) });
-        }
-      } catch {}
-    }
+    sendNotify("caballo_retirado", { caballo_id, usuario_id: ultimaPuja.rows[0]?.id_usuario, monto: ultimaPuja.rows[0]?.monto });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
