@@ -106,12 +106,18 @@ export default function DetalleCarrera() {
   const [popup, setPopup] = useState<{ caballo: Caballo; monto: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [cargando, setCargando] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchCarrera = useCallback(async () => {
     const res = await fetch(`/api/remates/carrera/${id}`);
     const data = await res.json();
     if (data.ok && data.carrera) setCarrera(data.carrera);
   }, [id]);
+
+  const setCarreraDebounced = useCallback((c: Carrera) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setCarrera(c), 150);
+  }, []);
 
   const fetchUser = useCallback(async () => {
     const res = await fetch("/api/me", { cache: "no-store" });
@@ -131,20 +137,21 @@ export default function DetalleCarrera() {
     }
     if (event.type === "puja") {
       if (event.carrera?.id === Number(id)) {
-        setCarrera(event.carrera);
+        setCarreraDebounced(event.carrera);
       }
       if (event.usuario_id && event.usuario_id === userIdRef.current && event.saldo !== undefined) {
         setUsuario((prev: any) => prev ? { ...prev, saldo: event.saldo } : prev);
       }
     }
     if (["ganador", "carrera_cerrada", "caballo_retirado", "carrera_anulada"].includes(event.type)) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       fetchCarrera();
     }
     if (event.type === "sync_estado" && event.carreras) {
       const found = event.carreras.find((c: any) => c.id === Number(id));
-      if (found) setCarrera(found);
+      if (found) setCarreraDebounced(found);
     }
-  }, [id, fetchCarrera]));
+  }, [id, fetchCarrera, setCarreraDebounced]));
 
   useEffect(() => {
     fetchCarrera();
@@ -244,15 +251,6 @@ export default function DetalleCarrera() {
         <div className="flex flex-wrap items-center gap-2 mb-3">
 
           <div className="flex items-center gap-2">
-            {carrera.imagen && (
-              <button
-                onClick={() => window.open(`/api/remates/imagen/${carrera.id}`, '_blank')}
-                className="w-9 h-9 rounded-xl text-sm font-bold bg-gradient-to-b from-yellow-500/30 to-orange-600/30 border border-yellow-400/40 shadow-[0_0_12px_rgba(255,200,0,0.15)] hover:shadow-[0_0_20px_rgba(255,200,0,0.4)] hover:border-yellow-300/60 active:scale-95 transition-all duration-300 flex items-center justify-center"
-              >
-                <svg className="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span className="text-amber-200 text-[10px] font-bold">REVISTA</span>
-              </button>
-            )}
             <button
               onClick={() => router.push("/remates")}
               className="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gradient-to-b from-slate-700 to-slate-900 border border-slate-500/50 shadow-[0_0_12px_rgba(100,200,255,0.15)] hover:shadow-[0_0_20px_rgba(100,200,255,0.4)] hover:border-cyan-400/60 active:scale-95 transition-all duration-300"
@@ -267,9 +265,9 @@ export default function DetalleCarrera() {
             <Temporizador horaCierre={carrera.hora_cierre} estado={carrera.estado} />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-2.5 py-1 text-right whitespace-nowrap shadow-[0_0_15px_rgba(0,255,255,0.05)]">
-            <p className="text-gray-300 text-[10px] font-bold leading-tight">{usuario.nombre}</p>
-            <p className="text-green-300 font-extrabold text-[10px] drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-3 py-1.5 text-right whitespace-nowrap shadow-[0_0_15px_rgba(0,255,255,0.05)]">
+            <p className="text-gray-300 text-sm font-bold leading-tight">{usuario.nombre}</p>
+            <p className="text-green-300 font-extrabold text-xs drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]">
               Bs. {Number(usuario.saldo).toLocaleString("en-US", { minimumFractionDigits: 0 })}
             </p>
           </div>
@@ -301,55 +299,67 @@ export default function DetalleCarrera() {
 
           <div className="flex-1 min-w-0">
 
-            <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-2xl p-2 shadow-[0_0_20px_rgba(0,0,0,0.3)]">
+            <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-gray-700/60 rounded-xl p-1.5 shadow-[0_0_20px_rgba(0,0,0,0.3)]">
 
-              <div className="hidden sm:grid grid-cols-[36px_1fr_100px_1fr] px-3 pb-2 border-b border-gray-700/50 gap-1">
-                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold">N°</span>
-                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold">Caballo</span>
-                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold text-center">Puja</span>
-                <span className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-semibold text-center">Apuesta</span>
+              <div className="hidden sm:grid grid-cols-[28px_1fr_90px_1fr] px-2 pb-1.5 border-b border-gray-700/40 gap-1">
+                <span className="text-[9px] text-gray-600 uppercase tracking-[0.15em] font-semibold">N°</span>
+                <span className="text-[9px] text-gray-600 uppercase tracking-[0.15em] font-semibold">Caballo</span>
+                <span className="text-[9px] text-gray-600 uppercase tracking-[0.15em] font-semibold text-center">Puja</span>
+                <span className="text-[9px] text-gray-600 uppercase tracking-[0.15em] font-semibold text-center">Apuesta</span>
               </div>
 
-              <div className="space-y-1 pt-2">
-                {carrera.caballos.map((caballo, idx) => (
+              <div className="space-y-0.5 pt-1.5">
+                <div className="flex gap-1.5 mb-1">
+                  {carrera.imagen && (
+                    <button onClick={() => window.open(`/api/remates/imagen/${carrera.id}`, '_blank')}
+                      className="flex-1 py-2 rounded-lg text-[10px] font-bold bg-gradient-to-r from-yellow-500/20 to-orange-600/20 border border-yellow-400/30 hover:border-yellow-300/50 active:scale-[0.98] transition-all">
+                      REVISTA
+                    </button>
+                  )}
+                  <button onClick={() => window.location.reload()}
+                    className="flex-1 py-2 rounded-lg text-[10px] font-bold bg-gradient-to-r from-emerald-500/30 to-teal-600/30 border border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(0,200,150,0.2)] hover:shadow-[0_0_20px_rgba(0,200,150,0.5)] hover:border-emerald-300/70 active:scale-[0.98] transition-all duration-300">
+                    ACTUALIZAR REMATE
+                  </button>
+                </div>
+                {carrera.caballos.map((caballo, idx) => {
+                  const fondos = ["bg-red-950/20", "bg-gray-800/20", "bg-blue-950/20", "bg-amber-950/20", "bg-green-950/20", "bg-gray-950/30"];
+                  const fondo = caballo.retirado ? "" : fondos[(caballo.numero - 1) % 6];
+                  return (
                   <div
                     key={caballo.id}
-                    className={`rounded-xl text-xs transition-all duration-200 ${
+                    className={`rounded-lg text-[11px] transition-all duration-200 border-2 ${fondo} ${
                       caballo.retirado
-                        ? "bg-red-500/10 border border-red-400/20"
-                        : idx % 2 === 0
-                          ? "bg-white/[0.04] border border-white/[0.06]"
-                          : "bg-white/[0.02] border border-white/[0.04]"
+                        ? "bg-red-500/8 border-red-400/30"
+                        : "border-white/[0.15]"
                     }`}
                   >
-                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 px-3 py-2">
-                      <span className="font-mono text-gray-500 text-xs font-semibold">#{caballo.numero}</span>
+                    <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 px-2 py-2">
+                      <span className="font-mono text-gray-500 text-[10px] font-semibold w-[18px]">#{caballo.numero}</span>
 
-                      <span className={`text-xs font-semibold truncate flex-1 min-w-0 ${caballo.retirado ? "line-through text-gray-500" : "text-white"}`}>
+                      <span className={`text-[11px] font-semibold truncate flex-1 min-w-0 ${caballo.retirado ? "line-through text-gray-500" : "text-white"}`}>
                         {caballo.nombre}
                         {caballo.retirado && (
-                          <span className="inline text-red-400 text-[10px] font-bold ml-1" style={{ textDecoration: "none" }}>RETIRADO</span>
+                          <span className="inline text-red-400 text-[9px] font-bold ml-1" style={{ textDecoration: "none" }}>RETIRADO</span>
                         )}
                       </span>
 
                       {caballo.retirado ? (
-                        <span className="text-gray-600 text-xs ml-auto">—</span>
+                        <span className="text-gray-600 text-[10px] ml-auto">—</span>
                       ) : (
-                        <div className="ml-auto sm:ml-0 text-right leading-snug">
-                          <span className="text-cyan-300 font-bold text-sm drop-shadow-[0_0_6px_rgba(0,255,255,0.15)]">
-                            {caballo.puja_actual ? `Bs.${caballo.puja_actual.toLocaleString()}` : "—"}
-                          </span>
-                          {caballo.pujador_sobrenombre && (
-                            <span className="block text-purple-400 font-bold text-[10px] drop-shadow-[0_0_4px_rgba(200,0,255,0.15)]">
-                              @{caballo.pujador_sobrenombre}
+                        <span className="ml-auto sm:ml-0 text-right text-sm">
+                          {caballo.puja_actual ? (
+                            <span className="text-cyan-300 font-bold">
+                              Bs. {caballo.puja_actual.toLocaleString()}{caballo.pujador_sobrenombre ? <span className="text-purple-400 font-bold"> {" "} - @{caballo.pujador_sobrenombre}</span> : ""}
                             </span>
+                          ) : (
+                            <span className="text-gray-500">—</span>
                           )}
-                        </div>
+                        </span>
                       )}
 
                       {!caballo.retirado && carrera.estado === "abierta" && (
-                        <div className="w-full flex items-center gap-1 pt-1.5 mt-1 border-t border-white/[0.04] flex-wrap">
-                          <span className="text-white font-bold text-xs text-center px-2 py-1 rounded-lg bg-black/50 border border-cyan-400/30 min-w-[70px] shadow-[0_0_6px_rgba(0,255,255,0.05)]">
+                        <div className="w-full flex items-center gap-3 pt-1.5 mt-1 border-t border-white/[0.06] flex-wrap">
+                          <span className="text-white font-bold text-[11px] text-center px-2 py-1 rounded-lg bg-black/50 border border-cyan-400/30 min-w-[70px]">
                             Bs.{(montos[caballo.id] || 0).toLocaleString()}
                           </span>
                           {[500, 1000, 5000].map((cant) => (
@@ -360,7 +370,7 @@ export default function DetalleCarrera() {
                                 setErrorMsg("");
                                 setMontos((prev) => ({ ...prev, [caballo.id]: (prev[caballo.id] || 0) + cant }));
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-gradient-to-b from-cyan-500/20 to-cyan-600/10 border border-cyan-400/30 text-cyan-300 font-bold text-xs hover:brightness-125 active:scale-90 transition-all shadow-[0_0_6px_rgba(0,255,255,0.08)]"
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-b from-cyan-500/20 to-cyan-600/10 border border-cyan-400/30 text-cyan-300 font-bold text-[11px] hover:brightness-125 active:scale-90 transition-all"
                             >
                               +Bs.{cant.toLocaleString()}
                             </button>
@@ -371,7 +381,7 @@ export default function DetalleCarrera() {
                               setMontos((prev) => ({ ...prev, [caballo.id]: 0 }));
                               setErrorMsg("");
                             }}
-                            className="px-1.5 py-1 rounded-lg bg-black/30 border border-white/10 text-gray-400 font-bold text-[10px] hover:text-white active:scale-90 transition-all"
+                            className="px-2.5 py-1.5 rounded-lg bg-red-900/30 border border-red-500/40 text-red-400 font-bold text-sm hover:bg-red-800/40 active:scale-90 transition-all"
                           >
                             ✕
                           </button>
@@ -380,7 +390,7 @@ export default function DetalleCarrera() {
                               e.stopPropagation();
                               abrirPopup(caballo);
                             }}
-                            className="px-3 py-1 rounded-lg bg-gradient-to-b from-green-500/30 to-green-600/20 border border-green-400/40 text-green-300 font-bold text-xs hover:brightness-125 active:scale-90 transition-all shadow-[0_0_8px_rgba(0,255,0,0.1)]"
+                            className="px-3 py-1 rounded-lg bg-gradient-to-b from-green-500/30 to-green-600/20 border border-green-400/40 text-green-300 font-bold text-[11px] hover:brightness-125 active:scale-90 transition-all"
                           >
                             Rematar
                           </button>
@@ -389,21 +399,18 @@ export default function DetalleCarrera() {
 
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
 
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-gray-700/60 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
                 <span className="text-gray-500 text-[9px] uppercase tracking-[0.15em] font-semibold">Total Pujas</span>
                 <span className="text-white font-bold text-base drop-shadow-[0_0_6px_rgba(255,255,255,0.1)]">Bs. {totalPujas.toLocaleString()}</span>
               </div>
-              <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-gray-800/80 to-gray-900/80 border border-gray-700/60 shadow-[0_0_15px_rgba(0,0,0,0.2)]">
-                <span className="text-gray-500 text-[9px] uppercase tracking-[0.15em] font-semibold">Casa 20%</span>
-                <span className="text-amber-400 font-bold text-base drop-shadow-[0_0_6px_rgba(255,200,0,0.15)]">- Bs. {casa.toLocaleString()}</span>
-              </div>
-              <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-green-900/60 to-green-950/60 border border-green-700/60 shadow-[0_0_15px_rgba(0,255,0,0.08)]">
+              <div className="flex flex-col items-center px-3 py-2.5 rounded-xl bg-gradient-to-b from-green-900/60 to-green-950/60 border border-green-700/60 shadow-[0_0_15px_rgba(0,255,0,0.08)] text-center">
                 <span className="text-gray-500 text-[9px] uppercase tracking-[0.15em] font-semibold">Premio Ganador</span>
                 <span className="text-green-400 font-bold text-base drop-shadow-[0_0_8px_rgba(0,255,0,0.2)]">Bs. {totalGanador.toLocaleString()}</span>
               </div>
