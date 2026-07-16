@@ -15,27 +15,34 @@ export async function GET(req: Request) {
     let label: string;
     let limit: string;
     if (filter === "semanal") {
-      groupBy = "DATE_TRUNC('week', pa.fecha - INTERVAL '4 hours')";
+      groupBy = "DATE_TRUNC('week', fecha - INTERVAL '4 hours')";
       label = `TO_CHAR(${groupBy}, 'YYYY-MM-DD') as inicio_semana`;
       limit = "52";
     } else if (filter === "mensual") {
-      groupBy = "DATE_TRUNC('month', pa.fecha - INTERVAL '4 hours')";
+      groupBy = "DATE_TRUNC('month', fecha - INTERVAL '4 hours')";
       label = `TO_CHAR(${groupBy}, 'YYYY-MM') as mes`;
       limit = "24";
     } else {
-      groupBy = "DATE(pa.fecha - INTERVAL '4 hours')";
-      label = "DATE(pa.fecha - INTERVAL '4 hours') as dia";
+      groupBy = "DATE(fecha - INTERVAL '4 hours')";
+      label = "DATE(fecha - INTERVAL '4 hours') as dia";
       limit = "60";
     }
 
     const { rows } = await pool.query(`
       SELECT
         ${label},
-        COUNT(DISTINCT (pa.polla_id, pa.ticket))::int as total_tickets,
-        ROUND(SUM(pc.costo))::numeric as monto_total
-      FROM polla_apuestas pa
-      JOIN polla_config pc ON pc.id = pa.polla_id
-      WHERE pa.vendido_por IS NULL
+        COUNT(*)::int as total_tickets,
+        ROUND(SUM(costo_unico))::numeric as monto_total
+      FROM (
+        SELECT DISTINCT ON (pa.polla_id, pa.ticket)
+          DATE(pa.fecha - INTERVAL '4 hours') as fecha,
+          pa.polla_id,
+          pa.ticket,
+          pc.costo as costo_unico
+        FROM polla_apuestas pa
+        JOIN polla_config pc ON pc.id = pa.polla_id
+        WHERE pa.vendido_por IS NULL
+      ) sub
       GROUP BY ${groupBy}
       ORDER BY ${groupBy} DESC
       LIMIT ${limit}

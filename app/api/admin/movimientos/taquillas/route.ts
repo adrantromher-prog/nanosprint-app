@@ -36,17 +36,23 @@ export async function GET(req: Request) {
         const { rows } = await pool.query(`
           SELECT
             ${label},
-            COUNT(DISTINCT (pa.polla_id, pa.ticket))::int as total_tickets,
-            ROUND(SUM(pc.costo))::numeric as monto_total
-          FROM polla_apuestas pa
-          JOIN polla_config pc ON pc.id = pa.polla_id
-          WHERE pa.vendido_por = $1
+            COUNT(*)::int as total_tickets,
+            ROUND(SUM(costo_unico))::numeric as monto_total
+          FROM (
+            SELECT DISTINCT ON (pa.polla_id, pa.ticket)
+              DATE(pa.fecha - INTERVAL '4 hours') as fecha,
+              pa.polla_id,
+              pa.ticket,
+              pc.costo as costo_unico
+            FROM polla_apuestas pa
+            JOIN polla_config pc ON pc.id = pa.polla_id
+            WHERE pa.vendido_por = $1
+          ) sub
           GROUP BY ${groupBy}
           ORDER BY ${groupBy} DESC
           LIMIT ${limit}
         `, [id]);
 
-        // Also get taquilla info for commission
         const taq = await pool.query("SELECT comision FROM usuarios WHERE id = $1", [id]);
         const comisionPct = Number(taq.rows[0]?.comision) || 10;
 
@@ -74,9 +80,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: "Tipo inválido" }, { status: 400 });
     }
 
-    // Lista de taquillas
+    // Lista de taquillas - fix: usar DISTINCT para evitar multiplicar por 6
     const { rows } = await pool.query(`
-      SELECT u.id, u.sobrenombre, u.nombre_taquilla, u.comision, u.saldo,
+      SELECT
+        u.id, u.sobrenombre, u.nombre_taquilla, u.comision, u.saldo,
         COALESCE(p.total_tickets_polla, 0)::int as total_tickets_polla,
         COALESCE(p.monto_polla, 0)::numeric as monto_polla,
         COALESCE(v.total_tickets_virtual, 0)::int as total_tickets_virtual,
@@ -84,13 +91,17 @@ export async function GET(req: Request) {
         COALESCE(p.monto_polla, 0) + COALESCE(v.monto_virtual, 0) as total_ventas
       FROM usuarios u
       LEFT JOIN (
-        SELECT pa.vendido_por,
-          COUNT(DISTINCT (pa.polla_id, pa.ticket))::int as total_tickets_polla,
-          SUM(pc.costo) as monto_polla
-        FROM polla_apuestas pa
-        JOIN polla_config pc ON pc.id = pa.polla_id
-        WHERE pa.vendido_por IS NOT NULL
-        GROUP BY pa.vendido_por
+        SELECT vendido_por,
+          COUNT(*)::int as total_tickets_polla,
+          ROUND(SUM(costo_unico))::numeric as monto_polla
+        FROM (
+          SELECT DISTINCT ON (pa.polla_id, pa.ticket)
+            pa.vendido_por, pa.polla_id, pa.ticket, pc.costo as costo_unico
+          FROM polla_apuestas pa
+          JOIN polla_config pc ON pc.id = pa.polla_id
+          WHERE pa.vendido_por IS NOT NULL
+        ) sub
+        GROUP BY vendido_por
       ) p ON p.vendido_por = u.id
       LEFT JOIN (
         SELECT usuario_id,
