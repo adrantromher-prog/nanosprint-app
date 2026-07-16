@@ -93,13 +93,28 @@ export default function PCSpectatorPage() {
         </div>
       </div>
 
-      {/* GANADOR */}
+      {/* GANADOR — RESULTADOS */}
       {etapa === "resultado" && ganador !== null && (
-        <div className="absolute top-[180px] left-1/2 -translate-x-1/2 z-20">
-          <div className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-600 to-orange-600 border border-yellow-400/60 shadow-[0_0_20px_rgba(255,200,0,0.3)]">
-            <p className="text-white text-lg font-extrabold uppercase tracking-wider">
-              Ganador: {estadisticas[ganador]?.nombre || ("Caballo " + (ganador + 1))}
-            </p>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center"
+          style={{ background: "linear-gradient(135deg, #05080f 0%, #070d1a 50%, #040a12 100%)" }}>
+          <div className="relative text-center px-8">
+            <p className="text-white/25 text-xs font-mono tracking-widest uppercase mb-6">Carrera #{String(carreraNum).padStart(4, "0")}</p>
+            <div className="mb-2 text-sm text-white/40 uppercase tracking-[0.2em] font-semibold">Ganador</div>
+            <h1 className="text-8xl font-black text-white mb-2 tracking-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              {estadisticas[ganador]?.nombre || ("Caballo " + (ganador + 1))}
+            </h1>
+            <div className="flex items-center justify-center gap-10 mb-8">
+              <div className="text-center">
+                <p className="text-white/30 text-xs uppercase tracking-[0.15em] mb-1">Cuota</p>
+                <p className="text-green-400 font-black text-3xl drop-shadow-[0_0_10px_rgba(0,255,0,0.2)]">x{cuotas[ganador]?.toFixed(2) || "—"}</p>
+              </div>
+              <div className="w-px h-12 bg-white/10" />
+              <div className="text-center">
+                <p className="text-white/30 text-xs uppercase tracking-[0.15em] mb-1">Premio base</p>
+                <p className="text-amber-400 font-black text-3xl drop-shadow-[0_0_10px_rgba(255,200,0,0.2)]">Bs. {((cuotas[ganador] || 0) * 500).toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="text-white/15 text-xs">NanoSprint — Carreras Virtuales</div>
           </div>
         </div>
       )}
