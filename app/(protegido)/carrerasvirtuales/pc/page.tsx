@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import CarreraView from "../CarreraView";
 
 type CaballoStat = {
   numero: number;
@@ -17,7 +18,7 @@ const coloresHexBg = ["#dc2626", "#e5e7eb", "#2563eb", "#facc15", "#16a34a", "#0
 const coloresHexText = ["#ffffff", "#0f172a", "#ffffff", "#0f172a", "#ffffff", "#ffffff"];
 
 export default function PCSpectatorPage() {
-  const [estado, setEstado] = useState<string>("apuestas");
+  const [etapa, setEtapa] = useState<string>("apuestas");
   const [tiempo, setTiempo] = useState<number>(0);
   const [cuotas, setCuotas] = useState<number[]>([]);
   const [estadisticas, setEstadisticas] = useState<CaballoStat[]>([]);
@@ -25,14 +26,20 @@ export default function PCSpectatorPage() {
   const [carreraNum, setCarreraNum] = useState<number>(1);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [ganador, setGanador] = useState<number | null>(null);
+  const [transicionActiva, setTransicionActiva] = useState(false);
 
   useEffect(() => {
-    if (estado === "carrera" || estado === "resultado") return;
     const poll = async () => {
       try {
         const res = await fetch("/api/carrera", { cache: "no-store" });
         const data = await res.json();
-        setEstado(data.estado);
+        if (data.estado !== etapa) {
+          setTransicionActiva(true);
+          setTimeout(() => {
+            setEtapa(data.estado);
+            setTransicionActiva(false);
+          }, 1100);
+        }
         setTiempo(data.tiempoRestante);
         setCuotas(data.cuotas ?? []);
         setEstadisticas(data.estadisticas ?? []);
@@ -43,26 +50,26 @@ export default function PCSpectatorPage() {
       } catch {}
     };
     poll();
-    const interval = setInterval(poll, 1000);
+    const ms = etapa === "apuestas" ? 1000 : 3000;
+    const interval = setInterval(poll, ms);
     return () => clearInterval(interval);
-  }, [estado]);
+  }, [etapa]);
 
   const barColor = (v: number) => v >= 85 ? "#22c55e" : v >= 75 ? "#eab308" : "#ef4444";
 
-  const ultimos10 = [...ultimosGanadores].reverse().slice(0, 10);
-
-  if (estado === "carrera" && videoUrl) {
-    return (
-      <div className="fixed inset-0 bg-black">
-        <video key={videoUrl} src={videoUrl} autoPlay muted playsInline preload="auto"
-          className="absolute inset-0 w-full h-full object-contain" />
-      </div>
-    );
+  if (etapa === "carrera" && videoUrl) {
+    return <CarreraView url={videoUrl} carreraNum={carreraNum} />;
   }
+
+  const ultimos10 = [...ultimosGanadores].reverse().slice(0, 10);
 
   return (
     <div className="fixed inset-0 overflow-hidden text-white select-none"
       style={{ background: "linear-gradient(135deg, #05080f 0%, #070d1a 50%, #040a12 100%)" }}>
+
+      {/* TRANSICIÓN */}
+      <div className={`pointer-events-none fixed inset-0 z-[999] bg-gradient-to-b from-[#001a33] via-[#003366] to-[#000814] backdrop-blur-[12px] bg-contain bg-no-repeat bg-center transition-transform duration-[1100ms] ease-out ${transicionActiva ? "translate-y-0" : "-translate-y-full"}`}
+        style={{ backgroundImage: "url('/transicion.png')" }} />
 
       {/* ORBES DE FONDO */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -81,13 +88,13 @@ export default function PCSpectatorPage() {
             {tiempo}
           </p>
           <p className="text-white/25 text-xs uppercase tracking-[0.3em]">
-            {estado === "resultado" ? "Resultados" : "Apuestas abiertas"}
+            {etapa === "resultado" ? "Resultados" : "Apuestas abiertas"}
           </p>
         </div>
       </div>
 
       {/* GANADOR */}
-      {estado === "resultado" && ganador !== null && (
+      {etapa === "resultado" && ganador !== null && (
         <div className="absolute top-[180px] left-1/2 -translate-x-1/2 z-20">
           <div className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-600 to-orange-600 border border-yellow-400/60 shadow-[0_0_20px_rgba(255,200,0,0.3)]">
             <p className="text-white text-lg font-extrabold uppercase tracking-wider">
@@ -120,10 +127,10 @@ export default function PCSpectatorPage() {
       </div>
 
       {/* STATS 3×2 */}
-      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+      <div className="absolute inset-0 flex items-center justify-center z-10">
         <div className="grid grid-cols-3 gap-5 w-full max-w-[1200px] px-20 ml-24 mt-10">
           {estadisticas.slice(0, 6).map((stat, i) => (
-            <div key={i} className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden pointer-events-auto">
+            <div key={i} className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
               <div className="h-14 flex items-center justify-center gap-2 text-base font-bold px-3"
                 style={{ backgroundColor: coloresHexBg[i], color: coloresHexText[i] }}>
                 <span className="opacity-80 text-base font-bold">#{stat.numero}</span>
