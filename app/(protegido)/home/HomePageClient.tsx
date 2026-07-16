@@ -231,6 +231,18 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
             🎫 Vender Pollas
           </button>
 
+          <button onClick={() => window.open("/carrerasvirtuales/pc", "_blank")}
+            className="w-full py-5 rounded-2xl bg-cyan-600/70 border border-cyan-400/60 text-white font-bold text-lg
+              shadow-[0_0_30px_rgba(0,255,255,0.3)] hover:brightness-110 active:scale-95 transition-all">
+            📺 Video
+          </button>
+
+          <button onClick={() => router.push("/carrerasvirtuales/venta")}
+            className="w-full py-5 rounded-2xl bg-purple-600/70 border border-purple-400/60 text-white font-bold text-lg
+              shadow-[0_0_30px_rgba(180,0,255,0.3)] hover:brightness-110 active:scale-95 transition-all">
+            🐎 Vender Carreras Virtuales
+          </button>
+
           <ModalPendientes nombre={nombre} />
           <ModalEstadisticas />
         </div>
