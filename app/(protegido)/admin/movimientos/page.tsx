@@ -37,7 +37,6 @@ export default function AdminMovimientos() {
   const [detalleData, setDetalleData] = useState<any[]>([]);
   const [cargandoDetalle, setCargandoDetalle] = useState(false);
 
-  // ===== USUARIOS =====
   const cargar = useCallback(async () => {
     if (tab !== "usuarios") return;
     setCargando(true);
@@ -56,7 +55,6 @@ export default function AdminMovimientos() {
     if (tab === "usuarios") cargar();
   }, [tab, juego, filtro, cargar]);
 
-  // ===== TAQUILLAS =====
   const cargarTaquillas = useCallback(async () => {
     if (tab !== "taquillas") return;
     setCargandoT(true);
@@ -123,7 +121,7 @@ export default function AdminMovimientos() {
         </button>
       </div>
 
-      {/* ==================== TAB USUARIOS ==================== */}
+      {/* ===== TAB USUARIOS ===== */}
       {tab === "usuarios" && (
         <div className="max-w-5xl mx-auto space-y-4">
           <div className="flex gap-2 flex-wrap">
@@ -246,7 +244,7 @@ export default function AdminMovimientos() {
         </div>
       )}
 
-      {/* ==================== TAB TAQUILLAS ==================== */}
+      {/* ===== TAB TAQUILLAS ===== */}
       {tab === "taquillas" && (
         <div className="max-w-5xl mx-auto space-y-4">
           {taquillaSel ? (
@@ -264,7 +262,7 @@ export default function AdminMovimientos() {
                 </button>
               </div>
 
-              {/* Resumen — solo polla o solo virtual, no combinado */}
+              {/* Resumen — valores absolutos de la taquilla, no del filtro */}
               {tipoDetalle === "polla" && (() => {
                 const pct = Number(taquillaSel.comision_pct) || 10;
                 const montoPolla = Number(taquillaSel.monto_polla) || 0;
@@ -292,8 +290,8 @@ export default function AdminMovimientos() {
 
               {tipoDetalle === "virtual" && (() => {
                 const montoVirtual = Number(taquillaSel.monto_virtual) || 0;
-                const totalGanancia = detalleData.reduce((s: number, r: any) => s + Number(r.ganancia || 0), 0);
-                const totalPremios = detalleData.reduce((s: number, r: any) => s + Number(r.premios_pagados || 0), 0);
+                const totalPremios = Number(taquillaSel.premios_virtual) || 0;
+                const totalGanancia = montoVirtual - totalPremios;
                 return (
                   <div className="bg-gradient-to-b from-cyan-600/10 to-blue-900/10 border border-cyan-400/20 rounded-xl px-4 py-3 flex items-center justify-center gap-8">
                     <div className="text-center">
@@ -422,7 +420,7 @@ export default function AdminMovimientos() {
                   <div key={t.id} className="bg-gray-900/50 border border-gray-700 rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="font-bold text-white/90">{t.nombre_taquilla || t.sobrenombre || "—"}</p>
+                        <p className="font-bold text-white/90">{t.nombre_taquilla || t.sobrenombre || "\u2014"}</p>
                         <p className="text-[10px] text-gray-500">@{t.sobrenombre} · Comisión {t.comision_pct}%</p>
                       </div>
                       <p className="text-right">

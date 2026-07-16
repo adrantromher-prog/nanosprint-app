@@ -13,7 +13,6 @@ export async function GET(req: Request) {
     const tipo = searchParams.get("tipo");
     const filter = searchParams.get("filter") || "diario";
 
-    // Detalle por taquilla: polla o virtual
     if (id && tipo) {
       let groupBy: string;
       let label: string;
@@ -41,9 +40,7 @@ export async function GET(req: Request) {
           FROM (
             SELECT DISTINCT ON (pa.polla_id, pa.ticket)
               DATE(pa.fecha - INTERVAL '4 hours') as fecha,
-              pa.polla_id,
-              pa.ticket,
-              pc.costo as costo_unico
+              pa.polla_id, pa.ticket, pc.costo as costo_unico
             FROM polla_apuestas pa
             JOIN polla_config pc ON pc.id = pa.polla_id
             WHERE pa.vendido_por = $1
@@ -65,8 +62,8 @@ export async function GET(req: Request) {
             ${label},
             COUNT(*)::int as total_tickets,
             ROUND(SUM(monto))::numeric as monto_total,
-            ROUND(SUM(premio_pagado))::numeric as premios_pagados,
-            ROUND(SUM(monto) - SUM(premio_pagado))::numeric as ganancia
+            ROUND(COALESCE(SUM(premio_pagado), 0))::numeric as premios_pagados,
+            ROUND(SUM(monto) - COALESCE(SUM(premio_pagado), 0))::numeric as ganancia
           FROM carrerasvirtuales_tickets
           WHERE usuario_id = $1
           GROUP BY ${groupBy}
@@ -80,7 +77,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: false, error: "Tipo inválido" }, { status: 400 });
     }
 
-    // Lista de taquillas - fix: usar DISTINCT para evitar multiplicar por 6
+    // Lista de taquillas
     const { rows } = await pool.query(`
       SELECT
         u.id, u.sobrenombre, u.nombre_taquilla, u.comision, u.saldo,
@@ -88,6 +85,7 @@ export async function GET(req: Request) {
         COALESCE(p.monto_polla, 0)::numeric as monto_polla,
         COALESCE(v.total_tickets_virtual, 0)::int as total_tickets_virtual,
         COALESCE(v.monto_virtual, 0)::numeric as monto_virtual,
+        COALESCE(v.premios_virtual, 0)::numeric as premios_virtual,
         COALESCE(p.monto_polla, 0) + COALESCE(v.monto_virtual, 0) as total_ventas
       FROM usuarios u
       LEFT JOIN (
@@ -106,7 +104,8 @@ export async function GET(req: Request) {
       LEFT JOIN (
         SELECT usuario_id,
           COUNT(*)::int as total_tickets_virtual,
-          SUM(monto) as monto_virtual
+          SUM(monto) as monto_virtual,
+          COALESCE(SUM(premio_pagado), 0) as premios_virtual
         FROM carrerasvirtuales_tickets
         GROUP BY usuario_id
       ) v ON v.usuario_id = u.id
