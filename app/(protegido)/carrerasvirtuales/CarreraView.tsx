@@ -5,22 +5,10 @@ import { useEffect, useRef, useCallback, useState } from "react";
 type Props = {
   url: string;
   onFinCarrera: () => void;
-  apuestasConfirmadas: number[];
-  cuotas: number[];
   carreraNum: number;
 };
 
-const coloresBadgeBg = [
-  "bg-red-600", "bg-white", "bg-blue-600",
-  "bg-yellow-400", "bg-green-600", "bg-black",
-];
-
-const coloresBadgeText = [
-  "text-white", "text-black", "text-white",
-  "text-black", "text-white", "text-white",
-];
-
-export default function CarreraView({ url, onFinCarrera, apuestasConfirmadas, cuotas, carreraNum }: Props) {
+export default function CarreraView({ url, onFinCarrera, carreraNum }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const finalizado = useRef(false);
   const duracion = useRef(0);
@@ -115,28 +103,6 @@ export default function CarreraView({ url, onFinCarrera, apuestasConfirmadas, cu
 
   const mostrarSkip = errorStr !== "" || (!finalizado.current && !cargando && videoRef.current?.currentTime === 0 && reproducir);
 
-  const apuestasRealizadas = apuestasConfirmadas
-    .map((monto, i) => ({
-      caballo: i + 1, monto, cuota: cuotas[i],
-      bgColor: coloresBadgeBg[i], textColor: coloresBadgeText[i],
-    }))
-    .filter((a) => a.monto > 0);
-
-  const izquierda = apuestasRealizadas.slice(0, 3);
-  const derecha = apuestasRealizadas.slice(3);
-
-  const ApuestaCard = ({ a }: { a: typeof apuestasRealizadas[0] }) => (
-    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2.5 w-full shadow-[0_0_10px_rgba(0,0,0,0.4)]">
-      <div className={`${a.bgColor} ${a.textColor} w-7 h-7 rounded-md flex items-center justify-center text-xs font-extrabold flex-shrink-0`}>
-        {a.caballo}
-      </div>
-      <div className="flex flex-col leading-tight">
-        <span className="text-white text-xs font-bold">Bs. {a.monto.toLocaleString()}</span>
-        <span className="text-white/50 text-[10px]">cuota {a.cuota}</span>
-      </div>
-    </div>
-  );
-
   return (
     <div
       className="fixed inset-0 overflow-hidden"
@@ -186,22 +152,6 @@ export default function CarreraView({ url, onFinCarrera, apuestasConfirmadas, cu
           >
             Saltar a resultados →
           </button>
-        </div>
-      )}
-
-      {izquierda.length > 0 && (
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2 w-[130px]">
-          {izquierda.map((a) => (
-            <ApuestaCard key={a.caballo} a={a} />
-          ))}
-        </div>
-      )}
-
-      {derecha.length > 0 && (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2 w-[130px]">
-          {derecha.map((a) => (
-            <ApuestaCard key={a.caballo} a={a} />
-          ))}
         </div>
       )}
 

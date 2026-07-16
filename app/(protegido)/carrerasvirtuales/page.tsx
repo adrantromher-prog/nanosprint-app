@@ -199,10 +199,10 @@ export default function CarrerasVirtualesPage() {
       {etapa === "apuestas" && cuotas.length === 6 && (
         <ApuestasView
           usuario={usuario}
-          cuotas={cuotas}
           apuestas={apuestas}
           apuestasConfirmadas={apuestasConfirmadas}
           tiempo={tiempo}
+          cuotas={cuotas}
           carreraNum={carreraNum} // â­
           estadisticas={estadisticas}
           ultimosGanadores={ultimosGanadores}
@@ -215,8 +215,6 @@ export default function CarrerasVirtualesPage() {
         <CarreraView
           url={videoUrl}
           onFinCarrera={manejarFinCarrera}
-          apuestasConfirmadas={apuestasConfirmadas}
-          cuotas={cuotas}
           carreraNum={carreraNum} // â­
         />
       )}
@@ -224,8 +222,8 @@ export default function CarrerasVirtualesPage() {
       {etapa === "resultado" && ganador !== null && (
         <ResultadoView
           usuario={usuario}
-          cuotas={cuotas}
           apuestas={apuestasConfirmadas}
+          cuotas={cuotas}
           ganador={ganador}
           gananciaTotal={gananciaTotal}
           carreraNum={carreraNum} // â­
