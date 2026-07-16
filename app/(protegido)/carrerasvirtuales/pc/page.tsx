@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 type CaballoStat = {
   numero: number;
@@ -13,209 +13,159 @@ type CaballoStat = {
   estilo: string;
 };
 
-const coloresHex = [
-  "#dc2626", "#e5e7eb", "#2563eb",
-  "#facc15", "#16a34a", "#0f172a",
-];
-
-const coloresTextHex = [
-  "#ffffff", "#0f172a", "#ffffff",
-  "#0f172a", "#ffffff", "#ffffff",
-];
+const coloresHexBg = ["#dc2626", "#e5e7eb", "#2563eb", "#facc15", "#16a34a", "#0f172a"];
+const coloresHexText = ["#ffffff", "#0f172a", "#ffffff", "#0f172a", "#ffffff", "#ffffff"];
 
 export default function PCSpectatorPage() {
   const [estado, setEstado] = useState<string>("apuestas");
   const [tiempo, setTiempo] = useState<number>(0);
+  const [cuotas, setCuotas] = useState<number[]>([]);
   const [estadisticas, setEstadisticas] = useState<CaballoStat[]>([]);
   const [ultimosGanadores, setUltimosGanadores] = useState<number[]>([]);
   const [carreraNum, setCarreraNum] = useState<number>(1);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [ganador, setGanador] = useState<number | null>(null);
-  const [sonidoActivo, setSonidoActivo] = useState(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  const activarSonido = useCallback(() => {
-    setSonidoActivo(true);
-    if (!audioCtxRef.current) {
-      try {
-        audioCtxRef.current = new AudioContext();
-      } catch {}
-    }
-  }, []);
-
-  const playBeep = useCallback(() => {
-    if (!sonidoActivo || !audioCtxRef.current) return;
-    try {
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.value = 0.3;
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch {}
-  }, [sonidoActivo]);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    if (estado === "carrera" || estado === "resultado") return;
+    const poll = async () => {
       try {
         const res = await fetch("/api/carrera", { cache: "no-store" });
         const data = await res.json();
         setEstado(data.estado);
         setTiempo(data.tiempoRestante);
+        setCuotas(data.cuotas ?? []);
         setEstadisticas(data.estadisticas ?? []);
         setUltimosGanadores(data.ultimosGanadores ?? []);
         setCarreraNum(data.numeroCarrera ?? 1);
         setVideoUrl(data.video ?? "");
         setGanador(data.ganador);
       } catch {}
-    }, 1000);
+    };
+    poll();
+    const interval = setInterval(poll, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [estado]);
 
-  useEffect(() => {
-    if (tiempo <= 5 && tiempo > 0 && estado === "apuestas") {
-      playBeep();
-    }
-  }, [tiempo, estado, playBeep]);
+  const barColor = (v: number) => v >= 85 ? "#22c55e" : v >= 75 ? "#eab308" : "#ef4444";
 
-  const getBarColor = (v: number) =>
-    v >= 85 ? "bg-green-500" : v >= 75 ? "bg-yellow-400" : "bg-red-500";
+  const ultimos10 = [...ultimosGanadores].reverse().slice(0, 10);
 
   if (estado === "carrera" && videoUrl) {
     return (
       <div className="fixed inset-0 bg-black">
-        <video
-          key={videoUrl}
-          src={videoUrl}
-          autoPlay
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-contain"
-        />
+        <video key={videoUrl} src={videoUrl} autoPlay muted playsInline preload="auto"
+          className="absolute inset-0 w-full h-full object-contain" />
       </div>
     );
   }
 
   return (
-    <div
-      className="fixed inset-0 overflow-hidden text-white select-none"
-      style={{ background: "linear-gradient(135deg, #0a0f1e 0%, #0d1f3c 50%, #091428 100%)" }}
-    >
-      {/* SONIDO */}
-      {!sonidoActivo && (
-        <button
-          onClick={activarSonido}
-          className="absolute top-4 right-4 z-30 px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-bold hover:bg-white/20 transition-all text-lg"
-        >
-          Activar sonido
-        </button>
-      )}
-      {sonidoActivo && (
-        <button
-          onClick={() => setSonidoActivo(false)}
-          className="absolute top-4 right-4 z-30 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/50 font-bold hover:bg-white/10 transition-all text-sm"
-        >
-          Silenciar
-        </button>
-      )}
+    <div className="fixed inset-0 overflow-hidden text-white select-none"
+      style={{ background: "linear-gradient(135deg, #05080f 0%, #070d1a 50%, #040a12 100%)" }}>
 
-      {/* TIMER GIGANTE */}
-      <div className="absolute top-0 left-0 right-0 flex justify-center pt-8 z-20">
+      {/* ORBES DE FONDO */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full bg-blue-500/8 blur-[120px]" />
+        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full bg-blue-600/5 blur-[100px]" />
+      </div>
+
+      {/* TIMER */}
+      <div className="absolute top-0 left-0 right-0 flex justify-center pt-4 z-20">
         <div className="text-center">
-          <p className="text-cyan-300 text-lg font-bold tracking-widest drop-shadow-[0_0_15px_rgba(0,255,255,0.6)]">
+          <p className="text-white/40 text-xs font-bold tracking-widest uppercase">
             Carrera #{String(carreraNum).padStart(4, "0")}
           </p>
-          <p className={`font-extrabold drop-shadow-[0_0_30px_rgba(0,255,255,0.8)] transition-all ${
-            tiempo <= 5 ? "text-red-500 animate-pulse text-9xl" : "text-cyan-300 text-8xl"
-          }`} style={{ lineHeight: "1" }}>
+          <p className={`font-extrabold transition-all ${tiempo <= 5 ? "text-red-500 animate-pulse" : "text-white/80"}`}
+            style={{ fontSize: "8rem", lineHeight: "0.85" }}>
             {tiempo}
           </p>
-          <p className="text-white/50 text-lg uppercase tracking-[0.3em] mt-1">
+          <p className="text-white/25 text-xs uppercase tracking-[0.3em]">
             {estado === "resultado" ? "Resultados" : "Apuestas abiertas"}
           </p>
         </div>
       </div>
 
-      {/* GRID 3Ã—2 CABALLOS */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div className="grid grid-cols-3 gap-4 w-full max-w-[900px] px-8 mt-20">
-          {estadisticas.map((stat, i) => (
-            <div
-              key={i}
-              className="rounded-2xl overflow-hidden bg-black/40 backdrop-blur-md border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
-            >
-              <div
-                className="w-full h-12 flex items-center justify-center text-sm font-extrabold px-2"
-                style={{ backgroundColor: coloresHex[i], color: coloresTextHex[i] }}
-              >
-                {stat.nombre || ("Caballo " + stat.numero)}
-              </div>
-              <div className="p-3 text-xs space-y-1.5">
-                <div className="flex justify-between">
-                  <span className="opacity-70">Estilo</span>
-                  <span className="font-semibold">{stat.estilo}</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <span className="opacity-70">Vel</span>
-                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className={`h-full ${getBarColor(stat.velocidad)}`} style={{ width: `${stat.velocidad}%` }} />
-                  </div>
-                  <span className="font-semibold w-6 text-right">{stat.velocidad}</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <span className="opacity-70">Res</span>
-                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className={`h-full ${getBarColor(stat.resistencia)}`} style={{ width: `${stat.resistencia}%` }} />
-                  </div>
-                  <span className="font-semibold w-6 text-right">{stat.resistencia}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="opacity-70">Forma</span>
-                  <span className={`font-semibold ${
-                    stat.forma === "Excelente" ? "text-green-400" :
-                    stat.forma === "Buena" ? "text-yellow-400" : "text-red-400"
-                  }`}>{stat.forma}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="opacity-70">Ãšltimas</span>
-                  <span className="font-semibold">{stat.ultimasLlegadas.join("Â° ")}Â°</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* GANADOR (resultado) */}
+      {/* GANADOR */}
       {estado === "resultado" && ganador !== null && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-          <div className="px-8 py-4 rounded-2xl bg-gradient-to-r from-yellow-600 to-orange-600 border-2 border-yellow-400 shadow-[0_0_30px_rgba(255,200,0,0.5)]">
-            <p className="text-white text-2xl font-extrabold uppercase tracking-wider">
+        <div className="absolute top-[180px] left-1/2 -translate-x-1/2 z-20">
+          <div className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-600 to-orange-600 border border-yellow-400/60 shadow-[0_0_20px_rgba(255,200,0,0.3)]">
+            <p className="text-white text-lg font-extrabold uppercase tracking-wider">
               Ganador: {estadisticas[ganador]?.nombre || ("Caballo " + (ganador + 1))}
             </p>
           </div>
         </div>
       )}
 
-      {/* ÃšLTIMOS GANADORES */}
-      {ultimosGanadores.length > 0 && (
-        <div className="absolute bottom-4 left-4 z-20 flex gap-1.5">
-          <span className="text-white/40 text-xs mr-1 self-end">Ãšltimos:</span>
-          {[...ultimosGanadores].reverse().slice(0, 10).map((num, i) => (
-            <div
-              key={i}
-              className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-extrabold border border-white/20"
-              style={{ backgroundColor: coloresHex[num - 1], color: coloresTextHex[num - 1] }}
-            >
-              {num}
+      {/* ÚLTIMOS GANADORES — IZQUIERDA */}
+      <div className="absolute left-4 top-24 z-20 flex flex-col items-center gap-1.5">
+        <div className="text-center leading-tight mb-0.5">
+          <p className="text-amber-400/60 text-xs uppercase tracking-[0.25em] font-extrabold">Últimos</p>
+          <p className="text-amber-400/35 text-[10px] uppercase tracking-[0.25em] font-bold">Ganadores</p>
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          {ultimos10.map((num, i) => {
+            const numCarrera = carreraNum - 1 - i;
+            return (
+            <div key={i} className="flex items-center gap-1.5">
+              <div style={{ backgroundColor: coloresHexBg[num - 1], color: coloresHexText[num - 1] }}
+                className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-extrabold border border-white/10 shadow-md">
+                {num}
+              </div>
+              <span className="text-white/40 text-sm font-mono">#{numCarrera > 0 ? numCarrera : "?"}</span>
+            </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* STATS 3×2 */}
+      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        <div className="grid grid-cols-3 gap-5 w-full max-w-[1200px] px-20 ml-24 mt-10">
+          {estadisticas.slice(0, 6).map((stat, i) => (
+            <div key={i} className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden pointer-events-auto">
+              <div className="h-14 flex items-center justify-center gap-2 text-base font-bold px-3"
+                style={{ backgroundColor: coloresHexBg[i], color: coloresHexText[i] }}>
+                <span className="opacity-80 text-base font-bold">#{stat.numero}</span>
+                <span>{stat.nombre || ("Caballo " + stat.numero)}</span>
+              </div>
+              <div className="p-5 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="opacity-50">Estilo</span>
+                  <span className="font-semibold">{stat.estilo}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm opacity-50 w-7">Vel</span>
+                  <div className="flex-1 h-3 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: stat.velocidad + "%", backgroundColor: barColor(stat.velocidad) }} />
+                  </div>
+                  <span className="text-sm font-semibold w-6 text-right">{stat.velocidad}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm opacity-50 w-7">Res</span>
+                  <div className="flex-1 h-3 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: stat.resistencia + "%", backgroundColor: barColor(stat.resistencia) }} />
+                  </div>
+                  <span className="text-sm font-semibold w-6 text-right">{stat.resistencia}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="opacity-50">Forma</span>
+                  <span className={`font-semibold ${stat.forma === "Excelente" ? "text-green-400" : stat.forma === "Buena" ? "text-yellow-400" : "text-red-400"}`}>{stat.forma}</span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-xs opacity-40">Lleg:</span>
+                  {stat.ultimasLlegadas.slice(0, 5).map((pos, j) => (
+                    <div key={j} className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${pos <= 2 ? "bg-green-500/30 text-green-300" : pos <= 4 ? "bg-yellow-500/25 text-yellow-300" : "bg-red-500/20 text-red-300"}`}>{pos}</div>
+                  ))}
+                </div>
+                <div className="text-center pt-2 border-t border-white/5 mt-1.5">
+                  <span className="text-xl font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,0.3)]">x{cuotas[i]?.toFixed(2) || "—"}</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
