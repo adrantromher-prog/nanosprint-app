@@ -4,165 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useWebSocket from "@/hooks/useWebSocket";
 
-function ModalPendientes({ nombre }: { nombre: string }) {
-  const router = useRouter();
-  const [abierto, setAbierto] = useState(false);
-  const [pendientes, setPendientes] = useState<any[]>([]);
-  const [cargando, setCargando] = useState(false);
-  const [pagando, setPagando] = useState<number | null>(null);
-  const [mensaje, setMensaje] = useState("");
-
-  const cargar = async () => {
-    setCargando(true);
-    const res = await fetch("/api/taquilla/estadisticas").then(r => r.json());
-    if (res.ok) setPendientes(res.pendientes_pago || []);
-    setCargando(false);
-  };
-
-  useEffect(() => { if (abierto) cargar(); }, [abierto]);
-
-  const confirmarPago = async (p: any) => {
-    if (!confirm(`¿Confirmas que pagaste Bs. ${Number(p.premio).toLocaleString()} al cliente?`)) return;
-    setPagando(p.id);
-    setMensaje("");
-    const res = await fetch("/api/taquilla/confirmar-pago", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ polla_id: p.polla_id, usuario_id: p.usuario_id, ticket: p.ticket }),
-    });
-    const data = await res.json();
-    setPagando(null);
-    if (data.ok) {
-      setMensaje(`✅ Pago de Bs. ${Number(p.premio).toLocaleString()} confirmado`);
-      cargar();
-      router.refresh();
-    } else {
-      setMensaje(`❌ ${data.error || "Error"}`);
-    }
-  };
-
-  return (
-    <>
-      <button onClick={() => setAbierto(true)}
-        className="w-full py-5 rounded-2xl bg-indigo-600/60 border border-indigo-400/50 text-white font-bold text-base
-          shadow-[0_0_20px_rgba(100,100,255,0.2)] hover:brightness-110 active:scale-95 transition-all">
-        💰 Confirmar Pago a Ganadores
-      </button>
-
-      {abierto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => setAbierto(false)}>
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Pagos Pendientes</h2>
-              <button onClick={() => setAbierto(false)} className="text-gray-400 text-xl">&times;</button>
-            </div>
-
-            {mensaje && <div className="text-sm text-center mb-3 bg-gray-800/50 rounded-xl py-2 px-3">{mensaje}</div>}
-
-            {cargando ? (
-              <div className="text-center py-8 text-gray-400 text-sm">Cargando...</div>
-            ) : pendientes.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 text-sm">No hay pagos pendientes</div>
-            ) : (
-              <div className="space-y-2">
-                {pendientes.map((p: any) => (
-                  <div key={p.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-semibold">{p.hipodromo}</p>
-                        <p className="text-gray-400 text-[10px]">Polla #{p.polla_id} · Ticket #{p.ticket}</p>
-                      </div>
-                      <p className="text-green-400 font-bold text-sm">Bs. {Number(p.premio).toLocaleString()}</p>
-                    </div>
-                    <button onClick={() => confirmarPago(p)} disabled={pagando === p.id}
-                      className="mt-2 w-full py-2 rounded-xl bg-emerald-600/60 border border-emerald-400/50 text-white font-semibold text-xs
-                        hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                      {pagando === p.id ? "Confirmando..." : "Confirmar Pago"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ModalEstadisticas() {
-  const [abierto, setAbierto] = useState(false);
-  const [data, setData] = useState<any>(null);
-  const [cargando, setCargando] = useState(false);
-
-  const cargar = async () => {
-    setCargando(true);
-    try {
-      const res = await fetch("/api/taquilla/estadisticas").then(r => r.json());
-      if (res.ok) setData(res);
-    } catch {}
-    setCargando(false);
-  };
-
-  useEffect(() => { if (abierto) cargar(); }, [abierto]);
-
-  return (
-    <>
-      <button onClick={() => setAbierto(true)}
-        className="w-full py-5 rounded-2xl bg-amber-600/50 border border-amber-400/40 text-white font-bold text-base
-          shadow-[0_0_20px_rgba(255,200,0,0.15)] hover:brightness-110 active:scale-95 transition-all">
-        📊 Ver Estadísticas
-      </button>
-
-      {abierto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70" onClick={() => setAbierto(false)}>
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Estadísticas</h2>
-              <button onClick={() => setAbierto(false)} className="text-gray-400 text-xl">&times;</button>
-            </div>
-
-            {cargando ? (
-              <div className="text-center py-8 text-gray-400 text-sm">Cargando...</div>
-            ) : !data ? (
-              <div className="text-center py-8 text-gray-500 text-sm">Sin datos</div>
-            ) : (
-              <div className="space-y-3">
-                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-                  <p className="text-gray-400 text-[10px] uppercase tracking-wider">Ventas Totales</p>
-                  <p className="text-white font-bold text-2xl">Bs. {(data?.ventas || 0).toLocaleString()}</p>
-                </div>
-                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-                  <p className="text-gray-400 text-[10px] uppercase tracking-wider">Comisión 10%</p>
-                  <p className="text-emerald-400 font-bold text-2xl">Bs. {(data?.comision || 0).toLocaleString()}</p>
-                </div>
-                <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-                  <p className="text-gray-400 text-[10px] uppercase tracking-wider">Entrega al Admin</p>
-                  <p className="text-amber-400 font-bold text-2xl">Bs. {(data?.totalAdmin || 0).toLocaleString()}</p>
-                </div>
-                <div className="pt-2 border-t border-gray-700">
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>Premios recibidos:</span>
-                    <span className="text-green-400">Bs. {(data?.premios_recibidos || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>Premios pagados a clientes:</span>
-                    <span className="text-red-400">Bs. {(data?.premios_pagados || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>Pendientes de pago:</span>
-                    <span className="text-yellow-400">{data?.pendientes_pago?.length || 0} ticket(s)</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
 export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado, razon_bloqueo, rol }: any) {
   const router = useRouter();
   const [isBlocked, setIsBlocked] = useState(bloqueado);
@@ -209,42 +50,82 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
 
   if (rol === "taquilla") {
     return (
-      <main className="min-h-screen flex flex-col items-center text-white bg-[#0a0f1e] p-6">
-        <div className="flex items-center justify-between w-full mb-6">
-          <div>
-            <h1 className="text-xl font-bold">{nombre}</h1>
-            <p className="text-gray-400 text-xs">Taquilla</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-green-300 font-extrabold text-sm">Bs. {(Number(saldo) || 0).toLocaleString()}</span>
-            <button onClick={async () => { await fetch("/api/logout", { method: "GET", credentials: "include" }); window.location.href = "/login"; }}
-              className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold active:scale-95 transition-all">
-              Salir
-            </button>
-          </div>
+      <main className="min-h-screen w-full text-white overflow-hidden flex flex-col"
+        style={{ background: "linear-gradient(135deg, #05080f 0%, #070d1a 50%, #040a12 100%)" }}>
+        
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full bg-blue-500/8 blur-[120px]" />
+          <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full bg-blue-600/5 blur-[100px]" />
         </div>
 
-        <div className="flex flex-col gap-4 w-full max-w-md flex-1 justify-center">
-          <button onClick={() => router.push("/taquilla")}
-            className="w-full py-5 rounded-2xl bg-emerald-600/70 border border-emerald-400/60 text-white font-bold text-lg
-              shadow-[0_0_30px_rgba(52,211,153,0.3)] hover:brightness-110 active:scale-95 transition-all">
-            🎫 Vender Pollas
-          </button>
+        <div className="relative z-10 flex-1 flex flex-col px-5 pt-5 pb-4 max-w-lg mx-auto w-full">
+          
+          <div className="flex items-center justify-between mb-8">
+            <div className="bg-white/[0.06] backdrop-blur-xl border border-white/[0.10] rounded-2xl px-5 py-3 shadow-lg">
+              <p className="text-white font-bold text-lg">{nombre}</p>
+              <p className="text-white/30 text-xs uppercase tracking-widest font-medium">Taquilla</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-white/30 text-[10px] uppercase tracking-wider">Saldo</p>
+                <p className="text-green-400 font-extrabold text-base">Bs. {(Number(saldo) || 0).toLocaleString()}</p>
+              </div>
+              <button onClick={async () => { await fetch("/api/logout", { method: "GET", credentials: "include" }); window.location.href = "/login"; }}
+                className="px-4 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white/60 text-xs font-semibold hover:bg-white/[0.10] active:scale-95 transition-all">
+                Salir
+              </button>
+            </div>
+          </div>
 
-          <button onClick={() => window.open("/carrerasvirtuales/pc", "_blank")}
-            className="w-full py-5 rounded-2xl bg-cyan-600/70 border border-cyan-400/60 text-white font-bold text-lg
-              shadow-[0_0_30px_rgba(0,255,255,0.3)] hover:brightness-110 active:scale-95 transition-all">
-            📺 Video
-          </button>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white/90">Panel de Taquilla</h2>
+            <p className="text-white/30 text-sm mt-1">Selecciona una opción para comenzar</p>
+          </div>
 
-          <button onClick={() => router.push("/carrerasvirtuales/venta")}
-            className="w-full py-5 rounded-2xl bg-purple-600/70 border border-purple-400/60 text-white font-bold text-lg
-              shadow-[0_0_30px_rgba(180,0,255,0.3)] hover:brightness-110 active:scale-95 transition-all">
-            🐎 Vender Carreras Virtuales
-          </button>
+          <div className="grid grid-cols-1 gap-4 flex-1 content-center">
+            <button onClick={() => router.push("/taquilla")}
+              className="group relative h-28 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-600/40 to-emerald-900/40 border border-emerald-400/30 hover:border-emerald-400/60 active:scale-[0.98] transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              <div className="relative h-full flex items-center gap-5 px-6">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-2xl shrink-0">{'🎫'}</div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-lg">Vender Pollas</p>
+                  <p className="text-emerald-300/60 text-xs mt-0.5">Gestión de venta de pollas hípicas</p>
+                </div>
+                <div className="ml-auto text-white/20 text-2xl">{'→'}</div>
+              </div>
+            </button>
 
-          <ModalPendientes nombre={nombre} />
-          <ModalEstadisticas />
+            <button onClick={() => window.open("/carrerasvirtuales/pc", "_blank")}
+              className="group relative h-28 rounded-2xl overflow-hidden bg-gradient-to-br from-cyan-600/40 to-blue-900/40 border border-cyan-400/30 hover:border-cyan-400/60 active:scale-[0.98] transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              <div className="relative h-full flex items-center gap-5 px-6">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-2xl shrink-0">{'📺'}</div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-lg">Video</p>
+                  <p className="text-cyan-300/60 text-xs mt-0.5">Carreras virtuales en vivo</p>
+                </div>
+                <div className="ml-auto text-white/20 text-2xl">{'→'}</div>
+              </div>
+            </button>
+
+            <button onClick={() => router.push("/carrerasvirtuales/venta")}
+              className="group relative h-28 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-600/40 to-indigo-900/40 border border-purple-400/30 hover:border-purple-400/60 active:scale-[0.98] transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              <div className="relative h-full flex items-center gap-5 px-6">
+                <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-2xl shrink-0">{'🐎'}</div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-lg">Vender Carreras Virtuales</p>
+                  <p className="text-purple-300/60 text-xs mt-0.5">Apuestas de carreras virtuales</p>
+                </div>
+                <div className="ml-auto text-white/20 text-2xl">{'→'}</div>
+              </div>
+            </button>
+          </div>
+
+          <div className="text-center mt-6">
+            <p className="text-white/[0.04] text-[10px] uppercase tracking-[0.3em] font-medium">NanoSprint</p>
+          </div>
         </div>
       </main>
     );
