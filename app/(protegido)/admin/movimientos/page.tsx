@@ -4,37 +4,60 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 type Tab = "usuarios" | "taquillas";
+type Juego = "remates" | "polla" | "virtuales";
+type Filtro = "diario" | "semanal" | "mensual";
+
+const FILTRO_LABELS: Record<Filtro, string> = {
+  diario: "Día",
+  semanal: "Semana",
+  mensual: "Mes",
+};
 
 export default function AdminMovimientos() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("usuarios");
-  const [usuarios, setUsuarios] = useState<any[]>([]);
-  const [taquillas, setTaquillas] = useState<any[]>([]);
+  const [juego, setJuego] = useState<Juego>("remates");
+  const [filtro, setFiltro] = useState<Filtro>("diario");
+  const [data, setData] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
-  const [expandedUser, setExpandedUser] = useState<number | null>(null);
 
-  const cargarUsuarios = useCallback(async () => {
+  // Taquillas state
+  const [taquillas, setTaquillas] = useState<any[]>([]);
+  const [cargandoT, setCargandoT] = useState(false);
+
+  const cargar = useCallback(async () => {
+    if (tab !== "usuarios") return;
     setCargando(true);
     try {
-      const res = await fetch("/api/admin/movimientos/usuarios").then(r => r.json());
-      if (res.ok) setUsuarios(res.usuarios || []);
+      let url = "";
+      if (juego === "remates") url = `/api/admin/movimientos/remates?filter=${filtro}`;
+      else if (juego === "polla") url = `/api/admin/movimientos/polla-usuarios?filter=${filtro}`;
+      else url = `/api/admin/movimientos/virtuales?filter=${filtro}`;
+      const res = await fetch(url).then(r => r.json());
+      if (res.ok) setData(res.data || []);
     } catch {}
     setCargando(false);
-  }, []);
+  }, [tab, juego, filtro]);
 
   const cargarTaquillas = useCallback(async () => {
-    setCargando(true);
+    setCargandoT(true);
     try {
       const res = await fetch("/api/admin/movimientos/taquillas").then(r => r.json());
       if (res.ok) setTaquillas(res.taquillas || []);
     } catch {}
-    setCargando(false);
+    setCargandoT(false);
   }, []);
 
   useEffect(() => {
-    if (tab === "usuarios") cargarUsuarios();
+    if (tab === "usuarios") cargar();
     else cargarTaquillas();
-  }, [tab, cargarUsuarios, cargarTaquillas]);
+  }, [tab, juego, filtro, cargar, cargarTaquillas]);
+
+  const fmtFecha = (r: any) => {
+    if (filtro === "diario") return (r.dia || "").substring(0, 10);
+    if (filtro === "semanal") return (r.inicio_semana || "").substring(0, 10);
+    return (r.mes || "").substring(0, 7);
+  };
 
   return (
     <main className="min-h-screen p-4 md:p-6 text-white">
@@ -47,7 +70,7 @@ export default function AdminMovimientos() {
         <div className="w-14 md:w-20" />
       </div>
 
-      {/* Tabs */}
+      {/* Tabs principales */}
       <div className="flex gap-2 mb-6 max-w-md mx-auto">
         <button onClick={() => setTab("usuarios")}
           className={"flex-1 py-3 rounded-xl text-sm font-bold transition-all " + (tab === "usuarios"
@@ -63,84 +86,148 @@ export default function AdminMovimientos() {
         </button>
       </div>
 
-      {cargando && (
-        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-12">
-          <div className="w-5 h-5 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
-          Cargando...
-        </div>
-      )}
+      {/* ========= TAB USUARIOS ========= */}
+      {tab === "usuarios" && (
+        <div className="max-w-5xl mx-auto space-y-4">
+          {/* Sub-botones de juegos */}
+          <div className="flex gap-2 flex-wrap">
+            {([
+              ["remates", "Remates"],
+              ["polla", "Polla"],
+              ["virtuales", "Carreras Virtuales"],
+            ] as [Juego, string][]).map(([j, label]) => (
+              <button key={j} onClick={() => { setJuego(j); setFiltro("diario"); }}
+                className={"px-5 py-2.5 rounded-xl text-xs font-bold transition-all " + (juego === j
+                  ? "bg-amber-500/30 border border-amber-400/50 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+                  : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>
+                {label}
+              </button>
+            ))}
+          </div>
 
-      {!cargando && tab === "usuarios" && (
-        <div className="max-w-5xl mx-auto space-y-2">
-          <p className="text-gray-400 text-xs mb-3">Actividad de usuarios en remates, polla y carreras virtuales</p>
-          {usuarios.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-8">No hay actividad de usuarios</p>
+          {/* Filtros día/semana/mes */}
+          <div className="flex gap-2">
+            {(["diario", "semanal", "mensual"] as Filtro[]).map(f => (
+              <button key={f} onClick={() => setFiltro(f)}
+                className={"px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (filtro === f
+                  ? "bg-white/15 border border-white/30 text-white"
+                  : "bg-white/5 border border-white/10 text-white/40 hover:bg-white/10")}>
+                {FILTRO_LABELS[f]}
+              </button>
+            ))}
+          </div>
+
+          {cargando ? (
+            <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-12">
+              <div className="w-5 h-5 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
+              Cargando...
+            </div>
+          ) : data.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">Sin datos para este período</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs md:text-sm">
-                <thead>
-                  <tr className="text-gray-400 border-b border-gray-700">
-                    <th className="text-left py-2 pr-2">Usuario</th>
-                    <th className="text-right px-2">Remates</th>
-                    <th className="text-right px-2">Polla</th>
-                    <th className="text-right px-2">Virtuales</th>
-                    <th className="text-right pl-2">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usuarios.map((u: any) => {
-                    const total = Number(u.monto_pujado_remates) + Number(u.monto_apostado_polla) + Number(u.monto_apostado_virtual);
-                    return (
-                      <>
-                        <tr key={u.id} onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
-                          className="border-b border-gray-800/50 hover:bg-white/[0.02] cursor-pointer">
-                          <td className="py-2.5 pr-2">
-                            <p className="font-semibold text-white/90">{u.sobrenombre || u.nombre || "—"}</p>
-                            <p className="text-[10px] text-gray-500">{u.rol}</p>
-                          </td>
-                          <td className="text-right px-2 align-middle">
-                            <p className="text-white/80">{Number(u.total_pujas_remates) > 0 ? Number(u.total_pujas_remates) + " pujas" : "—"}</p>
-                            {Number(u.monto_pujado_remates) > 0 && <p className="text-[10px] text-amber-400/70">Bs. {Number(u.monto_pujado_remates).toLocaleString()}</p>}
-                          </td>
-                          <td className="text-right px-2 align-middle">
-                            <p className="text-white/80">{Number(u.total_apuestas_polla) > 0 ? Number(u.total_apuestas_polla) + " tickets" : "—"}</p>
-                            {Number(u.monto_apostado_polla) > 0 && <p className="text-[10px] text-purple-400/70">Bs. {Number(u.monto_apostado_polla).toLocaleString()}</p>}
-                          </td>
-                          <td className="text-right px-2 align-middle">
-                            <p className="text-white/80">{Number(u.total_apuestas_virtual) > 0 ? Number(u.total_apuestas_virtual) + " apuestas" : "—"}</p>
-                            {Number(u.monto_apostado_virtual) > 0 && <p className="text-[10px] text-cyan-400/70">Bs. {Number(u.monto_apostado_virtual).toLocaleString()}</p>}
-                          </td>
-                          <td className="text-right pl-2 align-middle font-bold text-white/90">
-                            Bs. {total.toLocaleString()}
+            <div className="overflow-x-auto bg-gray-900/50 border border-gray-700 rounded-2xl p-3 md:p-4">
+              {juego === "remates" && (
+                <table className="w-full text-xs md:text-sm">
+                  <thead>
+                    <tr className="text-gray-400 border-b border-gray-700">
+                      <th className="text-left py-2 pr-2">Fecha</th>
+                      <th className="text-right px-2">Total Pujas</th>
+                      <th className="text-right px-2">Casa (20%)</th>
+                      <th className="text-right px-2">Jackpot (5%)</th>
+                      <th className="text-right px-2">Referidos (5%)</th>
+                      <th className="text-right pl-2">Ganancia Casa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((r: any, i: number) => {
+                      const g = Number(r.ganancia_casa);
+                      return (
+                        <tr key={i} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
+                          <td className="py-2.5 pr-2 text-white/70 font-mono">{fmtFecha(r)}</td>
+                          <td className="text-right px-2 text-white/80">Bs. {Number(r.total_pujas).toLocaleString()}</td>
+                          <td className="text-right px-2 text-amber-400/80">Bs. {Number(r.casa).toLocaleString()}</td>
+                          <td className="text-right px-2 text-yellow-400/70">Bs. {Number(r.jackpot).toLocaleString()}</td>
+                          <td className="text-right px-2 text-orange-400/70">Bs. {Number(r.referidos).toLocaleString()}</td>
+                          <td className={"text-right pl-2 font-bold " + (g >= 0 ? "text-green-400" : "text-red-400")}>
+                            Bs. {g.toLocaleString()}
                           </td>
                         </tr>
-                        {expandedUser === u.id && (
-                          <tr key={u.id + "-detail"}>
-                            <td colSpan={5} className="bg-white/[0.02] border-b border-gray-800/50">
-                              <div className="px-4 py-3 space-y-1 text-[11px]">
-                                <p className="text-gray-400"><span className="text-white/60">Saldo actual:</span> Bs. {Number(u.saldo).toLocaleString()}</p>
-                                <p className="text-gray-400"><span className="text-white/60">Registrado:</span> {new Date(u.creado_en).toLocaleDateString("es-VE")}</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+
+              {juego === "polla" && (
+                <table className="w-full text-xs md:text-sm">
+                  <thead>
+                    <tr className="text-gray-400 border-b border-gray-700">
+                      <th className="text-left py-2 pr-2">Fecha</th>
+                      <th className="text-right px-2">Tickets</th>
+                      <th className="text-right pl-2">Monto Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((r: any, i: number) => (
+                      <tr key={i} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
+                        <td className="py-2.5 pr-2 text-white/70 font-mono">{fmtFecha(r)}</td>
+                        <td className="text-right px-2 text-white/80">{r.total_tickets}</td>
+                        <td className="text-right pl-2 font-bold text-purple-400">
+                          Bs. {Number(r.monto_total).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {juego === "virtuales" && (
+                <table className="w-full text-xs md:text-sm">
+                  <thead>
+                    <tr className="text-gray-400 border-b border-gray-700">
+                      <th className="text-left py-2 pr-2">Fecha</th>
+                      <th className="text-right px-2">Apuestas</th>
+                      <th className="text-right px-2">Monto</th>
+                      <th className="text-right px-2">Premios</th>
+                      <th className="text-right pl-2">Ganancia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((r: any, i: number) => {
+                      const g = Number(r.ganancia_casa);
+                      return (
+                        <tr key={i} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
+                          <td className="py-2.5 pr-2 text-white/70 font-mono">{fmtFecha(r)}</td>
+                          <td className="text-right px-2 text-white/80">{r.total_apuestas}</td>
+                          <td className="text-right px-2 text-cyan-400/80">Bs. {Number(r.monto_apostado).toLocaleString()}</td>
+                          <td className="text-right px-2 text-red-400/80">- Bs. {Number(r.premios_pagados).toLocaleString()}</td>
+                          <td className={"text-right pl-2 font-bold " + (g >= 0 ? "text-green-400" : "text-red-400")}>
+                            Bs. {g.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {!cargando && tab === "taquillas" && (
+      {/* ========= TAB TAQUILLAS ========= */}
+      {tab === "taquillas" && (
         <div className="max-w-5xl mx-auto space-y-2">
           <p className="text-gray-400 text-xs mb-3">Ventas de taquillas en polla y carreras virtuales</p>
-          {taquillas.length === 0 ? (
+          {cargandoT ? (
+            <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-12">
+              <div className="w-5 h-5 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
+              Cargando...
+            </div>
+          ) : taquillas.length === 0 ? (
             <p className="text-gray-500 text-sm text-center py-8">No hay taquillas registradas</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-gray-900/50 border border-gray-700 rounded-2xl p-3 md:p-4">
               <table className="w-full text-xs md:text-sm">
                 <thead>
                   <tr className="text-gray-400 border-b border-gray-700">
