@@ -161,7 +161,7 @@ async function fetchCarrera() {
     if (fila.estado === "apuestas" && fila.tiempo_restante != null && elapsed >= fila.tiempo_restante) {
       const ganador = elegirGanador(fila.cuotas);
       const video = elegirVideo(ganador);
-      const duracionSeg = Math.ceil(video.duracion) + 15;
+      const duracionSeg = Math.ceil(video.duracion) + 12;
       fila.estado = "carrera";
       fila.inicio_estado = new Date().toISOString();
       fila.tiempo_restante = duracionSeg;

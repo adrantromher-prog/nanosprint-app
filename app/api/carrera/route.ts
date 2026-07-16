@@ -201,7 +201,7 @@ export async function GET() {
     if (fila.estado === "apuestas" && fila.tiempo_restante != null && elapsed >= fila.tiempo_restante) {
       const ganador = elegirGanador(fila.cuotas);
       const video = elegirVideo(ganador);
-      const duracionSeg = Math.ceil(video.duracion) + 15; // 2s extra de buffer
+      const duracionSeg = Math.ceil(video.duracion) + 12; // 2s extra de buffer
 
       fila.estado = "carrera";
       fila.inicio_estado = new Date().toISOString();

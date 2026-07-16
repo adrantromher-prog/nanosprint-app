@@ -63,6 +63,17 @@ export default function PCSpectatorPage() {
 
   const ultimos10 = [...ultimosGanadores].reverse().slice(0, 10);
 
+  // Si es carrera, mostrar CarreraView dentro del mismo layout (para que la transición sea visible)
+  if (etapa === "carrera" && videoUrl) {
+    return (
+      <div className="fixed inset-0">
+        <div className={`pointer-events-none fixed inset-0 z-[999] bg-gradient-to-b from-[#001a33] via-[#003366] to-[#000814] backdrop-blur-[12px] bg-contain bg-no-repeat bg-center transition-transform duration-[1100ms] ease-out ${transicionActiva ? "translate-y-0" : "-translate-y-full"}`}
+          style={{ backgroundImage: "url('/transicion.png')" }} />
+        <CarreraView url={videoUrl} carreraNum={carreraNum} />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 overflow-hidden text-white select-none"
       style={{ background: "linear-gradient(135deg, #05080f 0%, #070d1a 50%, #040a12 100%)" }}>
@@ -100,6 +111,7 @@ export default function PCSpectatorPage() {
           <div className="relative text-center px-8">
             <p className="text-white/25 text-xs font-mono tracking-widest uppercase mb-6">Carrera #{String(carreraNum).padStart(4, "0")}</p>
             <div className="mb-2 text-sm text-white/40 uppercase tracking-[0.2em] font-semibold">Ganador</div>
+            <p className="text-8xl font-black text-white/40 animate-pulse mb-2">#{ganador + 1}</p>
             <h1 className="text-8xl font-black text-white mb-2 tracking-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
               {estadisticas[ganador]?.nombre || ("Caballo " + (ganador + 1))}
             </h1>
