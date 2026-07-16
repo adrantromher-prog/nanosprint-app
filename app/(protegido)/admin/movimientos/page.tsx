@@ -1,49 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-type RematesItem = {
-  dia?: string; mes?: string; total_pujas: number; casa: number; ganancia_final: number;
-};
-
-type MovimientosRemates = {
-  totalRemates: number;
-  totalPujas: number;
-  casa: number;
-  aporteJackpot: number;
-  comisionReferidos: number;
-  gananciaFinal: number;
-};
+type Tab = "usuarios" | "taquillas";
 
 export default function AdminMovimientos() {
   const router = useRouter();
-  const [remates, setRemates] = useState<any>(null);
+  const [tab, setTab] = useState<Tab>("usuarios");
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [taquillas, setTaquillas] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
-  const [virtuales, setVirtuales] = useState<any>(null);
-  const [cargandoV, setCargandoV] = useState(false);
-  const [vista, setVista] = useState("diario");
-  const [vistaR, setVistaR] = useState("diario");
+  const [expandedUser, setExpandedUser] = useState<number | null>(null);
 
-  const cargar = async () => {
+  const cargarUsuarios = useCallback(async () => {
     setCargando(true);
     try {
-      const res = await fetch("/api/admin/movimientos/remates");
-      const data = await res.json();
-      if (data.ok) setRemates(data);
+      const res = await fetch("/api/admin/movimientos/usuarios").then(r => r.json());
+      if (res.ok) setUsuarios(res.usuarios || []);
     } catch {}
     setCargando(false);
-  };
+  }, []);
 
-  const cargarVirtuales = async () => {
-    setCargandoV(true);
+  const cargarTaquillas = useCallback(async () => {
+    setCargando(true);
     try {
-      const res = await fetch("/api/admin/movimientos/virtuales");
-      const data = await res.json();
-      if (data.ok) setVirtuales(data);
+      const res = await fetch("/api/admin/movimientos/taquillas").then(r => r.json());
+      if (res.ok) setTaquillas(res.taquillas || []);
     } catch {}
-    setCargandoV(false);
-  };
+    setCargando(false);
+  }, []);
+
+  useEffect(() => {
+    if (tab === "usuarios") cargarUsuarios();
+    else cargarTaquillas();
+  }, [tab, cargarUsuarios, cargarTaquillas]);
 
   return (
     <main className="min-h-screen p-4 md:p-6 text-white">
@@ -56,100 +47,142 @@ export default function AdminMovimientos() {
         <div className="w-14 md:w-20" />
       </div>
 
-      {!virtuales && !remates && (
-        <div className="flex flex-col items-center mt-8 md:mt-16 gap-4">
-          <button onClick={cargarVirtuales} disabled={cargandoV}
-            className="w-full max-w-xs py-4 md:py-6 rounded-2xl text-sm md:text-xl font-bold bg-gradient-to-b from-emerald-700 to-emerald-900 border border-emerald-400/30 shadow-[0_0_22px_rgba(4,120,87,0.3)] hover:shadow-[0_0_35px_rgba(4,120,87,0.6)] active:scale-95 transition-all disabled:opacity-50">
-            {cargandoV ? "Cargando..." : "Ver Virtuales"}
-          </button>
-          <button onClick={cargar} disabled={cargando}
-            className="w-full max-w-xs py-4 md:py-6 rounded-2xl text-sm md:text-xl font-bold bg-gradient-to-b from-[#003344] to-[#0077AA] border border-cyan-300/70 shadow-[0_0_22px_rgba(0,255,255,0.5)] hover:shadow-[0_0_35px_rgba(0,255,255,0.9)] active:scale-95 transition-all disabled:opacity-50">
-            {cargando ? "Cargando..." : "Ver Remates"}
-          </button>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 max-w-md mx-auto">
+        <button onClick={() => setTab("usuarios")}
+          className={"flex-1 py-3 rounded-xl text-sm font-bold transition-all " + (tab === "usuarios"
+            ? "bg-blue-600/50 border border-blue-400/50 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+            : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>
+          Usuarios
+        </button>
+        <button onClick={() => setTab("taquillas")}
+          className={"flex-1 py-3 rounded-xl text-sm font-bold transition-all " + (tab === "taquillas"
+            ? "bg-emerald-600/50 border border-emerald-400/50 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+            : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>
+          Taquillas
+        </button>
+      </div>
+
+      {cargando && (
+        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-12">
+          <div className="w-5 h-5 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
+          Cargando...
         </div>
       )}
 
-      {virtuales && !remates && (
-        <div className="max-w-4xl mx-auto mt-6 md:mt-8 space-y-4">
-          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 md:p-6 shadow-xl">
-            <h2 className="text-xl md:text-2xl font-bold text-emerald-300 mb-4">Carreras Virtuales</h2>
-            <div className="flex gap-2 mb-4">
-              <button onClick={() => setVista('diario')} className={'px-4 py-2 rounded-lg text-xs font-semibold transition-all ' + (vista === 'diario' ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300' : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10')}>Diario</button>
-              <button onClick={() => setVista('mensual')} className={'px-4 py-2 rounded-lg text-xs font-semibold transition-all ' + (vista === 'mensual' ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300' : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10')}>Mensual</button>
-            </div>
-            <div className='overflow-x-auto'>
-              <table className='w-full text-xs md:text-sm'>
-                <thead>
-                  <tr className='text-gray-400 border-b border-gray-700'>
-                    <th className='text-left py-2 pr-2'>Fecha</th>
-                    <th className='text-right px-2'>Apuestas</th>
-                    <th className='text-right px-2'>Monto</th>
-                    <th className='text-right px-2'>Premios</th>
-                    <th className='text-right pl-2'>Ganancia</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(vista === 'diario' ? virtuales.diario : virtuales.mensual).map((r: any, i: number) => {
-                    const g = Number(r.ganancia_casa);
-                    return (
-                      <tr key={i} className='border-b border-gray-800/50 hover:bg-white/[0.02]'>
-                        <td className='py-2 pr-2 text-white/70 font-mono'>{vista === 'diario' ? (r.dia||'').substring(0,10) : (r.mes||'').substring(0,7)}</td>
-                        <td className='text-right px-2 text-white/80'>{r.total_apuestas}</td>
-                        <td className='text-right px-2 text-white/80'>Bs. {Number(r.monto_apostado).toFixed(2)}</td>
-                        <td className='text-right px-2 text-red-400'>- Bs. {Number(r.premios_pagados).toFixed(2)}</td>
-                        <td className={'text-right pl-2 font-bold ' + (g >= 0 ? 'text-green-400' : 'text-red-400')}>Bs. {g.toFixed(2)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <button onClick={() => { setVirtuales(null); setVista('diario'); }}
-            className='w-full py-3 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 active:scale-[0.98] transition-all'>
-            ← Volver
-          </button>
-        </div>
-      )}
-
-      {remates && (
-        <div className="max-w-4xl mx-auto mt-6 md:mt-8 space-y-4">
-          <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-4 md:p-6 shadow-xl">
-            <h2 className="text-xl md:text-2xl font-bold text-cyan-300 mb-4">Remates</h2>
-            <div className="flex gap-2 mb-4">
-              <button onClick={() => setVistaR("diario")} className={"px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (vistaR === "diario" ? "bg-cyan-500/20 border border-cyan-400/40 text-cyan-300" : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>Diario</button>
-              <button onClick={() => setVistaR("mensual")} className={"px-4 py-2 rounded-lg text-xs font-semibold transition-all " + (vistaR === "mensual" ? "bg-cyan-500/20 border border-cyan-400/40 text-cyan-300" : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10")}>Mensual</button>
-            </div>
+      {!cargando && tab === "usuarios" && (
+        <div className="max-w-5xl mx-auto space-y-2">
+          <p className="text-gray-400 text-xs mb-3">Actividad de usuarios en remates, polla y carreras virtuales</p>
+          {usuarios.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">No hay actividad de usuarios</p>
+          ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs md:text-sm">
                 <thead>
                   <tr className="text-gray-400 border-b border-gray-700">
-                    <th className="text-left py-2 pr-2">Fecha</th>
-                    <th className="text-right px-2">Total pujas</th>
-                    <th className="text-right px-2">Casa (20%)</th>
-                    <th className="text-right pl-2">Ganancia</th>
+                    <th className="text-left py-2 pr-2">Usuario</th>
+                    <th className="text-right px-2">Remates</th>
+                    <th className="text-right px-2">Polla</th>
+                    <th className="text-right px-2">Virtuales</th>
+                    <th className="text-right pl-2">Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {((vistaR === "diario" ? (remates.diario || []) : (remates.mensual || []))).map((r: any, i: number) => {
-                    const g = Number(r.ganancia_final);
+                  {usuarios.map((u: any) => {
+                    const total = Number(u.monto_pujado_remates) + Number(u.monto_apostado_polla) + Number(u.monto_apostado_virtual);
                     return (
-                      <tr key={i} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
-                        <td className="py-2 pr-2 text-white/70 font-mono">{vistaR === "diario" ? (r.dia||"").substring(0,10) : (r.mes||"").substring(0,7)}</td>
-                        <td className="text-right px-2 text-white/80">Bs. {Number(r.total_pujas).toFixed(2)}</td>
-                        <td className="text-right px-2 text-amber-400">Bs. {Number(r.casa).toFixed(2)}</td>
-                        <td className={"text-right pl-2 font-bold " + (g >= 0 ? "text-green-400" : "text-red-400")}>Bs. {g.toFixed(2)}</td>
-                      </tr>
+                      <>
+                        <tr key={u.id} onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
+                          className="border-b border-gray-800/50 hover:bg-white/[0.02] cursor-pointer">
+                          <td className="py-2.5 pr-2">
+                            <p className="font-semibold text-white/90">{u.sobrenombre || u.nombre || "—"}</p>
+                            <p className="text-[10px] text-gray-500">{u.rol}</p>
+                          </td>
+                          <td className="text-right px-2 align-middle">
+                            <p className="text-white/80">{Number(u.total_pujas_remates) > 0 ? Number(u.total_pujas_remates) + " pujas" : "—"}</p>
+                            {Number(u.monto_pujado_remates) > 0 && <p className="text-[10px] text-amber-400/70">Bs. {Number(u.monto_pujado_remates).toLocaleString()}</p>}
+                          </td>
+                          <td className="text-right px-2 align-middle">
+                            <p className="text-white/80">{Number(u.total_apuestas_polla) > 0 ? Number(u.total_apuestas_polla) + " tickets" : "—"}</p>
+                            {Number(u.monto_apostado_polla) > 0 && <p className="text-[10px] text-purple-400/70">Bs. {Number(u.monto_apostado_polla).toLocaleString()}</p>}
+                          </td>
+                          <td className="text-right px-2 align-middle">
+                            <p className="text-white/80">{Number(u.total_apuestas_virtual) > 0 ? Number(u.total_apuestas_virtual) + " apuestas" : "—"}</p>
+                            {Number(u.monto_apostado_virtual) > 0 && <p className="text-[10px] text-cyan-400/70">Bs. {Number(u.monto_apostado_virtual).toLocaleString()}</p>}
+                          </td>
+                          <td className="text-right pl-2 align-middle font-bold text-white/90">
+                            Bs. {total.toLocaleString()}
+                          </td>
+                        </tr>
+                        {expandedUser === u.id && (
+                          <tr key={u.id + "-detail"}>
+                            <td colSpan={5} className="bg-white/[0.02] border-b border-gray-800/50">
+                              <div className="px-4 py-3 space-y-1 text-[11px]">
+                                <p className="text-gray-400"><span className="text-white/60">Saldo actual:</span> Bs. {Number(u.saldo).toLocaleString()}</p>
+                                <p className="text-gray-400"><span className="text-white/60">Registrado:</span> {new Date(u.creado_en).toLocaleDateString("es-VE")}</p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-          </div>
-          <button onClick={() => { setRemates(null); setVistaR("diario"); }}
-            className="w-full py-3 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 active:scale-[0.98] transition-all">
-            ← Volver
-          </button>
+          )}
+        </div>
+      )}
+
+      {!cargando && tab === "taquillas" && (
+        <div className="max-w-5xl mx-auto space-y-2">
+          <p className="text-gray-400 text-xs mb-3">Ventas de taquillas en polla y carreras virtuales</p>
+          {taquillas.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">No hay taquillas registradas</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs md:text-sm">
+                <thead>
+                  <tr className="text-gray-400 border-b border-gray-700">
+                    <th className="text-left py-2 pr-2">Taquilla</th>
+                    <th className="text-right px-2">Pollas</th>
+                    <th className="text-right px-2">Virtuales</th>
+                    <th className="text-right px-2">Total Ventas</th>
+                    <th className="text-right px-2">Comisión</th>
+                    <th className="text-right pl-2">Entrega Admin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {taquillas.map((t: any) => (
+                    <tr key={t.id} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
+                      <td className="py-2.5 pr-2">
+                        <p className="font-semibold text-white/90">{t.nombre_taquilla || t.sobrenombre || "—"}</p>
+                        <p className="text-[10px] text-gray-500">{t.sobrenombre}</p>
+                      </td>
+                      <td className="text-right px-2 align-middle">
+                        <p className="text-white/80">{Number(t.total_tickets_polla)} tickets</p>
+                        <p className="text-[10px] text-purple-400/70">Bs. {Number(t.monto_polla).toLocaleString()}</p>
+                      </td>
+                      <td className="text-right px-2 align-middle">
+                        <p className="text-white/80">{Number(t.total_tickets_virtual)} tickets</p>
+                        <p className="text-[10px] text-cyan-400/70">Bs. {Number(t.monto_virtual).toLocaleString()}</p>
+                      </td>
+                      <td className="text-right px-2 align-middle font-bold text-white/90">
+                        Bs. {Number(t.total_ventas).toLocaleString()}
+                      </td>
+                      <td className="text-right px-2 align-middle">
+                        <p className="text-emerald-400 font-semibold">Bs. {Number(t.comision).toLocaleString()}</p>
+                        <p className="text-[10px] text-gray-500">({t.comision_pct}%)</p>
+                      </td>
+                      <td className="text-right pl-2 align-middle font-bold text-amber-400">
+                        Bs. {Number(t.total_entrega).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </main>
