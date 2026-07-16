@@ -23,14 +23,12 @@ const fmtFecha = (r: any, f: Filtro) => {
 export default function AdminMovimientos() {
   const router = useRouter();
 
-  // Usuarios state
   const [tab, setTab] = useState<Tab>("usuarios");
   const [juego, setJuego] = useState<Juego>("remates");
   const [filtro, setFiltro] = useState<Filtro>("diario");
   const [data, setData] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
 
-  // Taquillas state
   const [taquillas, setTaquillas] = useState<any[]>([]);
   const [cargandoT, setCargandoT] = useState(false);
   const [taquillaSel, setTaquillaSel] = useState<any>(null);
@@ -78,7 +76,6 @@ export default function AdminMovimientos() {
     }
   }, [tab, cargar, cargarTaquillas]);
 
-  // Cargar detalle de una taquilla (polla o virtual)
   const cargarDetalle = useCallback(async (taqId: number, tipo: TipoDetalle, f: Filtro) => {
     setCargandoDetalle(true);
     try {
@@ -89,7 +86,6 @@ export default function AdminMovimientos() {
     setCargandoDetalle(false);
   }, []);
 
-  // When clicking Pollas/Virtuales on a taquilla card
   const abrirDetalle = (taq: any, t: TipoDetalle) => {
     setTaquillaSel(taq);
     setTipoDetalle(t);
@@ -97,7 +93,6 @@ export default function AdminMovimientos() {
     cargarDetalle(taq.id, t, "diario");
   };
 
-  // Filter change in detail view
   useEffect(() => {
     if (taquillaSel) cargarDetalle(taquillaSel.id, tipoDetalle, filtroT);
   }, [filtroT, taquillaSel, tipoDetalle, cargarDetalle]);
@@ -113,7 +108,6 @@ export default function AdminMovimientos() {
         <div className="w-14 md:w-20" />
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-6 max-w-md mx-auto">
         <button onClick={() => setTab("usuarios")}
           className={"flex-1 py-3 rounded-xl text-sm font-bold transition-all " + (tab === "usuarios"
@@ -255,7 +249,6 @@ export default function AdminMovimientos() {
       {/* ==================== TAB TAQUILLAS ==================== */}
       {tab === "taquillas" && (
         <div className="max-w-5xl mx-auto space-y-4">
-          {/* Vista detalle de una taquilla */}
           {taquillaSel ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -271,49 +264,56 @@ export default function AdminMovimientos() {
                 </button>
               </div>
 
-              {/* Resumen */}
-              {tipoDetalle === "polla" && (
-                <div className="bg-gradient-to-b from-purple-600/10 to-purple-900/10 border border-purple-400/20 rounded-xl px-4 py-3 flex items-center justify-center gap-8">
-                  <div className="text-center">
-                    <p className="text-purple-300 font-bold text-lg">
-                      Bs. {Number(taquillaSel.monto_polla || 0).toLocaleString()}
-                    </p>
-                    <p className="text-purple-400/40 text-[9px] uppercase tracking-widest">Monto Pollas</p>
+              {/* Resumen — solo polla o solo virtual, no combinado */}
+              {tipoDetalle === "polla" && (() => {
+                const pct = Number(taquillaSel.comision_pct) || 10;
+                const montoPolla = Number(taquillaSel.monto_polla) || 0;
+                const comisionPolla = Math.floor(montoPolla * pct / 100);
+                const entregaPolla = montoPolla - comisionPolla;
+                return (
+                  <div className="bg-gradient-to-b from-purple-600/10 to-purple-900/10 border border-purple-400/20 rounded-xl px-4 py-3 flex items-center justify-center gap-8">
+                    <div className="text-center">
+                      <p className="text-purple-300 font-bold text-lg">Bs. {montoPolla.toLocaleString()}</p>
+                      <p className="text-purple-400/40 text-[9px] uppercase tracking-widest">Monto Pollas</p>
+                    </div>
+                    <div className="w-px h-8 bg-purple-400/10" />
+                    <div className="text-center">
+                      <p className="text-emerald-300 font-bold text-lg">{pct}%</p>
+                      <p className="text-emerald-400/40 text-[9px] uppercase tracking-widest">Comisión Vendedor</p>
+                    </div>
+                    <div className="w-px h-8 bg-purple-400/10" />
+                    <div className="text-center">
+                      <p className="text-amber-300 font-bold text-lg">Bs. {entregaPolla.toLocaleString()}</p>
+                      <p className="text-amber-400/40 text-[9px] uppercase tracking-widest">Entrega Admin</p>
+                    </div>
                   </div>
-                  <div className="w-px h-8 bg-purple-400/10" />
-                  <div className="text-center">
-                    <p className="text-emerald-300 font-bold text-lg">{taquillaSel.comision_pct}%</p>
-                    <p className="text-emerald-400/40 text-[9px] uppercase tracking-widest">Comisión</p>
-                  </div>
-                  <div className="w-px h-8 bg-purple-400/10" />
-                  <div className="text-center">
-                    <p className="text-amber-300 font-bold text-lg">
-                      Bs. {Number(taquillaSel.total_entrega || 0).toLocaleString()}
-                    </p>
-                    <p className="text-amber-400/40 text-[9px] uppercase tracking-widest">Entrega Admin</p>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
-              {tipoDetalle === "virtual" && (
-                <div className="bg-gradient-to-b from-cyan-600/10 to-blue-900/10 border border-cyan-400/20 rounded-xl px-4 py-3 flex items-center justify-center gap-8">
-                  <div className="text-center">
-                    <p className="text-cyan-300 font-bold text-lg">
-                      Bs. {Number(taquillaSel.monto_virtual || 0).toLocaleString()}
-                    </p>
-                    <p className="text-cyan-400/40 text-[9px] uppercase tracking-widest">Monto Apuestas</p>
+              {tipoDetalle === "virtual" && (() => {
+                const montoVirtual = Number(taquillaSel.monto_virtual) || 0;
+                const totalGanancia = detalleData.reduce((s: number, r: any) => s + Number(r.ganancia || 0), 0);
+                const totalPremios = detalleData.reduce((s: number, r: any) => s + Number(r.premios_pagados || 0), 0);
+                return (
+                  <div className="bg-gradient-to-b from-cyan-600/10 to-blue-900/10 border border-cyan-400/20 rounded-xl px-4 py-3 flex items-center justify-center gap-8">
+                    <div className="text-center">
+                      <p className="text-cyan-300 font-bold text-lg">Bs. {montoVirtual.toLocaleString()}</p>
+                      <p className="text-cyan-400/40 text-[9px] uppercase tracking-widest">Monto Apuestas</p>
+                    </div>
+                    <div className="w-px h-8 bg-cyan-400/10" />
+                    <div className="text-center">
+                      <p className="text-red-300 font-bold text-lg">Bs. {totalPremios.toLocaleString()}</p>
+                      <p className="text-red-400/40 text-[9px] uppercase tracking-widest">Premios Entregados</p>
+                    </div>
+                    <div className="w-px h-8 bg-cyan-400/10" />
+                    <div className="text-center">
+                      <p className="text-green-300 font-bold text-lg">Bs. {totalGanancia.toLocaleString()}</p>
+                      <p className="text-green-400/40 text-[9px] uppercase tracking-widest">Ganancia</p>
+                    </div>
                   </div>
-                  <div className="w-px h-8 bg-cyan-400/10" />
-                  <div className="text-center">
-                    <p className="text-green-300 font-bold text-lg">
-                      Bs. {Number(detalleData.reduce((s: number, r: any) => s + Number(r.ganancia || 0), 0)).toLocaleString()}
-                    </p>
-                    <p className="text-green-400/40 text-[9px] uppercase tracking-widest">Ganancia</p>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
-              {/* Sub-tabs Pollas / Virtuales */}
               <div className="flex gap-2">
                 <button onClick={() => { setTipoDetalle("polla"); setFiltroT("diario"); }}
                   className={"px-4 py-2 rounded-xl text-xs font-bold transition-all " + (tipoDetalle === "polla"
@@ -329,7 +329,6 @@ export default function AdminMovimientos() {
                 </button>
               </div>
 
-              {/* Filtros detalle */}
               <div className="flex gap-2">
                 {(["diario", "semanal", "mensual"] as Filtro[]).map(f => (
                   <button key={f} onClick={() => setFiltroT(f)}
@@ -341,7 +340,6 @@ export default function AdminMovimientos() {
                 ))}
               </div>
 
-              {/* Tabla detalle */}
               {cargandoDetalle ? (
                 <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-12">
                   <div className="w-5 h-5 border-2 border-amber-400/20 border-t-amber-400 rounded-full animate-spin" />
@@ -410,7 +408,6 @@ export default function AdminMovimientos() {
               )}
             </div>
           ) : (
-            /* Lista de taquillas */
             <div className="space-y-2">
               <p className="text-gray-400 text-xs mb-2">Selecciona una taquilla para ver sus movimientos:</p>
               {cargandoT ? (
