@@ -99,7 +99,7 @@ export default function ApuestasView({
         style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
       {/* ===== CONTENIDO ===== */}
-      <div className="relative z-10 flex flex-col h-full px-3 py-3 md:px-5 md:py-4">
+      <div className="relative z-10 flex flex-col h-full px-3 pt-3 md:px-5 md:pt-4">
 
         {/* HEADER */}
         <div className="flex justify-between items-center flex-shrink-0 mb-2">
@@ -119,26 +119,16 @@ export default function ApuestasView({
           </div>
         </div>
 
-        {/* ÃšLTIMOS GANADORES - barra horizontal */}
-        {ultimosGanadores.length > 0 && (
-          <div className="flex items-center gap-1.5 flex-shrink-0 mb-2">
-            <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest mr-1">Ãšltimos</span>
-            {[...ultimosGanadores].reverse().slice(0, 10).map((num, i) => (
-              <div key={i} className="w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold border border-white/10"
-                style={{ backgroundColor: coloresHex[num - 1], color: coloresText[num - 1] }}>{num}</div>
-            ))}
-          </div>
-        )}
-
-        {/* ===== ESTADÃSTICAS 3Ã—2 FIJAS ===== */}
-        <div className="flex-shrink-0 grid grid-cols-3 gap-2 mb-2">
+        {/* ===== ESTADÍSTICAS 3×2 FIJAS ===== */}
+        <div className="flex-shrink-0 grid grid-cols-3 gap-2 mb-4">
           {estadisticas.length >= 6 && [0, 1, 2].map((i) => (
             <div key={i} className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
-              <div className="h-7 flex items-center justify-center text-[10px] md:text-xs font-bold"
+              <div className="h-9 flex items-center justify-center gap-1.5 text-[11px] md:text-sm font-bold px-1"
                 style={{ backgroundColor: coloresHex[i], color: coloresText[i] }}>
-                {estadisticas[i].nombre || ("Caballo " + (i + 1))}
+                <span className="opacity-80 text-sm font-bold">#{i + 1}</span>
+                <span>{estadisticas[i].nombre || ("Caballo " + (i + 1))}</span>
               </div>
-              <div className="p-1.5 space-y-0.5">
+              <div className="p-2.5 space-y-1">
                 <div className="flex justify-between text-[9px] md:text-[10px]">
                   <span className="opacity-50">Estilo</span>
                   <span className="font-medium">{estadisticas[i].estilo}</span>
@@ -160,17 +150,26 @@ export default function ApuestasView({
                 <div className="flex justify-between text-[9px] md:text-[10px]">
                   <span className="opacity-50">Forma</span>
                   <span className={`font-medium ${estadisticas[i].forma === "Excelente" ? "text-green-400" : estadisticas[i].forma === "Buena" ? "text-yellow-400" : "text-red-400"}`}>{estadisticas[i].forma}</span>
+                </div>
+                <div className="flex items-center gap-1 pt-0.5">
+                  <span className="text-[8px] opacity-40">Lleg:</span>
+                  {estadisticas[i].ultimasLlegadas.slice(0, 5).map((pos, j) => (
+                    <div key={j} className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold ${
+                      pos <= 2 ? "bg-green-500/30 text-green-300" : pos <= 4 ? "bg-yellow-500/25 text-yellow-300" : "bg-red-500/20 text-red-300"
+                    }`}>{pos}</div>
+                  ))}
                 </div>
               </div>
             </div>
           ))}
           {estadisticas.length >= 6 && [3, 4, 5].map((i) => (
             <div key={i} className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
-              <div className="h-7 flex items-center justify-center text-[10px] md:text-xs font-bold"
+              <div className="h-9 flex items-center justify-center gap-1.5 text-[11px] md:text-sm font-bold px-1"
                 style={{ backgroundColor: coloresHex[i], color: coloresText[i] }}>
-                {estadisticas[i].nombre || ("Caballo " + (i + 1))}
+                <span className="opacity-80 text-sm font-bold">#{i + 1}</span>
+                <span>{estadisticas[i].nombre || ("Caballo " + (i + 1))}</span>
               </div>
-              <div className="p-1.5 space-y-0.5">
+              <div className="p-2.5 space-y-1">
                 <div className="flex justify-between text-[9px] md:text-[10px]">
                   <span className="opacity-50">Estilo</span>
                   <span className="font-medium">{estadisticas[i].estilo}</span>
@@ -193,27 +192,49 @@ export default function ApuestasView({
                   <span className="opacity-50">Forma</span>
                   <span className={`font-medium ${estadisticas[i].forma === "Excelente" ? "text-green-400" : estadisticas[i].forma === "Buena" ? "text-yellow-400" : "text-red-400"}`}>{estadisticas[i].forma}</span>
                 </div>
+                <div className="flex items-center gap-1 pt-0.5">
+                  <span className="text-[8px] opacity-40">Lleg:</span>
+                  {estadisticas[i].ultimasLlegadas.slice(0, 5).map((pos, j) => (
+                    <div key={j} className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold ${
+                      pos <= 2 ? "bg-green-500/30 text-green-300" : pos <= 4 ? "bg-yellow-500/25 text-yellow-300" : "bg-red-500/20 text-red-300"
+                    }`}>{pos}</div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ===== APUESTAS 3Ã—2 ===== */}
+        {/* ÚLTIMOS GANADORES */}
+        {ultimosGanadores.length > 0 && (
+          <div className="flex items-center gap-2 flex-shrink-0 mb-4">
+            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest mr-1">{"\u00daltimos Ganadores"}</span>
+            {[...ultimosGanadores].reverse().slice(0, 10).map((num, i) => (
+              <div key={i} className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold border border-white/10"
+                style={{ backgroundColor: coloresHex[num - 1], color: coloresText[num - 1] }}>{num}</div>
+            ))}
+          </div>
+        )}
+
+        {/* ===== APUESTAS 3×2 ===== */}
         <div className="flex-shrink-0 grid grid-cols-3 gap-2 mb-2">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <div key={i} onClick={() => apostarAlCaballo(i)}
               className={`${coloresApostarBg[i]} ${coloresApostarText[i]} rounded-xl border border-white/10 cursor-pointer hover:brightness-110 active:scale-[0.97] transition-all text-center py-2 relative shadow-[0_2px_8px_rgba(0,0,0,0.3)]`}>
               <div className="text-[11px] md:text-xs font-bold opacity-70">Caballo {i + 1}</div>
               <div className="text-base md:text-lg font-extrabold opacity-90">x{cuotas[i]}</div>
-              <div className="text-[10px] md:text-xs opacity-60">
-                {apuestasConfirmadas[i] > 0 && <span className="opacity-90 font-bold">Confirmado: Bs. {apuestasConfirmadas[i]}</span>}
-                {apuestas[i] > 0 && <span className="opacity-90 font-bold"> + Bs. {apuestas[i]}</span>}
-                {apuestasConfirmadas[i] === 0 && apuestas[i] === 0 && "Toca para apostar"}
-              </div>
-              {apuestas[i] > 0 && (
-                <div className="absolute -top-2 -right-1 px-2 py-0.5 rounded-full bg-cyan-600 text-white font-bold text-[10px]">
-                  +{apuestas[i]}
+              {apuestasConfirmadas[i] > 0 && (
+                <div className="inline-block mt-1 px-2 py-0.5 rounded-md bg-black/50 border border-green-400/60 text-green-300 font-bold text-[10px]">
+                  Bs. {apuestasConfirmadas[i]}
                 </div>
+              )}
+              {apuestasConfirmadas[i] === 0 && apuestas[i] > 0 && (
+                <div className="inline-block mt-1 px-2 py-0.5 rounded-md bg-black/50 border border-white/30 text-white font-bold text-[10px]">
+                  + Bs. {apuestas[i]}
+                </div>
+              )}
+              {apuestasConfirmadas[i] === 0 && apuestas[i] === 0 && (
+                <div className="text-[10px] md:text-xs opacity-40 mt-1">Toca para apostar</div>
               )}
             </div>
           ))}
@@ -224,9 +245,8 @@ export default function ApuestasView({
           <p className="text-red-400 text-[10px] md:text-xs text-center flex-shrink-0 mb-1">{mensajeError}</p>
         )}
 
-        {/* ===== BOTONES / INFO ===== */}
-        <div className="flex items-center justify-center gap-3 flex-shrink-0 mt-auto pb-2">
-          <span className="text-white/50 text-[10px] md:text-xs">Min Bs.500 Â· MÃ¡x Bs.5.000</span>
+        {/* ===== BOTONES ===== */}
+        <div className="flex items-center justify-center gap-3 flex-shrink-0 pt-3 pb-0.5">
           <button onClick={borrarApuestas}
             className="px-4 py-2 rounded-xl text-white text-xs font-bold bg-red-600/80 border border-white/10 hover:bg-red-700 active:scale-95 transition-all">
             Borrar
@@ -235,6 +255,11 @@ export default function ApuestasView({
             className="px-5 py-2 rounded-xl text-white text-sm font-bold bg-green-600/90 border border-white/10 hover:bg-green-700 active:scale-95 transition-all">
             Confirmar {totalApostado > 0 && <span className="font-normal">Bs.{totalApostado}</span>}
           </button>
+        </div>
+
+        {/* MÍN / MÁX */}
+        <div className="flex items-center justify-center flex-shrink-0 pt-0.5 pb-1">
+          <span className="text-white/40 text-[10px] md:text-xs">{"M\u00ednimo"} Bs.500 &middot; {"M\u00e1ximo"} Bs.5.000</span>
         </div>
 
         {/* ID CARRERA */}
@@ -262,13 +287,13 @@ export default function ApuestasView({
               <span className="text-white font-bold">Bs. {totalApostado}</span>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => { setMostrarPopup(false); onConfirmar(); }}
-                className="flex-1 py-2.5 rounded-xl text-white font-bold text-sm bg-green-600/80 border border-white/10 active:scale-95 transition-all">
-                Confirmar
-              </button>
               <button onClick={() => setMostrarPopup(false)}
                 className="flex-1 py-2.5 rounded-xl text-white font-bold text-sm bg-red-600/80 border border-white/10 active:scale-95 transition-all">
                 Cancelar
+              </button>
+              <button onClick={() => { setMostrarPopup(false); onConfirmar(); }}
+                className="flex-1 py-2.5 rounded-xl text-white font-bold text-sm bg-green-600/80 border border-white/10 active:scale-95 transition-all">
+                Confirmar
               </button>
             </div>
           </div>

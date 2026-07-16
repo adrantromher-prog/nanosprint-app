@@ -3,7 +3,7 @@ import pool from "@/lib/db";
 import fs from "fs";
 import path from "path";
 
-const DURACION_APUESTAS = 30;
+const DURACION_APUESTAS = 150;
 const DURACION_RESULTADO = 7;
 const SAFETY_TIMEOUT_CARRERA = 240; // solo si nadie ve el video
 const MAX_CICLOS_POR_REQUEST = 5;

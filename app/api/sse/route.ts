@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 
 // â”€â”€â”€ helpers copiados de /api/carrera (sin tocar ese archivo) â”€â”€â”€
 
-const DURACION_APUESTAS = 30;
+const DURACION_APUESTAS = 150;
 const DURACION_RESULTADO = 7;
 const SAFETY_TIMEOUT_CARRERA = 240;
 const MAX_CICLOS_POR_REQUEST = 5;
