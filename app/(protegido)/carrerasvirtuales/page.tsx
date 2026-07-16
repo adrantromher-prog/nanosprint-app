@@ -30,7 +30,10 @@ export default function CarrerasVirtualesPage() {
   const ultimaCarreraRestaurada = useRef(0);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    // Sin polling durante carrera/resultado — el servidor controla
+    if (etapa === "carrera" || etapa === "resultado") return;
+
+    const poll = async () => {
       try {
         const res = await fetch("/api/carrera", { cache: "no-store" });
         const data = await res.json();
@@ -47,7 +50,7 @@ export default function CarrerasVirtualesPage() {
         setCuotas(data.cuotas);
         setGanador(data.ganador);
         setVideoUrl(data.video ?? "");
-        setCarreraNum(data.numeroCarrera ?? 1); // â­
+        setCarreraNum(data.numeroCarrera ?? 1);
         setEstadisticas(data.estadisticas ?? []);
         setUltimosGanadores(data.ultimosGanadores ?? []);
 
@@ -56,8 +59,11 @@ export default function CarrerasVirtualesPage() {
       } catch (e) {
         console.error("Error obteniendo estado global:", e);
       }
-    }, 1000);
+    };
 
+    poll();
+    const ms = tiempo <= 10 ? 1000 : 3000;
+    const interval = setInterval(poll, ms);
     return () => clearInterval(interval);
   }, [etapa]);
 
@@ -168,14 +174,6 @@ export default function CarrerasVirtualesPage() {
     }
   };
 
-  const manejarFinCarrera = async () => {
-    try {
-      await fetch("/api/carrera", { method: "POST" });
-    } catch (e) {
-      console.error("Error enviando fin de carrera:", e);
-    }
-  };
-
   if (!usuario) return (
     <main className="min-h-screen w-full flex items-center justify-center bg-black">
       <p className="text-cyan-300 text-xl animate-pulse">Cargando...</p>
@@ -214,7 +212,6 @@ export default function CarrerasVirtualesPage() {
       {etapa === "carrera" && videoUrl && (
         <CarreraView
           url={videoUrl}
-          onFinCarrera={manejarFinCarrera}
           carreraNum={carreraNum} // â­
         />
       )}

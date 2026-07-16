@@ -46,7 +46,9 @@ function elegirGanador(cuotas: number[]) {
 
 const R2_BASE = "https://pub-38f03dca333b4687bcf68ac8da6b1cf2.r2.dev";
 
-const VIDEO_MAP: Record<string, string> = (() => {
+type VideoEntry = { path: string; duracion: number };
+
+const VIDEO_MAP: Record<string, VideoEntry> = (() => {
   try {
     return JSON.parse(fs.readFileSync(path.join(process.cwd(), "video-mapping.json"), "utf8"));
   } catch {
@@ -54,13 +56,13 @@ const VIDEO_MAP: Record<string, string> = (() => {
   }
 })();
 
-function elegirVideo(ganador: number) {
+function elegirVideo(ganador: number): { url: string; duracion: number } {
   const caballo = ganador + 1;
-  const videos = Object.entries(VIDEO_MAP)
-    .filter(([key]) => key.startsWith(`${caballo}/`))
-    .map(([, value]) => value);
-  if (videos.length === 0) return "";
-  return `${R2_BASE}/${videos[Math.floor(Math.random() * videos.length)]}`;
+  const videos = Object.values(VIDEO_MAP)
+    .filter((v) => v.path.startsWith(`${caballo}/`));
+  if (videos.length === 0) return { url: "", duracion: 25 };
+  const elegido = videos[Math.floor(Math.random() * videos.length)];
+  return { url: `${R2_BASE}/${elegido.path}`, duracion: elegido.duracion };
 }
 
 const perfilesCaballos = [
@@ -199,19 +201,21 @@ export async function GET() {
     if (fila.estado === "apuestas" && fila.tiempo_restante != null && elapsed >= fila.tiempo_restante) {
       const ganador = elegirGanador(fila.cuotas);
       const video = elegirVideo(ganador);
+      const duracionSeg = Math.ceil(video.duracion) + 15; // 2s extra de buffer
 
       fila.estado = "carrera";
       fila.inicio_estado = new Date().toISOString();
-      fila.tiempo_restante = null; // sin timer: solo avanza via POST (video termina)
+      fila.tiempo_restante = duracionSeg;
       fila.ganador = ganador;
-      fila.video = video;
+      fila.video = video.url;
+      fila.video_duracion = video.duracion;
       cambio = true;
       ciclos++;
       continue;
     }
 
-    // Safety: si nadie ve el video despuÃ©s de SAFETY_TIMEOUT_CARRERA segundos, avanzar
-    if (fila.estado === "carrera" && elapsed >= SAFETY_TIMEOUT_CARRERA) {
+    // Carrera: avanzar cuando el timer de duraciÃ³n se agote
+    if (fila.estado === "carrera" && fila.tiempo_restante != null && elapsed >= fila.tiempo_restante) {
       fila.estado = "resultado";
       fila.inicio_estado = new Date().toISOString();
       fila.tiempo_restante = DURACION_RESULTADO;
@@ -249,8 +253,8 @@ export async function GET() {
 
   if (cambio) {
     await pool.query(
-      `UPDATE carreras_virtuales SET estado=$1, inicio_estado=$2, tiempo_restante=$3, numero_carrera=$4, cuotas=$5, ganador=$6, video=$7, estadisticas=$8, ultimos_ganadores=$9 WHERE id=1`,
-      [fila.estado, fila.inicio_estado, fila.tiempo_restante, fila.numero_carrera, JSON.stringify(fila.cuotas), fila.ganador, fila.video, JSON.stringify(fila.estadisticas), JSON.stringify(fila.ultimos_ganadores)]
+      `UPDATE carreras_virtuales SET estado=$1, inicio_estado=$2, tiempo_restante=$3, numero_carrera=$4, cuotas=$5, ganador=$6, video=$7, estadisticas=$8, ultimos_ganadores=$9, video_duracion=$10 WHERE id=1`,
+      [fila.estado, fila.inicio_estado, fila.tiempo_restante, fila.numero_carrera, JSON.stringify(fila.cuotas), fila.ganador, fila.video, JSON.stringify(fila.estadisticas), JSON.stringify(fila.ultimos_ganadores), fila.video_duracion || 0]
     );
   }
 
@@ -273,12 +277,5 @@ export async function GET() {
 }
 
 export async function POST() {
-  await asegurarTabla();
-
-  await pool.query(
-    `UPDATE carreras_virtuales SET estado='resultado', inicio_estado=NOW(), tiempo_restante=$1 WHERE id=1 AND estado='carrera'`,
-    [DURACION_RESULTADO]
-  );
-
   return NextResponse.json({ ok: true });
 }
