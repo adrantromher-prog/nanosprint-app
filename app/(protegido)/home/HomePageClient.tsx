@@ -171,6 +171,12 @@ export default function HomePageClient({ nombre, saldo: saldoInicial, bloqueado,
                 Admin
               </button>
             )}
+            {rol === "admin" && (
+              <button onClick={() => router.push("/home/poker")}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-b from-green-600 to-emerald-800 border border-green-400/50 text-white font-bold text-xs tracking-wide shadow-[0_0_18px_rgba(34,197,94,0.25)] hover:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:scale-95 transition-all">
+                Poker
+              </button>
+            )}
             <button onClick={async () => { await fetch("/api/logout", { method: "GET", credentials: "include" }); window.location.href = "/login"; }}
               className="px-5 py-3 rounded-xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.12] text-white font-semibold text-sm tracking-wide shadow-[4px_16px_rgba(0,0,0,0.3)] hover:bg-white/[0.12] active:scale-95 transition-all">
               Salir
