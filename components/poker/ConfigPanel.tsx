@@ -13,7 +13,7 @@ const STORAGE_KEY_FPS = 'poker_fps';
 const CAL_STORAGE_KEY = 'poker_calibration_data';
 
 export default function ConfigPanel({ onStart, onCalibrate }: ConfigPanelProps) {
-  const [url, setUrl] = useState('ws://localhost:8000/ws');
+  const [url, setUrl] = useState('ws://45.91.108.10:8000/ws');
   const [fps, setFps] = useState(3);
   const [hasCalibration, setHasCalibration] = useState(false);
   const [urlError, setUrlError] = useState('');
@@ -84,7 +84,7 @@ export default function ConfigPanel({ onStart, onCalibrate }: ConfigPanelProps) 
             type="text"
             value={url}
             onChange={(e) => handleUrlChange(e.target.value)}
-            placeholder="ws://localhost:8000/ws"
+            placeholder="ws://45.91.108.10:8000/ws"
             className={`w-full px-3 py-2 rounded-lg bg-black/40 border ${urlError ? 'border-red-400/50' : 'border-white/[0.12]'} text-white text-sm placeholder-white/30 focus:outline-none focus:border-cyan-400/50 transition-colors`}
           />
           {urlError && <p className="text-red-400 text-xs mt-1">{urlError}</p>}
